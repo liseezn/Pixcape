@@ -83,7 +83,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
   const sideRef = useRef(side)
   const modelTypeRef = useRef(modelType)
   const onRotationChangeRef = useRef(onRotationChange)
-  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[] } | null>(null)
+  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[] } | null>(null)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
@@ -127,8 +127,8 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     box([0.78, 0.78, 0.78], [0, 1.28, 0], UV.head)
     box([0.8, 1.18, 0.42], [0, 0.3, 0], UV.torso)
     const armWidth = modelType === 'alex' ? 0.22 : 0.29
-    box([armWidth, 1.18, 0.38], [-0.54, 0.3, 0], UV.rightArm)
-    box([armWidth, 1.18, 0.38], [0.54, 0.3, 0], UV.leftArm)
+    const leftArm = box([armWidth, 1.18, 0.38], [-0.54, 0.3, 0], UV.rightArm)
+    const rightArm = box([armWidth, 1.18, 0.38], [0.54, 0.3, 0], UV.leftArm)
     box([0.34, 1.18, 0.4], [-0.22, -0.88, 0], UV.rightLeg)
     box([0.34, 1.18, 0.4], [0.22, -0.88, 0], UV.leftLeg)
 
@@ -159,7 +159,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       renderer.render(scene, camera)
     }
     animate()
-    sceneRef.current = { renderer, model, materials }
+    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm] }
 
     let drag: { x: number; rotation: number } | null = null
     const down = (event: PointerEvent) => {
@@ -222,6 +222,14 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       capeMaterial.map = makeTexture(canvas); capeMaterial.needsUpdate = true; old?.dispose()
     }
   }, [layers])
+
+  useEffect(() => {
+    const current = sceneRef.current
+    if (current) {
+      const width = modelType === 'alex' ? 0.22 : 0.29
+      current.armMeshes.forEach(arm => { arm.scale.x = width / (modelType === 'alex' ? 0.22 : 0.29) })
+    }
+  }, [modelType])
 
   useEffect(() => {
     const current = sceneRef.current
