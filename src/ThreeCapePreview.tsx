@@ -119,7 +119,7 @@ export default function ThreeCapePreview({ layers, side, rotation, onRotationCha
     let frame = 0
     const animate = () => {
       frame = requestAnimationFrame(animate)
-      model.rotation.y = (rotationRef.current + (sideRef.current === 'front' ? 180 : 0)) * Math.PI / 180
+      model.rotation.y = (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
       renderer.render(scene, camera)
     }
     animate()
@@ -180,7 +180,7 @@ export default function ThreeCapePreview({ layers, side, rotation, onRotationCha
 
   useEffect(() => {
     const current = sceneRef.current
-    if (current) current.model.rotation.y = (rotation + (side === 'front' ? 180 : 0)) * Math.PI / 180
+    if (current) current.model.rotation.y = (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
   }, [rotation, side])
 
   return <div ref={hostRef} className="three-preview-canvas" role="img" aria-label="可旋转的 Minecraft 风格 3D 角色和披风预览">
