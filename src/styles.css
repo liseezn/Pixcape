@@ -71,7 +71,7 @@
 
 /* Quick skin assembly: compact preset asset browser */
 .assets-panel .assets-title { display: inline-flex; align-items: center; gap: 6px; color: #e0e7f2; }
-.asset-categories { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding: 9px 8px 6px; }
+.asset-categories { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; padding: 9px 8px 6px; }
 .asset-categories button { min-width: 0; padding: 7px 1px; border: 1px solid #293a50; border-radius: 4px; background: #182536; color: #92a4bd; font-size: 10px; }
 .asset-categories button:hover { border-color: #5277c4; color: #e8efff; }
 .asset-categories button.active { border-color: #527fff; background: #20375f; color: #e5edff; }
