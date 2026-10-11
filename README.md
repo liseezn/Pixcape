@@ -7,8 +7,11 @@ A Minecraft skin quick-customization studio built with React, TypeScript, Vite, 
 - Color palette and custom color picker
 - Grid toggle and clear-canvas action
 - Import an image and scale it to the canvas
-- Export transparent PNG
-- Ready-made asset browser for capes/shoulder wraps, hats, shirts, pants, and shoes
+- Export transparent 64×64 skin PNG
+- Switch between Quick Outfit mode and the Full Editor without losing the current project
+- Separate shoulder-mantle presets (skin outer-layer UV) from back-mounted cape accessories
+- Export the 64×64 Minecraft skin PNG separately from the independent 64×32 cape texture
+- Ready-made asset browser for shoulder mantles, capes, hats, shirts, pants, and shoes
 - Presets apply as editable layers, so assets can be recolored, erased, reordered, or combined
 - Live Minecraft character preview with Steve/Alex model selection
 - Responsive layout for desktop and mobile
