@@ -227,7 +227,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     const current = sceneRef.current
     if (current) {
       const width = modelType === 'alex' ? 0.22 : 0.29
-      current.armMeshes.forEach(arm => { arm.scale.x = width / (modelType === 'alex' ? 0.22 : 0.29) })
+      current.armMeshes.forEach(arm => { arm.scale.x = width / (arm.geometry as THREE.BoxGeometry).parameters.width })
     }
   }, [modelType])
 
