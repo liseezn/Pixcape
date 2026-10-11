@@ -39,6 +39,35 @@ const UV = {
   ] as FaceRegion[],
 }
 
+const OUTER_UV = {
+  head: UV.head.map(region => ({ ...region, x: region.x + 32 })),
+  torso: [
+    { x: 16, y: 36, w: 4, h: 12 }, { x: 28, y: 36, w: 4, h: 12 },
+    { x: 20, y: 32, w: 8, h: 4 }, { x: 28, y: 32, w: 8, h: 4 },
+    { x: 20, y: 36, w: 8, h: 12 }, { x: 32, y: 36, w: 8, h: 12 },
+  ] as FaceRegion[],
+  rightLeg: [
+    { x: 0, y: 36, w: 4, h: 12 }, { x: 8, y: 36, w: 4, h: 12 },
+    { x: 4, y: 32, w: 4, h: 4 }, { x: 8, y: 32, w: 4, h: 4 },
+    { x: 4, y: 36, w: 4, h: 12 }, { x: 12, y: 36, w: 4, h: 12 },
+  ] as FaceRegion[],
+  leftLeg: [
+    { x: 0, y: 52, w: 4, h: 12 }, { x: 8, y: 52, w: 4, h: 12 },
+    { x: 4, y: 48, w: 4, h: 4 }, { x: 8, y: 48, w: 4, h: 4 },
+    { x: 4, y: 52, w: 4, h: 12 }, { x: 12, y: 52, w: 4, h: 12 },
+  ] as FaceRegion[],
+  rightArm: [
+    { x: 40, y: 36, w: 4, h: 12 }, { x: 48, y: 36, w: 4, h: 12 },
+    { x: 44, y: 32, w: 4, h: 4 }, { x: 48, y: 32, w: 4, h: 4 },
+    { x: 44, y: 36, w: 4, h: 12 }, { x: 52, y: 36, w: 4, h: 12 },
+  ] as FaceRegion[],
+  leftArm: [
+    { x: 32, y: 52, w: 4, h: 12 }, { x: 40, y: 52, w: 4, h: 12 },
+    { x: 36, y: 48, w: 4, h: 4 }, { x: 40, y: 48, w: 4, h: 4 },
+    { x: 36, y: 52, w: 4, h: 12 }, { x: 44, y: 52, w: 4, h: 12 },
+  ] as FaceRegion[],
+}
+
 function makeSource(layers: LayerData[]) {
   const canvas = document.createElement('canvas')
   canvas.width = 64; canvas.height = 64
@@ -115,13 +144,15 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     const edge = new THREE.LineBasicMaterial({ color: 0x111c2b, transparent: true, opacity: 0.25 })
     const materials: THREE.MeshBasicMaterial[] = []
     const source = makeSource(layers)
-    const box = (size: [number, number, number], position: [number, number, number], regions: FaceRegion[]) => {
+    const box = (size: [number, number, number], position: [number, number, number], regions: FaceRegion[], outline = true) => {
       const geometry = new THREE.BoxGeometry(...size)
       const mesh = new THREE.Mesh(geometry, makeFaceMaterials(source, regions, materials))
       mesh.position.set(...position)
       model.add(mesh)
-      const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), edge)
-      lines.position.copy(mesh.position); model.add(lines)
+      if (outline) {
+        const lines = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), edge)
+        lines.position.copy(mesh.position); model.add(lines)
+      }
       return mesh
     }
     box([0.78, 0.78, 0.78], [0, 1.28, 0], UV.head)
@@ -131,6 +162,15 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     const rightArm = box([armWidth, 1.18, 0.38], [0.54, 0.3, 0], UV.leftArm)
     box([0.34, 1.18, 0.4], [-0.22, -0.88, 0], UV.rightLeg)
     box([0.34, 1.18, 0.4], [0.22, -0.88, 0], UV.leftLeg)
+
+    // Classic skin outer layer (hat, jacket, sleeves and trouser legs).
+    // Slightly enlarged boxes avoid z-fighting; transparent pixels reveal the base skin.
+    box([0.84, 0.84, 0.84], [0, 1.28, 0], OUTER_UV.head, false)
+    box([0.84, 1.22, 0.46], [0, 0.3, 0], OUTER_UV.torso, false)
+    const leftArmOverlay = box([armWidth + 0.04, 1.22, 0.42], [-0.54, 0.3, 0], OUTER_UV.rightArm, false)
+    const rightArmOverlay = box([armWidth + 0.04, 1.22, 0.42], [0.54, 0.3, 0], OUTER_UV.leftArm, false)
+    box([0.38, 1.22, 0.44], [-0.22, -0.88, 0], OUTER_UV.rightLeg, false)
+    box([0.38, 1.22, 0.44], [0.22, -0.88, 0], OUTER_UV.leftLeg, false)
 
     // The cape remains a separate accessory, using the lower half of the texture canvas.
     const capeCanvas = document.createElement('canvas')
@@ -159,7 +199,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       renderer.render(scene, camera)
     }
     animate()
-    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm] }
+    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm, leftArmOverlay, rightArmOverlay] }
 
     let drag: { x: number; rotation: number } | null = null
     const down = (event: PointerEvent) => {
@@ -200,7 +240,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     const current = sceneRef.current
     if (!current) return
     const source = makeSource(layers)
-    const regionSets = [UV.head, UV.torso, UV.rightArm, UV.leftArm, UV.rightLeg, UV.leftLeg]
+    const regionSets = [UV.head, UV.torso, UV.rightArm, UV.leftArm, UV.rightLeg, UV.leftLeg, OUTER_UV.head, OUTER_UV.torso, OUTER_UV.rightArm, OUTER_UV.leftArm, OUTER_UV.rightLeg, OUTER_UV.leftLeg]
     let materialIndex = 0
     for (const regions of regionSets) {
       for (const region of regions) {
