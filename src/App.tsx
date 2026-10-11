@@ -40,7 +40,6 @@ export default function App() {
   })
   const [previewSide, setPreviewSide] = useState<'front' | 'back'>('back')
   const [previewRotation, setPreviewRotation] = useState(-13)
-  const previewDragRef = useRef<{ x: number; rotation: number } | null>(null)
 
   const setLayers = useCallback((next: Layer[] | ((old: Layer[]) => Layer[])) => {
     setLayersState(old => {
