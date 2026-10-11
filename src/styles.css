@@ -51,3 +51,14 @@
   .simple-mode .layers-panel { display: block; }
   .simple-mode .right-sidebar { display: grid; }
 }
+
+
+/* Live Three.js preview */
+.three-model-stage { min-height: 300px; position: relative; }
+.three-preview-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.three-preview-canvas:active { cursor: grabbing; }
+.three-preview-canvas canvas { display: block; width: 100%; height: 100%; }
+.three-preview-canvas .webgl-fallback { display: none; }
+.three-preview-canvas[data-webgl-unavailable="true"] .webgl-fallback { display: grid; position: absolute; inset: 20px; place-items: center; text-align: center; color: #aab8cb; font-size: 12px; line-height: 1.6; }
+.three-model-stage > p, .three-model-stage > small { z-index: 2; pointer-events: none; }
+@media (max-width: 780px) { .three-model-stage { min-height: 320px; } }
