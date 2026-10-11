@@ -35,6 +35,9 @@ export default function App() {
   const [brushSize, setBrushSize] = useState(1)
   const [saved, setSaved] = useState(false)
   const [status, setStatus] = useState('就绪')
+  const [editorMode, setEditorMode] = useState<'simple' | 'professional'>(() => {
+    try { return localStorage.getItem('pixcape-editor-mode') === 'professional' ? 'professional' : 'simple' } catch { return 'simple' }
+  })
   const [previewSide, setPreviewSide] = useState<'front' | 'back'>('back')
   const [previewRotation, setPreviewRotation] = useState(-13)
   const previewDragRef = useRef<{ x: number; rotation: number } | null>(null)
@@ -64,6 +67,7 @@ export default function App() {
     setLayers(next.layers); setActiveId(next.activeId); setStatus('已重做')
   }, [activeId, setLayers])
   const activeLayer = layers.find(layer => layer.id === activeId) ?? layers[layers.length - 1]
+  useEffect(() => { try { localStorage.setItem('pixcape-editor-mode', editorMode) } catch { /* storage may be unavailable */ } }, [editorMode])
   const pixelCount = layers.reduce((sum, layer) => sum + (layer.visible ? layer.pixels.filter(Boolean).length : 0), 0)
 
   useEffect(() => {
@@ -304,11 +308,11 @@ export default function App() {
     { id: 'ellipse', label: '椭圆', key: 'O', icon: Circle },
   ]
 
-  return <div className="editor-shell">
+  return <div className={'editor-shell ' + (editorMode === 'simple' ? 'simple-mode' : 'professional-mode')}>
     <header className="topbar">
       <a className="brand" href="#" onClick={e => e.preventDefault()}><span className="brand-mark">✦</span><span>Pixcape</span><small>STUDIO</small></a>
       <nav className="main-menu"><button onClick={saveLocal}>文件</button><button onClick={undo}>编辑</button><button onClick={() => setShowGrid(v => !v)}>视图</button><button onClick={() => setStatus('快捷键：B 画笔 / E 橡皮 / G 填充 / Ctrl+Z 撤销')}>帮助</button></nav>
-      <div className="top-actions"><span className={'save-state ' + (saved ? 'is-saved' : '')}><span />{saved ? '已保存' : '未保存'}</span><button className="primary-btn" onClick={exportPng}><Download size={15}/> 导出 PNG</button></div>
+      <div className="top-actions"><div className="mode-switch" role="group" aria-label="编辑器模式"><button className={editorMode === 'simple' ? 'active' : ''} aria-pressed={editorMode === 'simple'} onClick={() => setEditorMode('simple')}>简单模式</button><button className={editorMode === 'professional' ? 'active' : ''} aria-pressed={editorMode === 'professional'} onClick={() => setEditorMode('professional')}>专业模式</button></div><span className={'save-state ' + (saved ? 'is-saved' : '')}><span />{saved ? '已保存' : '未保存'}</span><button className="primary-btn" onClick={exportPng}><Download size={15}/> 导出 PNG</button></div>
     </header>
     <main className="editor-layout">
       <aside className="left-sidebar">
@@ -320,7 +324,7 @@ export default function App() {
       <section className="center-workspace">
         <div className="document-tabs"><div className="tab active"><FileImage size={14}/><input value={projectName} aria-label="项目名称" onChange={e => { setProjectName(e.target.value); setSaved(false) }}/><span>.png</span></div><div className="tab-meta">64 × 64 · RGBA</div><div className="tab-actions"><button title="撤销 Ctrl+Z" disabled={!historyRef.current.length} onClick={undo}><RotateCcw size={16}/></button><button title="重做 Ctrl+Y" disabled={!redoRef.current.length} onClick={redo}><RotateCw size={16}/></button><i/><button title="清空当前图层" onClick={clearLayer}><Trash2 size={16}/></button><button title="导入图片到当前图层" onClick={() => inputRef.current?.click()}><Upload size={16}/></button><input ref={inputRef} hidden type="file" accept="image/*" onChange={e => { importImage(e.target.files?.[0]); e.currentTarget.value = '' }}/></div></div>
         <div className="canvas-toolbar"><div className="toolbar-group"><span className="toolbar-label">画布</span><button onClick={() => setZoom(v => Math.max(200, v - 100))} title="缩小"><ZoomOut size={15}/></button><strong>{Math.round(zoom / 100)}×</strong><button onClick={() => setZoom(v => Math.min(1000, v + 100))} title="放大"><ZoomIn size={15}/></button><button onClick={() => setZoom(700)} title="适应画布"><Maximize2 size={15}/></button></div><div className="toolbar-group"><button className={showGrid ? 'tool-on' : ''} onClick={() => setShowGrid(v => !v)} title="显示/隐藏像素网格"><Grid2X2 size={15}/></button><span className="toolbar-label">64 × 64</span></div></div>
-        <div className="canvas-stage"><div className="canvas-ruler top-ruler"><span>0</span><span>16</span><span>32</span><span>48</span><span>64</span></div><div className="canvas-workarea"><div className="side-ruler"><span>0</span><span>16</span><span>32</span><span>48</span><span>64</span></div><div className="checkerboard" style={{ width: 'min(' + zoom + 'px, calc(100vw - 390px))' }}><canvas ref={canvasRef} width={SIZE} height={SIZE} className={'pixel-canvas ' + (showGrid ? 'with-grid' : '')} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={() => { drawingRef.current = false }} aria-label="64×64 像素画布"/></div></div><div className="canvas-help">滚轮缩放即将支持 · 当前工具：{toolList.find(item => item.id === tool)?.label} · 在画布上拖动绘制</div></div>
+        <div className="canvas-stage"><div className="canvas-ruler top-ruler"><span>0</span><span>16</span><span>32</span><span>48</span><span>64</span></div><div className="canvas-workarea"><div className="side-ruler"><span>0</span><span>16</span><span>32</span><span>48</span><span>64</span></div><div className="checkerboard" style={{ width: 'min(' + zoom + 'px, calc(100vw - 390px))' }}><canvas ref={canvasRef} width={SIZE} height={SIZE} className={'pixel-canvas ' + (showGrid ? 'with-grid' : '')} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={() => { drawingRef.current = false }} aria-label="64×64 像素画布"/></div></div><div className="canvas-help">{editorMode === 'simple' ? '在画布上直接绘制 · 使用上方按钮切换专业模式' : '当前工具：' + (toolList.find(item => item.id === tool)?.label ?? '画笔') + ' · 在画布上拖动绘制'}</div></div>
         <div className="status-bar"><span><i className="live-dot"/>{status}</span><span>{pixelCount.toLocaleString()} 像素 · 当前图层：{activeLayer?.name ?? '图层'}</span><span>Ctrl + Z 撤销</span></div>
       </section>
       <aside className="right-sidebar">
