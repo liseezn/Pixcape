@@ -24,8 +24,8 @@ const PRESET_ASSETS: PresetAsset[] = [
   { id: 'cape-ember', category: '披肩', name: '熔岩披肩', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
   { id: 'cape-forest', category: '披肩', name: '森林短披', description: '苔绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
   { id: 'cape-classic', category: '披风', name: '经典披风', description: '深蓝 · 银色边缘', color: '#203b70', accent: '#8fb5ff', style: 'trim' },
-  { id: 'cape-ember', category: '披风', name: '熔火披风', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
-  { id: 'cape-forest', category: '披风', name: '林地披风', description: '森林绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
+  { id: 'cape-cloak-ember', category: '披风', name: '熔火披风', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
+  { id: 'cape-cloak-forest', category: '披风', name: '林地披风', description: '森林绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
   { id: 'hat-wizard', category: '帽子', name: '星术师帽', description: '紫色 · 星点', color: '#563a8c', accent: '#f4d77a', style: 'stripe' },
   { id: 'hat-hood', category: '帽子', name: '旅行兜帽', description: '石墨灰 · 浅边', color: '#475569', accent: '#cbd5e1', style: 'trim' },
   { id: 'hat-crown', category: '帽子', name: '像素王冠', description: '金色 · 宝石蓝', color: '#d7a928', accent: '#60a5fa', style: 'trim' },
@@ -55,10 +55,22 @@ function makePresetPixels(asset: PresetAsset) {
     }
   }
   if (asset.category === '披肩') {
-    rect(32, 36, 8, 12, asset.color); detail(32, 36, 8, 12)
-    rect(44, 36, 4, 4, asset.color); rect(48, 36, 4, 4, asset.color)
-    rect(44, 36, 4, 1, asset.accent); rect(48, 36, 4, 1, asset.accent)
-    rect(34, 38, 4, 1, asset.accent); rect(35, 39, 2, 5, asset.color)
+    // Shoulder mantle occupies the outer torso and upper-arm UV regions.
+    rect(20, 36, 8, 4, asset.color); rect(32, 36, 8, 4, asset.color)
+    rect(16, 36, 4, 4, asset.color); rect(28, 36, 4, 4, asset.color)
+    rect(40, 36, 4, 4, asset.color); rect(44, 36, 4, 4, asset.color)
+    rect(48, 36, 4, 4, asset.color); rect(52, 36, 4, 4, asset.color)
+    rect(20, 36, 8, 1, asset.accent); rect(32, 36, 8, 1, asset.accent)
+    rect(40, 36, 16, 1, asset.accent); rect(16, 39, 4, 1, asset.accent)
+    rect(28, 39, 4, 1, asset.accent)
+  } else if (asset.category === '披风') {
+    rect(0, 32, 64, 32, asset.color)
+    if (asset.style === 'stripe') {
+      for (let y = 34; y < 64; y += 6) rect(0, y, 64, 2, asset.accent)
+    } else {
+      rect(0, 32, 64, 2, asset.accent); rect(0, 62, 64, 2, asset.accent)
+      rect(0, 32, 2, 32, asset.accent); rect(62, 32, 2, 32, asset.accent)
+    }
   } else if (asset.category === '帽子') {
     rect(40, 0, 8, 8, asset.color); detail(40, 0, 8, 8)
     rect(32, 8, 8, 8, asset.color); rect(48, 8, 8, 8, asset.color); rect(40, 8, 8, 8, asset.color)
@@ -350,7 +362,7 @@ export default function App() {
     const ctx = output.getContext('2d')
     if (!ctx) return output
     for (const layer of layersRef.current) {
-      if (!layer.visible) continue
+      if (!layer.visible || layer.name.startsWith('披风 · ')) continue
       ctx.globalAlpha = layer.opacity / 100
       layer.pixels.forEach((fill, i) => { if (fill) { ctx.fillStyle = fill; ctx.fillRect(i % SIZE, Math.floor(i / SIZE), 1, 1) } })
     }
@@ -359,8 +371,24 @@ export default function App() {
   }
   const exportPng = () => {
     const output = makeComposite(), link = document.createElement('a')
-    link.download = (projectName.trim() || 'pixcape-art') + '.png'
-    link.href = output.toDataURL('image/png'); link.click(); setSaved(true); setStatus('PNG 已导出')
+    link.download = (projectName.trim() || 'minecraft-skin') + '.png'
+    link.href = output.toDataURL('image/png'); link.click(); setSaved(true); setStatus('皮肤 PNG 已导出（不包含独立披风）')
+  }
+  const exportCapePng = () => {
+    const output = document.createElement('canvas'); output.width = 64; output.height = 32
+    const ctx = output.getContext('2d')
+    if (!ctx) return
+    for (const layer of layersRef.current) {
+      if (!layer.visible || !layer.name.startsWith('披风 · ')) continue
+      ctx.globalAlpha = layer.opacity / 100
+      layer.pixels.forEach((fill, i) => {
+        const x = i % 64, y = Math.floor(i / 64)
+        if (fill && y >= 32) { ctx.fillStyle = fill; ctx.fillRect(x, y - 32, 1, 1) }
+      })
+    }
+    ctx.globalAlpha = 1
+    const link = document.createElement('a'); link.download = (projectName.trim() || 'minecraft-skin') + '-cape.png'
+    link.href = output.toDataURL('image/png'); link.click(); setStatus('独立披风纹理已导出（64 × 32）')
   }
   const saveLocal = () => {
     localStorage.setItem('pixcape-project-v2', JSON.stringify({ layers: layersRef.current, activeId, projectName }))
