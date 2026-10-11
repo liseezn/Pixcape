@@ -18,7 +18,16 @@
 .simple-mode .main-menu { display: none; }
 .simple-mode .tool-list .tool-button:nth-child(n+4) { display: none; }
 .simple-mode .left-sidebar .section-title span { display: none; }
-.simple-mode .layers-panel, .simple-mode .export-panel { display: none; }
+.simple-mode .export-panel { display: none; }
+.simple-mode .layers-panel { padding-bottom: 8px; }
+.simple-mode .layers-panel .layer-actions { display: none; }
+.simple-mode .layers-panel .layer-order,
+.simple-mode .layers-panel .range-label,
+.simple-mode .layers-panel input.range,
+.simple-mode .layers-panel .layer-footnote { display: none; }
+.simple-mode .layers-panel .layer-row { padding: 5px; }
+.simple-mode .layers-panel .layer-thumb { width: 28px; height: 28px; }
+.simple-mode .layers-panel .section-title::after { content: "可选中图层"; color: var(--muted); font-size: 10px; font-weight: 400; }
 .simple-mode .right-sidebar { gap: 0; }
 .simple-mode .preview-panel { flex: 1; }
 .simple-mode .canvas-help { color: var(--muted, #9ba5b5); }
@@ -30,4 +39,15 @@
 @media (max-width: 680px) {
   .mode-switch button { padding: 6px; }
   .save-state { display: none; }
+}
+
+
+/* Make the mode switch useful on compact screens and explain preview limitations clearly. */
+.preview-note { margin: 7px 12px 0; padding: 7px 8px; border: 1px solid #2b3a4e; border-radius: 4px; color: #8fa2bd; background: #111a27; font-size: 9px; line-height: 1.5; }
+.simple-mode .preview-note { color: #b6c7df; }
+.simple-mode .preview-panel { padding-bottom: 10px; }
+.simple-mode .right-sidebar { display: flex; }
+@media (max-width: 780px) {
+  .simple-mode .layers-panel { display: block; }
+  .simple-mode .right-sidebar { display: grid; }
 }
