@@ -30,10 +30,12 @@ function makeTexture(layers: LayerData[]) {
 export default function ThreeCapePreview({ layers, side, rotation, onRotationChange }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const rotationRef = useRef(rotation)
+  const sideRef = useRef(side)
   const onRotationChangeRef = useRef(onRotationChange)
   const sceneRef = useRef<{ scene: THREE.Scene; camera: THREE.PerspectiveCamera; renderer: THREE.WebGLRenderer; model: THREE.Group; capeMaterial: THREE.MeshBasicMaterial } | null>(null)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
+  useEffect(() => { sideRef.current = side }, [side])
   useEffect(() => { onRotationChangeRef.current = onRotationChange }, [onRotationChange])
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export default function ThreeCapePreview({ layers, side, rotation, onRotationCha
     let frame = 0
     const animate = () => {
       frame = requestAnimationFrame(animate)
-      model.rotation.y = (rotationRef.current + (side === 'front' ? 180 : 0)) * Math.PI / 180
+      model.rotation.y = (rotationRef.current + (sideRef.current === 'front' ? 180 : 0)) * Math.PI / 180
       renderer.render(scene, camera)
     }
     animate()
