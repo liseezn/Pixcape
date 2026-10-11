@@ -112,7 +112,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
   const sideRef = useRef(side)
   const modelTypeRef = useRef(modelType)
   const onRotationChangeRef = useRef(onRotationChange)
-  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[] } | null>(null)
+  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[]; outerArmMeshes: THREE.Mesh[] } | null>(null)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
@@ -199,7 +199,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       renderer.render(scene, camera)
     }
     animate()
-    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm, leftArmOverlay, rightArmOverlay] }
+    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm], outerArmMeshes: [leftArmOverlay, rightArmOverlay] }
 
     let drag: { x: number; rotation: number } | null = null
     const down = (event: PointerEvent) => {
@@ -268,6 +268,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     if (current) {
       const width = modelType === 'alex' ? 0.22 : 0.29
       current.armMeshes.forEach(arm => { arm.scale.x = width / (arm.geometry as THREE.BoxGeometry).parameters.width })
+      current.outerArmMeshes.forEach(arm => { arm.scale.x = (width + 0.04) / (arm.geometry as THREE.BoxGeometry).parameters.width })
     }
   }, [modelType])
 
