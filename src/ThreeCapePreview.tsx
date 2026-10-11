@@ -75,7 +75,7 @@ function makeSource(layers: LayerData[]) {
   if (ctx) {
     ctx.clearRect(0, 0, 64, 64)
     for (const layer of layers) {
-      if (!layer.visible) continue
+      if (!layer.visible || layer.name.startsWith('披风 · ')) continue
       ctx.globalAlpha = layer.opacity / 100
       layer.pixels.forEach((color, index) => {
         if (color) { ctx.fillStyle = color; ctx.fillRect(index % 64, Math.floor(index / 64), 1, 1) }
@@ -86,7 +86,25 @@ function makeSource(layers: LayerData[]) {
   return canvas
 }
 
-function makeCapeSource(layers: LayerData[]) {\n  const canvas = document.createElement('canvas')\n  canvas.width = 64; canvas.height = 64\n  const ctx = canvas.getContext('2d')\n  if (ctx) {\n    for (const layer of layers) {\n      if (!layer.visible || !layer.name.startsWith('披风 · ')) continue\n      ctx.globalAlpha = layer.opacity / 100\n      layer.pixels.forEach((color, index) => {\n        const y = Math.floor(index / 64)\n        if (color && y >= 32) { ctx.fillStyle = color; ctx.fillRect(index % 64, y, 1, 1) }\n      })\n    }\n    ctx.globalAlpha = 1\n  }\n  return canvas\n}\n\nfunction makeTexture(canvas: HTMLCanvasElement) {
+function makeCapeSource(layers: LayerData[]) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 64; canvas.height = 64
+  const ctx = canvas.getContext('2d')
+  if (ctx) {
+    for (const layer of layers) {
+      if (!layer.visible || !layer.name.startsWith('披风 · ')) continue
+      ctx.globalAlpha = layer.opacity / 100
+      layer.pixels.forEach((color, index) => {
+        const y = Math.floor(index / 64)
+        if (color && y >= 32) { ctx.fillStyle = color; ctx.fillRect(index % 64, y, 1, 1) }
+      })
+    }
+    ctx.globalAlpha = 1
+  }
+  return canvas
+}
+
+function makeTexture(canvas: HTMLCanvasElement) {
   const texture = new THREE.CanvasTexture(canvas)
   texture.magFilter = THREE.NearestFilter
   texture.minFilter = THREE.NearestFilter
@@ -173,10 +191,11 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     box([0.38, 1.22, 0.44], [0.22, -0.88, 0], OUTER_UV.leftLeg, false)
 
     // The cape remains a separate accessory, using the lower half of the texture canvas.
+    const capeSource = makeCapeSource(layers)
     const capeCanvas = document.createElement('canvas')
     capeCanvas.width = 64; capeCanvas.height = 64
     const capeCtx = capeCanvas.getContext('2d')
-    if (capeCtx) capeCtx.drawImage(source, 0, 32, 64, 32, 0, 0, 64, 64)
+    if (capeCtx) capeCtx.drawImage(capeSource, 0, 32, 64, 32, 0, 0, 64, 64)
     const capeMaterial = new THREE.MeshBasicMaterial({ map: makeTexture(capeCanvas), transparent: true, side: THREE.DoubleSide, depthWrite: false })
     materials.push(capeMaterial)
     const capeGeometry = new THREE.PlaneGeometry(0.95, 1.5)
@@ -240,6 +259,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     const current = sceneRef.current
     if (!current) return
     const source = makeSource(layers)
+    const capeSource = makeCapeSource(layers)
     const regionSets = [UV.head, UV.torso, UV.rightArm, UV.leftArm, UV.rightLeg, UV.leftLeg, OUTER_UV.head, OUTER_UV.torso, OUTER_UV.rightArm, OUTER_UV.leftArm, OUTER_UV.rightLeg, OUTER_UV.leftLeg]
     let materialIndex = 0
     for (const regions of regionSets) {
@@ -257,7 +277,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     if (capeMaterial) {
       const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64
       const ctx = canvas.getContext('2d')
-      if (ctx) ctx.drawImage(source, 0, 32, 64, 32, 0, 0, 64, 64)
+      if (ctx) ctx.drawImage(capeSource, 0, 32, 64, 32, 0, 0, 64, 64)
       const old = capeMaterial.map
       capeMaterial.map = makeTexture(canvas); capeMaterial.needsUpdate = true; old?.dispose()
     }
