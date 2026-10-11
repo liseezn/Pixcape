@@ -20,9 +20,9 @@ type AssetCategory = '披肩' | '披风' | '帽子' | '上衣' | '裤子' | '鞋
 type PresetAsset = { id: string; category: AssetCategory; name: string; description: string; color: string; accent: string; style: 'solid' | 'stripe' | 'trim' }
 const ASSET_CATEGORIES: AssetCategory[] = ['披肩', '披风', '帽子', '上衣', '裤子', '鞋子']
 const PRESET_ASSETS: PresetAsset[] = [
-  { id: 'cape-midnight', category: '披肩', name: '夜幕披肩', description: '深蓝 · 银边', color: '#203b70', accent: '#8fb5ff', style: 'trim' },
-  { id: 'cape-ember', category: '披肩', name: '熔岩披肩', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
-  { id: 'cape-forest', category: '披肩', name: '森林短披', description: '苔绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
+  { id: 'mantle-midnight', category: '披肩', name: '夜幕披肩', description: '深蓝 · 银边', color: '#203b70', accent: '#8fb5ff', style: 'trim' },
+  { id: 'mantle-ember', category: '披肩', name: '熔岩披肩', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
+  { id: 'mantle-forest', category: '披肩', name: '森林短披', description: '苔绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
   { id: 'cape-classic', category: '披风', name: '经典披风', description: '深蓝 · 银色边缘', color: '#203b70', accent: '#8fb5ff', style: 'trim' },
   { id: 'cape-cloak-ember', category: '披风', name: '熔火披风', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
   { id: 'cape-cloak-forest', category: '披风', name: '林地披风', description: '森林绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
@@ -89,15 +89,14 @@ function makePresetPixels(asset: PresetAsset) {
     rect(23, 36, 2, 7, asset.accent)
     if (asset.id === 'shirt-forest') rect(20, 44, 8, 2, asset.accent)
   } else if (asset.category === '裤子') {
-    rect(4, 36, 4, 12, asset.color); rect(8, 36, 4, 12, asset.color)
-    rect(0, 36, 4, 12, asset.color); rect(12, 36, 4, 12, asset.color)
+    rect(0, 36, 16, 12, asset.color); rect(0, 52, 16, 12, asset.color)
     rect(0, 36, 1, 12, asset.accent); rect(12, 36, 1, 12, asset.accent)
+    rect(0, 52, 1, 12, asset.accent); rect(12, 52, 1, 12, asset.accent)
     rect(4, 36, 4, 1, asset.accent); rect(8, 36, 4, 1, asset.accent)
+    rect(4, 52, 4, 1, asset.accent); rect(8, 52, 4, 1, asset.accent)
   } else {
-    rect(0, 44, 4, 4, asset.color); rect(4, 44, 4, 4, asset.color)
-    rect(8, 44, 4, 4, asset.color); rect(12, 44, 4, 4, asset.color)
-    rect(0, 47, 4, 1, asset.accent); rect(4, 47, 4, 1, asset.accent)
-    rect(8, 47, 4, 1, asset.accent); rect(12, 47, 4, 1, asset.accent)
+    rect(0, 44, 16, 4, asset.color); rect(0, 60, 16, 4, asset.color)
+    rect(0, 47, 16, 1, asset.accent); rect(0, 63, 16, 1, asset.accent)
   }
   return pixels
 }
