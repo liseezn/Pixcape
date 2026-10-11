@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import {
   Download, Eraser, Paintbrush, RotateCcw, RotateCw, Upload, PaintBucket, Pipette,
-  ZoomIn, ZoomOut, Maximize2, Layers3, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
+  ZoomIn, ZoomOut, Maximize2, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
   Minus, Square, Circle, Grid2X2, Save, FileImage, Copy,
 } from 'lucide-react'
 
