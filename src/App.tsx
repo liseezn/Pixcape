@@ -184,7 +184,7 @@ export default function App() {
           <div className="panel-separator"/>
           <div className="panel-heading"><span>IMPORT IMAGE</span><span className="panel-index">04</span></div>
           <label className="scale-label" htmlFor="scale">Image scale <span>{Math.round(importScale*100)}%</span></label>
-          <input id="scale" className="scale-slider" type="range" min=".5" max="2" step=".25" value={importScale} onChange={e=>setImportScale(Number(e.target.value)}/>
+          <input id="scale" className="scale-slider" type="range" min=".5" max="2" step=".25" value={importScale} onChange={e=>setImportScale(Number(e.target.value))}/>
           <button className="import-btn" onClick={()=>inputRef.current?.click()}><Upload size={15}/> Import image</button>
           <input ref={inputRef} type="file" accept="image/*" hidden onChange={e=>{importImage(e.target.files?.[0]);e.currentTarget.value=''}}/>
           <p className="hint">Images are centered and resized to fit the canvas.</p>
