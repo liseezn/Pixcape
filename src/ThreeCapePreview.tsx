@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 
-type LayerData = { pixels: string[]; visible: boolean; opacity: number }
+type LayerData = { name: string; pixels: string[]; visible: boolean; opacity: number }
 type FaceRegion = { x: number; y: number; w: number; h: number }
 type ModelType = 'steve' | 'alex'
 type Props = { layers: LayerData[]; side: 'front' | 'back'; rotation: number; modelType: ModelType; onRotationChange: (value: number) => void }
@@ -86,7 +86,7 @@ function makeSource(layers: LayerData[]) {
   return canvas
 }
 
-function makeTexture(canvas: HTMLCanvasElement) {
+function makeCapeSource(layers: LayerData[]) {\n  const canvas = document.createElement('canvas')\n  canvas.width = 64; canvas.height = 64\n  const ctx = canvas.getContext('2d')\n  if (ctx) {\n    for (const layer of layers) {\n      if (!layer.visible || !layer.name.startsWith('披风 · ')) continue\n      ctx.globalAlpha = layer.opacity / 100\n      layer.pixels.forEach((color, index) => {\n        const y = Math.floor(index / 64)\n        if (color && y >= 32) { ctx.fillStyle = color; ctx.fillRect(index % 64, y, 1, 1) }\n      })\n    }\n    ctx.globalAlpha = 1\n  }\n  return canvas\n}\n\nfunction makeTexture(canvas: HTMLCanvasElement) {
   const texture = new THREE.CanvasTexture(canvas)
   texture.magFilter = THREE.NearestFilter
   texture.minFilter = THREE.NearestFilter
