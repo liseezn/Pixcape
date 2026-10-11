@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import {
   Download, Eraser, Grid2X2, ImagePlus, Paintbrush, RotateCcw,
   Trash2, Upload, WandSparkles, MousePointer2, Palette,
@@ -42,7 +42,7 @@ export default function App() {
     })
   }, [pixels])
 
-  const getIndex = (event: React.PointerEvent<HTMLCanvasElement>) => {
+  const getIndex = (event: PointerEvent<HTMLCanvasElement>) => {
     const rect = event.currentTarget.getBoundingClientRect()
     const x = Math.max(0, Math.min(SIZE - 1, Math.floor((event.clientX - rect.left) / rect.width * SIZE)))
     const y = Math.max(0, Math.min(SIZE - 1, Math.floor((event.clientY - rect.top) / rect.height * SIZE)))
