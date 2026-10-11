@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import {
-  Download, Eraser, Grid2X2, ImagePlus, Paintbrush, RotateCcw, RotateCw,
-  Trash2, Upload, MousePointer2, Palette, Minus, Plus, PaintBucket,
-  Pipette, ZoomIn, ZoomOut, Maximize2, Layers3, Command, Check,
+  Download, Eraser, Grid2X2, Paintbrush, RotateCcw, RotateCw,
+  Trash2, Upload, Palette, Minus, PaintBucket, Pipette,
+  ZoomIn, ZoomOut, Maximize2, Layers3, Command, Check,
 } from 'lucide-react'
 
 const SIZE = 64
@@ -28,19 +28,17 @@ export default function App() {
   const [saved, setSaved] = useState(true)
 
   const setPixels = useCallback((next: string[] | ((old: string[]) => string[])) => {
+    setSaved(false)
     setPixelsState(old => {
       const value = typeof next === 'function' ? next(old) : next
       pixelsRef.current = value
-      setSaved(false)
       return value
     })
   }, [])
-
   const checkpoint = useCallback(() => {
     undoRef.current = [...undoRef.current.slice(-79), [...pixelsRef.current]]
     redoRef.current = []
   }, [])
-
   const undo = useCallback(() => {
     if (!undoRef.current.length) return
     redoRef.current = [...redoRef.current, [...pixelsRef.current]]
@@ -53,13 +51,10 @@ export default function App() {
   }, [setPixels])
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
+    const canvas = canvasRef.current, ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
     ctx.clearRect(0, 0, SIZE, SIZE)
-    pixels.forEach((fill, i) => {
-      if (fill) { ctx.fillStyle = fill; ctx.fillRect(i % SIZE, Math.floor(i / SIZE), 1, 1) }
-    })
+    pixels.forEach((fill, i) => { if (fill) { ctx.fillStyle = fill; ctx.fillRect(i % SIZE, Math.floor(i / SIZE), 1, 1) } })
   }, [pixels])
 
   useEffect(() => {
@@ -112,25 +107,16 @@ export default function App() {
       }
       setPixels(next); return
     }
-    setPixels(old => {
-      const next = [...old]
-      next[index] = tool === 'eraser' ? '' : color
-      return next
-    })
+    setPixels(old => { const next = [...old]; next[index] = tool === 'eraser' ? '' : color; return next })
   }
   const onPointerDown = (e: PointerEvent<HTMLCanvasElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId)
     const index = getIndex(e)
     if (tool === 'eyedropper' || tool === 'fill') { applyAt(index); return }
-    checkpoint()
-    drawingRef.current = true
-    startRef.current = index
+    checkpoint(); drawingRef.current = true; startRef.current = index
     if (tool !== 'line') applyAt(index)
   }
-  const onPointerMove = (e: PointerEvent<HTMLCanvasElement>) => {
-    if (!drawingRef.current || tool === 'line') return
-    applyAt(getIndex(e))
-  }
+  const onPointerMove = (e: PointerEvent<HTMLCanvasElement>) => { if (drawingRef.current && tool !== 'line') applyAt(getIndex(e)) }
   const onPointerUp = (e: PointerEvent<HTMLCanvasElement>) => {
     if (!drawingRef.current) return
     if (tool === 'line' && startRef.current !== null) {
@@ -178,8 +164,8 @@ export default function App() {
   return <div className="app-shell">
     <header className="topbar">
       <a className="brand" href="#" aria-label="Pixcape home"><span className="brand-mark"><span /></span><span>pixcape<span className="brand-dot">.</span></span><span className="brand-product">STUDIO</span></a>
-      <div className="topbar-center"><span className="workspace-label">WORKSPACE</span><span className="crumb">My projects</span><span className="crumb-sep">/</span><span className="crumb current">{projectName || 'Untitled'}</span></div>
-      <div className="topbar-right"><span className="save-state"><span className={'status-dot ' + (!saved ? 'unsaved' : '')} />{saved ? 'Saved locally' : 'Unsaved changes'}</span><button className="export-btn" onClick={exportPng}><Download size={15} /> Export PNG</button></div>
+      <div className="topbar-center"><span className="workspace-label">WORKSPACE</span><span className="crumb">My projects</span><span className="crumb-sep">/</span><span className="crumb current">{projectName}</span></div>
+      <div className="topbar-right"><span className="save-state"><span className={'status-dot '+(!saved?'unsaved':'')}/>{saved?'Saved locally':'Unsaved changes'}</span><button className="export-btn" onClick={exportPng}><Download size={15}/> Export PNG</button></div>
     </header>
     <main>
       <section className="document-bar"><div><div className="eyebrow">PIXEL ART EDITOR <span className="eyebrow-divider">/</span> 2D WORKSPACE</div><input className="document-name" aria-label="Project filename" value={projectName} onChange={e=>setProjectName(e.target.value)} spellCheck={false}/><span className="document-subtitle">Transparent canvas · 64 × 64 pixels</span></div><div className="doc-actions"><button title="Undo (Ctrl+Z)" disabled={!undoRef.current.length} onClick={undo}><RotateCcw size={16}/></button><button title="Redo (Ctrl+Y)" disabled={!redoRef.current.length} onClick={redo}><RotateCw size={16}/></button><span className="action-divider"/><button title="Clear canvas" onClick={clearCanvas}><Trash2 size={16}/></button></div></section>
@@ -198,7 +184,7 @@ export default function App() {
           <div className="panel-separator"/>
           <div className="panel-heading"><span>IMPORT IMAGE</span><span className="panel-index">04</span></div>
           <label className="scale-label" htmlFor="scale">Image scale <span>{Math.round(importScale*100)}%</span></label>
-          <input id="scale" className="scale-slider" type="range" min=".5" max="2" step=".25" value={importScale} onChange={e=>setImportScale(Number(e.target.value))}/>
+          <input id="scale" className="scale-slider" type="range" min=".5" max="2" step=".25" value={importScale} onChange={e=>setImportScale(Number(e.target.value)}/>
           <button className="import-btn" onClick={()=>inputRef.current?.click()}><Upload size={15}/> Import image</button>
           <input ref={inputRef} type="file" accept="image/*" hidden onChange={e=>{importImage(e.target.files?.[0]);e.currentTarget.value=''}}/>
           <p className="hint">Images are centered and resized to fit the canvas.</p>
@@ -210,7 +196,7 @@ export default function App() {
             <div className="canvas-footer"><span><span className="keyboard-dot"/>{toolList.find(t=>t.id===tool)?.label} tool active</span><span>RGBA · TRANSPARENT BACKGROUND</span><span>{pixels.filter(Boolean).length.toLocaleString()} / 4,096 PIXELS</span></div>
           </div>
           <div className="bottom-row"><div className="tip-card"><span className="tip-icon"><Command size={16}/></span><div><strong>Fast workflow</strong><p><kbd>B</kbd> Pencil <kbd>E</kbd> Eraser <kbd>G</kbd> Fill <kbd>I</kbd> Pick color <kbd>H</kbd> Grid · Ctrl/⌘ Z Undo</p></div></div><button className="reset-btn" onClick={()=>setZoom(100)}><Maximize2 size={14}/> Fit canvas</button></div>
-          <div className="layer-panel"><div className="layer-heading"><span><Layers3 size={15}/> LAYERS</span><span className="layer-count">1 layer</span></div><div className="layer-row"><span className="layer-thumb"><Grid2X2 size={15}/></span><span className="layer-name">Layer 1 <small>64 × 64 px</small></span><span className="layer-visible"><Check size={14}/></span></div><p className="layer-note">Single-layer editing is active. Multi-layer support can be added without changing your export format.</p></div>
+          <div className="layer-panel"><div className="layer-heading"><span><Layers3 size={15}/> LAYERS</span><span className="layer-count">1 layer</span></div><div className="layer-row"><span className="layer-thumb"><Grid2X2 size={15}/></span><span className="layer-name">Layer 1 <small>64 × 64 px</small></span><span className="layer-visible"><Check size={14}/></span></div><p className="layer-note">Single-layer editing is active. Multi-layer support is not yet implemented.</p></div>
         </section>
       </section>
       <footer><span>PIX CAPE STUDIO <b>© 2026</b></span><span>64 × 64 · PIXEL-PERFECT BY DESIGN</span></footer>
