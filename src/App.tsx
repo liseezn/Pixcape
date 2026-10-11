@@ -3,7 +3,7 @@ import ThreeCapePreview from './ThreeCapePreview'
 import {
   Download, Eraser, Paintbrush, RotateCcw, RotateCw, Upload, PaintBucket, Pipette,
   ZoomIn, ZoomOut, Maximize2, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Minus, Square, Circle, Grid2X2, Save, FileImage, Copy,
+  Minus, Square, Circle, Grid2X2, Save, FileImage, Copy, Sparkles,
 } from 'lucide-react'
 
 const SIZE = 64
@@ -15,6 +15,75 @@ const COLORS = ['#111318', '#ffffff', '#ff6b6b', '#ff9f43', '#feca57', '#1dd1a1'
 let nextLayerId = 2
 const cloneLayers = (layers: Layer[]): Layer[] => layers.map(layer => ({ ...layer, pixels: [...layer.pixels] }))
 const firstLayer = (): Layer => ({ id: 1, name: '绘制图层 1', pixels: emptyPixels(), visible: true, opacity: 100 })
+
+type AssetCategory = '披肩' | '帽子' | '上衣' | '裤子' | '鞋子'
+type PresetAsset = { id: string; category: AssetCategory; name: string; description: string; color: string; accent: string; style: 'solid' | 'stripe' | 'trim' }
+const ASSET_CATEGORIES: AssetCategory[] = ['披肩', '帽子', '上衣', '裤子', '鞋子']
+const PRESET_ASSETS: PresetAsset[] = [
+  { id: 'cape-midnight', category: '披肩', name: '夜幕披肩', description: '深蓝 · 银边', color: '#203b70', accent: '#8fb5ff', style: 'trim' },
+  { id: 'cape-ember', category: '披肩', name: '熔岩披肩', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
+  { id: 'cape-forest', category: '披肩', name: '森林短披', description: '苔绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
+  { id: 'hat-wizard', category: '帽子', name: '星术师帽', description: '紫色 · 星点', color: '#563a8c', accent: '#f4d77a', style: 'stripe' },
+  { id: 'hat-hood', category: '帽子', name: '旅行兜帽', description: '石墨灰 · 浅边', color: '#475569', accent: '#cbd5e1', style: 'trim' },
+  { id: 'hat-crown', category: '帽子', name: '像素王冠', description: '金色 · 宝石蓝', color: '#d7a928', accent: '#60a5fa', style: 'trim' },
+  { id: 'shirt-adventurer', category: '上衣', name: '冒险者外套', description: '海军蓝 · 浅蓝饰边', color: '#315a8c', accent: '#8ecbff', style: 'trim' },
+  { id: 'shirt-hoodie', category: '上衣', name: '街头连帽衫', description: '炭黑 · 亮紫', color: '#343447', accent: '#b38cff', style: 'stripe' },
+  { id: 'shirt-forest', category: '上衣', name: '森林旅装', description: '苔绿 · 棕色腰带', color: '#54734a', accent: '#a87543', style: 'trim' },
+  { id: 'pants-denim', category: '裤子', name: '像素牛仔裤', description: '靛蓝 · 浅蓝缝线', color: '#345c9c', accent: '#91bfff', style: 'stripe' },
+  { id: 'pants-dark', category: '裤子', name: '暗影长裤', description: '深灰 · 银色饰线', color: '#343b49', accent: '#aebbd0', style: 'trim' },
+  { id: 'pants-forest', category: '裤子', name: '探险工装裤', description: '橄榄绿 · 棕色口袋', color: '#687343', accent: '#b58a59', style: 'trim' },
+  { id: 'shoes-boots', category: '鞋子', name: '远行靴', description: '棕色 · 深色鞋底', color: '#80583c', accent: '#382d2a', style: 'trim' },
+  { id: 'shoes-sneaker', category: '鞋子', name: '街头运动鞋', description: '白色 · 蓝色鞋带', color: '#e4e8f0', accent: '#4e7dff', style: 'stripe' },
+  { id: 'shoes-neon', category: '鞋子', name: '霓虹跑鞋', description: '黑色 · 荧光绿', color: '#202936', accent: '#a3e635', style: 'trim' },
+]
+function makePresetPixels(asset: PresetAsset) {
+  const pixels = emptyPixels()
+  const rect = (x: number, y: number, w: number, h: number, fill: string) => {
+    for (let py = Math.max(0, y); py < Math.min(64, y + h); py++)
+      for (let px = Math.max(0, x); px < Math.min(64, x + w); px++)
+        pixels[py * 64 + px] = fill
+  }
+  const detail = (x: number, y: number, w: number, h: number) => {
+    if (asset.style === 'stripe') {
+      for (let py = y; py < y + h; py += 3) rect(x, py, w, 1, asset.accent)
+    } else if (asset.style === 'trim') {
+      rect(x, y, w, 1, asset.accent); rect(x, y + h - 1, w, 1, asset.accent)
+      rect(x, y, 1, h, asset.accent); rect(x + w - 1, y, 1, h, asset.accent)
+    }
+  }
+  if (asset.category === '披肩') {
+    rect(32, 36, 8, 12, asset.color); detail(32, 36, 8, 12)
+    rect(44, 36, 4, 4, asset.color); rect(48, 36, 4, 4, asset.color)
+    rect(44, 36, 4, 1, asset.accent); rect(48, 36, 4, 1, asset.accent)
+    rect(34, 38, 4, 1, asset.accent); rect(35, 39, 2, 5, asset.color)
+  } else if (asset.category === '帽子') {
+    rect(40, 0, 8, 8, asset.color); detail(40, 0, 8, 8)
+    rect(32, 8, 8, 8, asset.color); rect(48, 8, 8, 8, asset.color); rect(40, 8, 8, 8, asset.color)
+    if (asset.id === 'hat-crown') {
+      rect(40, 0, 2, 3, asset.accent); rect(43, 0, 2, 3, asset.accent); rect(46, 0, 2, 3, asset.accent)
+    } else if (asset.id === 'hat-wizard') {
+      rect(42, 2, 1, 1, asset.accent); rect(45, 5, 1, 1, asset.accent)
+    }
+  } else if (asset.category === '上衣') {
+    rect(20, 36, 8, 12, asset.color); detail(20, 36, 8, 12)
+    rect(32, 36, 8, 12, asset.color); detail(32, 36, 8, 12)
+    rect(44, 36, 4, 12, asset.color); rect(48, 36, 4, 12, asset.color)
+    rect(44, 36, 1, 12, asset.accent); rect(48, 36, 1, 12, asset.accent)
+    rect(23, 36, 2, 7, asset.accent)
+    if (asset.id === 'shirt-forest') rect(20, 44, 8, 2, asset.accent)
+  } else if (asset.category === '裤子') {
+    rect(4, 36, 4, 12, asset.color); rect(8, 36, 4, 12, asset.color)
+    rect(0, 36, 4, 12, asset.color); rect(12, 36, 4, 12, asset.color)
+    rect(0, 36, 1, 12, asset.accent); rect(12, 36, 1, 12, asset.accent)
+    rect(4, 36, 4, 1, asset.accent); rect(8, 36, 4, 1, asset.accent)
+  } else {
+    rect(0, 44, 4, 4, asset.color); rect(4, 44, 4, 4, asset.color)
+    rect(8, 44, 4, 4, asset.color); rect(12, 44, 4, 4, asset.color)
+    rect(0, 47, 4, 1, asset.accent); rect(4, 47, 4, 1, asset.accent)
+    rect(8, 47, 4, 1, asset.accent); rect(12, 47, 4, 1, asset.accent)
+  }
+  return pixels
+}
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -28,6 +97,7 @@ export default function App() {
   const [layers, setLayersState] = useState<Layer[]>(layersRef.current)
   const [activeId, setActiveId] = useState(1)
   const [color, setColor] = useState('#54a0ff')
+  const [assetCategory, setAssetCategory] = useState<AssetCategory>('上衣')
   const [tool, setTool] = useState<Tool>('pencil')
   const [showGrid, setShowGrid] = useState(true)
   const [projectName, setProjectName] = useState('我的披风')
@@ -228,6 +298,16 @@ export default function App() {
     const layer: Layer = { id, name: duplicate ? (source?.name ?? '图层') + ' 副本' : '新建图层', pixels: duplicate && source ? [...source.pixels] : emptyPixels(), visible: true, opacity: 100 }
     setLayers(old => [...old, layer]); setActiveId(id); setStatus('已添加图层')
   }
+  const applyPreset = (asset: PresetAsset) => {
+    const id = Math.max(nextLayerId, ...layersRef.current.map(layer => layer.id + 1))
+    nextLayerId = id + 1
+    snapshot()
+    const layer: Layer = { id, name: asset.name, pixels: makePresetPixels(asset), visible: true, opacity: 100 }
+    setLayers(old => [...old, layer])
+    setActiveId(id)
+    setColor(asset.color)
+    setStatus('已添加素材：' + asset.name)
+  }
   const deleteLayer = (id: number) => {
     if (layers.length <= 1) { setStatus('至少保留一个图层'); return }
     snapshot()
@@ -304,6 +384,11 @@ export default function App() {
       <aside className="left-sidebar">
         <section className="panel tool-panel"><div className="section-title">工具 <span>TOOLS</span></div>
           <div className="tool-list">{toolList.map(({ id, label, key, icon: Icon }) => <button key={id} title={label + ' (' + key + ')'} aria-pressed={tool === id} className={'tool-button ' + (tool === id ? 'selected' : '')} onClick={() => setTool(id)}><Icon size={17}/><span>{label}</span><kbd>{key}</kbd></button>)}</div>
+        </section>
+        <section className="panel assets-panel"><div className="section-title"><span className="assets-title"><Sparkles size={14}/> 预制素材库</span><span>ASSETS</span></div>
+          <div className="asset-categories">{ASSET_CATEGORIES.map(category => <button key={category} className={assetCategory === category ? 'active' : ''} onClick={() => setAssetCategory(category)}>{category}</button>)}</div>
+          <div className="asset-list">{PRESET_ASSETS.filter(asset => asset.category === assetCategory).map(asset => <button key={asset.id} className="asset-card" onClick={() => applyPreset(asset)} title={'添加到新图层：' + asset.name}><span className="asset-swatch" style={{ background: 'linear-gradient(135deg,' + asset.color + ' 0 62%,' + asset.accent + ' 62% 76%,' + asset.color + ' 76%)' }}><i/></span><span className="asset-copy"><strong>{asset.name}</strong><small>{asset.description}</small></span><Plus size={14}/></button>)}</div>
+          <p className="asset-hint">点击素材即可叠加到角色贴图的新图层，可继续修改颜色与像素。</p>
         </section>
         <section className="panel color-panel"><div className="section-title">颜色 <span>COLOR</span></div><div className="color-current"><input type="color" aria-label="选择颜色" value={color} onChange={e => setColor(e.target.value)}/><div><strong>{color.toUpperCase()}</strong><small>前景色</small></div></div><div className="swatches">{COLORS.map(c => <button key={c} title={c} aria-label={'选择颜色 ' + c} className={color === c ? 'active' : ''} style={{ background: c }} onClick={() => setColor(c)}/>)}</div><label className="range-label">画笔大小 <strong>{brushSize} px</strong></label><input className="range" type="range" min="1" max="12" value={brushSize} onChange={e => setBrushSize(Number(e.target.value))}/></section>
       </aside>
