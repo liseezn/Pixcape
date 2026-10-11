@@ -159,15 +159,19 @@ export default function App() {
     const canvas = canvasRef.current, ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
     ctx.clearRect(0, 0, SIZE, SIZE)
+    const selected = layers.find(layer => layer.id === activeId)
+    const editingCape = selected?.name.startsWith('披风 · ') ?? false
     for (const layer of layers) {
       if (!layer.visible) continue
+      if (editingCape && layer.id !== activeId) continue
+      if (!editingCape && layer.name.startsWith('披风 · ')) continue
       ctx.globalAlpha = layer.opacity / 100
       layer.pixels.forEach((fill, i) => {
         if (fill) { ctx.fillStyle = fill; ctx.fillRect(i % SIZE, Math.floor(i / SIZE), 1, 1) }
       })
     }
     ctx.globalAlpha = 1
-  }, [layers])
+  }, [layers, activeId])
 
   useEffect(() => {
     try {
