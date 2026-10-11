@@ -230,7 +230,8 @@ export default function App() {
   }
   const addLayer = (duplicate = false) => {
     const source = layers.find(layer => layer.id === activeId)
-    const id = nextLayerId++
+    const id = Math.max(nextLayerId, ...layers.map(layer => layer.id + 1))
+    nextLayerId = id + 1
     snapshot()
     const layer: Layer = { id, name: duplicate ? (source?.name ?? '图层') + ' 副本' : '新建图层', pixels: duplicate && source ? [...source.pixels] : emptyPixels(), visible: true, opacity: 100 }
     setLayers(old => [...old, layer]); setActiveId(id); setStatus('已添加图层')
