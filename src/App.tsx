@@ -16,13 +16,16 @@ let nextLayerId = 2
 const cloneLayers = (layers: Layer[]): Layer[] => layers.map(layer => ({ ...layer, pixels: [...layer.pixels] }))
 const firstLayer = (): Layer => ({ id: 1, name: '绘制图层 1', pixels: emptyPixels(), visible: true, opacity: 100 })
 
-type AssetCategory = '披肩' | '帽子' | '上衣' | '裤子' | '鞋子'
+type AssetCategory = '披肩' | '披风' | '帽子' | '上衣' | '裤子' | '鞋子'
 type PresetAsset = { id: string; category: AssetCategory; name: string; description: string; color: string; accent: string; style: 'solid' | 'stripe' | 'trim' }
-const ASSET_CATEGORIES: AssetCategory[] = ['披肩', '帽子', '上衣', '裤子', '鞋子']
+const ASSET_CATEGORIES: AssetCategory[] = ['披肩', '披风', '帽子', '上衣', '裤子', '鞋子']
 const PRESET_ASSETS: PresetAsset[] = [
   { id: 'cape-midnight', category: '披肩', name: '夜幕披肩', description: '深蓝 · 银边', color: '#203b70', accent: '#8fb5ff', style: 'trim' },
   { id: 'cape-ember', category: '披肩', name: '熔岩披肩', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
   { id: 'cape-forest', category: '披肩', name: '森林短披', description: '苔绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
+  { id: 'cape-classic', category: '披风', name: '经典披风', description: '深蓝 · 银色边缘', color: '#203b70', accent: '#8fb5ff', style: 'trim' },
+  { id: 'cape-ember', category: '披风', name: '熔火披风', description: '炭黑 · 熔岩红', color: '#292b38', accent: '#ff6b4a', style: 'stripe' },
+  { id: 'cape-forest', category: '披风', name: '林地披风', description: '森林绿 · 金边', color: '#315b45', accent: '#e5c46a', style: 'trim' },
   { id: 'hat-wizard', category: '帽子', name: '星术师帽', description: '紫色 · 星点', color: '#563a8c', accent: '#f4d77a', style: 'stripe' },
   { id: 'hat-hood', category: '帽子', name: '旅行兜帽', description: '石墨灰 · 浅边', color: '#475569', accent: '#cbd5e1', style: 'trim' },
   { id: 'hat-crown', category: '帽子', name: '像素王冠', description: '金色 · 宝石蓝', color: '#d7a928', accent: '#60a5fa', style: 'trim' },
@@ -100,7 +103,7 @@ export default function App() {
   const [assetCategory, setAssetCategory] = useState<AssetCategory>('上衣')
   const [tool, setTool] = useState<Tool>('pencil')
   const [showGrid, setShowGrid] = useState(true)
-  const [projectName, setProjectName] = useState('我的披风')
+  const [projectName, setProjectName] = useState('我的皮肤')
   const [zoom, setZoom] = useState(700)
   const [brushSize, setBrushSize] = useState(1)
   const [saved, setSaved] = useState(false)
@@ -302,7 +305,7 @@ export default function App() {
     const id = Math.max(nextLayerId, ...layersRef.current.map(layer => layer.id + 1))
     nextLayerId = id + 1
     snapshot()
-    const layer: Layer = { id, name: asset.name, pixels: makePresetPixels(asset), visible: true, opacity: 100 }
+    const layer: Layer = { id, name: (asset.category === '披风' ? '披风 · ' : asset.category === '披肩' ? '披肩 · ' : '') + asset.name, pixels: makePresetPixels(asset), visible: true, opacity: 100 }
     setLayers(old => [...old, layer])
     setActiveId(id)
     setColor(asset.color)
@@ -378,7 +381,7 @@ export default function App() {
     <header className="topbar">
       <a className="brand" href="#" onClick={e => e.preventDefault()}><span className="brand-mark">✦</span><span>Pixcape</span><small>STUDIO</small></a>
       <nav className="main-menu"><button onClick={saveLocal}>文件</button><button onClick={undo}>编辑</button><button onClick={() => setShowGrid(v => !v)}>视图</button><button onClick={() => setStatus('快捷键：B 画笔 / E 橡皮 / G 填充 / Ctrl+Z 撤销')}>帮助</button></nav>
-      <div className="top-actions"><div className="mode-switch" role="group" aria-label="编辑器模式"><button className={editorMode === 'simple' ? 'active' : ''} aria-pressed={editorMode === 'simple'} onClick={() => setEditorMode('simple')}>简单模式</button><button className={editorMode === 'professional' ? 'active' : ''} aria-pressed={editorMode === 'professional'} onClick={() => setEditorMode('professional')}>专业模式</button></div><span className={'save-state ' + (saved ? 'is-saved' : '')}><span />{saved ? '已保存' : '未保存'}</span><button className="primary-btn" onClick={exportPng}><Download size={15}/> 导出 PNG</button></div>
+      <div className="top-actions"><div className="mode-switch" role="group" aria-label="编辑器模式"><button className={editorMode === 'simple' ? 'active' : ''} aria-pressed={editorMode === 'simple'} onClick={() => setEditorMode('simple')}>快速穿搭</button><button className={editorMode === 'professional' ? 'active' : ''} aria-pressed={editorMode === 'professional'} onClick={() => setEditorMode('professional')}>完整编辑器</button></div><span className={'save-state ' + (saved ? 'is-saved' : '')}><span />{saved ? '已保存' : '未保存'}</span><button className="primary-btn" onClick={exportPng}><Download size={15}/> 导出 PNG</button></div>
     </header>
     <main className="editor-layout">
       <aside className="left-sidebar">
@@ -399,11 +402,11 @@ export default function App() {
         <div className="status-bar"><span><i className="live-dot"/>{status}</span><span>{pixelCount.toLocaleString()} 像素 · 当前图层：{activeLayer?.name ?? '图层'}</span><span>Ctrl + Z 撤销</span></div>
       </section>
       <aside className="right-sidebar">
-        <section className="panel preview-panel"><div className="section-title">3D 预览 <span>PREVIEW</span></div><div className="preview-tabs"><button className={previewSide === 'front' ? 'active' : ''} onClick={() => setPreviewSide('front')}>正面</button><button className={previewSide === 'back' ? 'active' : ''} onClick={() => setPreviewSide('back')}>背面</button><span className="preview-tab-divider" /><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex</button><button title="重置视角" aria-label="重置 3D 视角" onClick={() => setPreviewRotation(0)}><RotateCcw size={13}/></button></div><div className="preview-note">{editorMode === 'simple' ? '拖动旋转 · 在左侧选颜色后直接绘制' : 'Three.js 实时预览 · 皮肤与披风纹理同步'}</div><div className="model-stage three-model-stage"><ThreeCapePreview layers={layers} side={previewSide} rotation={previewRotation} modelType={modelType} onRotationChange={setPreviewRotation}/><p>拖动模型可旋转视角</p><small>实时 3D · 披风纹理同步</small></div></section>
+        <section className="panel preview-panel"><div className="section-title">3D 预览 <span>PREVIEW</span></div><div className="preview-tabs"><button className={previewSide === 'front' ? 'active' : ''} onClick={() => setPreviewSide('front')}>正面</button><button className={previewSide === 'back' ? 'active' : ''} onClick={() => setPreviewSide('back')}>背面</button><span className="preview-tab-divider" /><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex</button><button title="重置视角" aria-label="重置 3D 视角" onClick={() => setPreviewRotation(0)}><RotateCcw size={13}/></button></div><div className="preview-note">{editorMode === 'simple' ? '快速穿搭：选择服饰预设，图层可单独隐藏' : '完整编辑器：皮肤 UV 与独立披风预览'}</div><div className="model-stage three-model-stage"><ThreeCapePreview layers={layers} side={previewSide} rotation={previewRotation} modelType={modelType} onRotationChange={setPreviewRotation}/><p>拖动模型可旋转视角</p><small>披肩穿在肩部 · 披风独立位于背后</small></div></section>
         <section className="panel layers-panel"><div className="section-title">图层 <span>{layers.length} LAYERS</span></div><div className="layer-actions"><button title="新建图层" onClick={() => addLayer()}><Plus size={16}/></button><button title="复制图层" onClick={() => addLayer(true)}><Copy size={15}/></button><button title="删除图层" onClick={() => deleteLayer(activeId)}><Trash2 size={15}/></button></div><div className="layer-list">{[...layers].reverse().map(layer => <div key={layer.id} className={'layer-row ' + (activeId === layer.id ? 'active' : '')} onClick={() => setActiveId(layer.id)}><button className="visibility-btn" title={layer.visible ? '隐藏图层' : '显示图层'} onClick={e => { e.stopPropagation(); setLayers(old => old.map(item => item.id === layer.id ? { ...item, visible: !item.visible } : item)) }}>{layer.visible ? <Eye size={15}/> : <EyeOff size={15}/>}</button><div className="layer-thumb"><canvas width="32" height="32" ref={node => { if (!node) return; const ctx = node.getContext('2d'); if (!ctx) return; ctx.clearRect(0, 0, 32, 32); layer.pixels.forEach((fill, i) => { if (fill) { ctx.fillStyle = fill; ctx.fillRect((i % 64) / 2, Math.floor(i / 64) / 2, .5, .5) } }) }}/></div><div className="layer-info"><span>{layer.name}</span><small>{layer.pixels.filter(Boolean).length} px · {layer.opacity}%</small></div><div className="layer-order"><button title="上移图层" onClick={e => { e.stopPropagation(); moveLayer(layer.id, 1) }}><ChevronUp size={13}/></button><button title="下移图层" onClick={e => { e.stopPropagation(); moveLayer(layer.id, -1) }}><ChevronDown size={13}/></button></div></div>)}</div>{activeLayer && <><label className="range-label">图层不透明度 <strong>{activeLayer.opacity}%</strong></label><input className="range" type="range" min="0" max="100" value={activeLayer.opacity} onChange={e => setLayers(old => old.map(layer => layer.id === activeId ? { ...layer, opacity: Number(e.target.value) } : layer))}/><div className="layer-footnote">图层独立编辑 · 可隐藏、复制、排序</div></>}</section>
-        <section className="panel export-panel"><div className="section-title">导出 <span>EXPORT</span></div><div className="export-meta"><span>画布尺寸</span><strong>64 × 64 px</strong></div><button className="export-wide" onClick={exportPng}><Download size={15}/> 导出透明 PNG</button><button className="save-wide" onClick={saveLocal}><Save size={15}/> 保存到本机</button></section>
+        <section className="panel export-panel"><div className="section-title">导出 <span>EXPORT</span></div><div className="export-meta"><span>画布尺寸</span><strong>64 × 64 px</strong></div><button className="export-wide" onClick={exportPng}><Download size={15}/> 导出皮肤 PNG</button><button className="save-wide" onClick={exportCapePng}><Download size={14}/> 单独导出披风 PNG</button><button className="save-wide" onClick={saveLocal}><Save size={15}/> 保存到本机</button></section>
       </aside>
     </main>
-    <footer className="app-footer"><span>Pixcape · Minecraft 披风 / 皮肤编辑器</span><span>{saved ? '本地草稿已保存' : '有未保存的修改'}</span></footer>
+    <footer className="app-footer"><span>Pixcape · Minecraft 皮肤与服饰编辑器</span><span>{saved ? '本地草稿已保存' : '有未保存的修改'}</span></footer>
   </div>
 }
