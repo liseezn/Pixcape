@@ -155,7 +155,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     const animate = () => {
       frame = requestAnimationFrame(animate)
       model.rotation.y = (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      // Alex's slimmer arms are rebuilt by selecting the model option on the component.
+      // Body proportions and texture regions follow the selected classic model layout.
       renderer.render(scene, camera)
     }
     animate()
