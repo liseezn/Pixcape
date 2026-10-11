@@ -60,9 +60,11 @@ function makePresetPixels(asset: PresetAsset) {
     rect(16, 36, 4, 4, asset.color); rect(28, 36, 4, 4, asset.color)
     rect(40, 36, 4, 4, asset.color); rect(44, 36, 4, 4, asset.color)
     rect(48, 36, 4, 4, asset.color); rect(52, 36, 4, 4, asset.color)
+    rect(32, 52, 4, 4, asset.color); rect(36, 52, 4, 4, asset.color)
+    rect(40, 52, 4, 4, asset.color); rect(44, 52, 4, 4, asset.color)
     rect(20, 36, 8, 1, asset.accent); rect(32, 36, 8, 1, asset.accent)
-    rect(40, 36, 16, 1, asset.accent); rect(16, 39, 4, 1, asset.accent)
-    rect(28, 39, 4, 1, asset.accent)
+    rect(40, 36, 16, 1, asset.accent); rect(32, 52, 16, 1, asset.accent)
+    rect(16, 39, 4, 1, asset.accent); rect(28, 39, 4, 1, asset.accent)
   } else if (asset.category === '披风') {
     rect(0, 32, 64, 32, asset.color)
     if (asset.style === 'stripe') {
