@@ -62,3 +62,8 @@
 .three-preview-canvas[data-webgl-unavailable="true"] .webgl-fallback { display: grid; position: absolute; inset: 20px; place-items: center; text-align: center; color: #aab8cb; font-size: 12px; line-height: 1.6; }
 .three-model-stage > p, .three-model-stage > small { z-index: 2; pointer-events: none; }
 @media (max-width: 780px) { .three-model-stage { min-height: 320px; } }
+
+.preview-tab-divider { width: 1px; align-self: stretch; margin: 2px 2px; background: #314158; }
+.preview-tabs button { min-width: 0; padding: 7px 5px; }
+.three-model-stage { min-height: 300px; }
+.three-preview-canvas { z-index: 1; }
