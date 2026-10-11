@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'rea
 import {
   Download, Eraser, Paintbrush, RotateCcw, RotateCw, Upload, PaintBucket, Pipette,
   ZoomIn, ZoomOut, Maximize2, Layers3, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Minus, Square, Circle, Grid2X2, Save, FileImage, Hand, Copy, X,
+  Minus, Square, Circle, Grid2X2, Save, FileImage, Copy,
 } from 'lucide-react'
 
 const SIZE = 64
-type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'line' | 'rectangle' | 'ellipse' | 'pan'
+type Tool = 'pencil' | 'eraser' | 'fill' | 'eyedropper' | 'line' | 'rectangle' | 'ellipse'
 type Layer = { id: number; name: string; pixels: string[]; visible: boolean; opacity: number }
 type Snapshot = { layers: Layer[]; activeId: number }
 const emptyPixels = () => Array<string>(SIZE * SIZE).fill('')
@@ -104,7 +104,7 @@ export default function App() {
         localStorage.setItem('pixcape-project-v2', JSON.stringify({ layers: layersRef.current, activeId, projectName }))
         setSaved(true); setStatus('已保存到本机'); return
       }
-      const shortcuts: Record<string, Tool> = { b: 'pencil', e: 'eraser', g: 'fill', i: 'eyedropper', l: 'line', u: 'rectangle', o: 'ellipse', h: 'pan' }
+      const shortcuts: Record<string, Tool> = { b: 'pencil', e: 'eraser', g: 'fill', i: 'eyedropper', l: 'line', u: 'rectangle', o: 'ellipse' }
       if (shortcuts[key]) setTool(shortcuts[key])
       if (key === '[') setBrushSize(v => Math.max(1, v - 1))
       if (key === ']') setBrushSize(v => Math.min(12, v + 1))
@@ -283,7 +283,7 @@ export default function App() {
     { id: 'pencil', label: '画笔', key: 'B', icon: Paintbrush }, { id: 'eraser', label: '橡皮擦', key: 'E', icon: Eraser },
     { id: 'fill', label: '油漆桶', key: 'G', icon: PaintBucket }, { id: 'eyedropper', label: '吸管', key: 'I', icon: Pipette },
     { id: 'line', label: '直线', key: 'L', icon: Minus }, { id: 'rectangle', label: '矩形', key: 'U', icon: Square },
-    { id: 'ellipse', label: '椭圆', key: 'O', icon: Circle }, { id: 'pan', label: '移动视图', key: 'H', icon: Hand },
+    { id: 'ellipse', label: '椭圆', key: 'O', icon: Circle },
   ]
 
   return <div className="editor-shell">
