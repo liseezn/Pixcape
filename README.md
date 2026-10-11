@@ -1,6 +1,6 @@
 # Pixcape
 
-A lightweight 64×64 pixel-art studio built with React, TypeScript, Vite, and Canvas 2D.
+A Minecraft skin quick-customization studio built with React, TypeScript, Vite, Canvas 2D, and Three.js. The goal is fast assembly from ready-made clothing/accessory presets, with pixel-level editing available when needed.
 
 ## Features
 - 64×64 pixel canvas with pencil and eraser tools
@@ -8,6 +8,9 @@ A lightweight 64×64 pixel-art studio built with React, TypeScript, Vite, and Ca
 - Grid toggle and clear-canvas action
 - Import an image and scale it to the canvas
 - Export transparent PNG
+- Ready-made asset browser for capes/shoulder wraps, hats, shirts, pants, and shoes
+- Presets apply as editable layers, so assets can be recolored, erased, reordered, or combined
+- Live Minecraft character preview with Steve/Alex model selection
 - Responsive layout for desktop and mobile
 
 ## Local development
