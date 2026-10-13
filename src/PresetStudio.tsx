@@ -8,7 +8,14 @@ type Preset = { id: string; label: string; file: string; slimFile: string; kind:
 
 const ASSET_ROOT = 'https://raw.githubusercontent.com/lonelyang/CapeSkinImage/master/examples/img/'
 const BASE_SKIN = ASSET_ROOT + 'stevea.png'
-const CAPES = [\n  { id: 'cape_office.png', label: '眼眸花披风' },\n  { id: 'cape_MCC.png', label: 'MCC 披风' },\n  { id: 'cape_creeper.png', label: '苦力怕披风' },\n  { id: 'cape_tiktok.png', label: 'TikTok 披风' },\n  { id: 'cape_twitch.png', label: 'Twitch 披风' },\n]\nconst PRESETS: Preset[] = [
+const CAPES = [
+  { id: 'cape_office.png', label: '眼眸花披风' },
+  { id: 'cape_MCC.png', label: 'MCC 披风' },
+  { id: 'cape_creeper.png', label: '苦力怕披风' },
+  { id: 'cape_tiktok.png', label: 'TikTok 披风' },
+  { id: 'cape_twitch.png', label: 'Twitch 披风' },
+]
+const PRESETS: Preset[] = [
   { id: 'office-shawl', label: '眼眸花披肩', file: 'office_shawl_default_64.png', slimFile: 'office_shawl_slim_64.png', kind: 'shawl' },
   { id: 'mcc-shawl', label: 'MCC 披肩', file: 'MCC_shawl_default_64.png', slimFile: 'MCC_shawl_slim_64.png', kind: 'shawl' },
   { id: 'creeper-shawl', label: '苦力怕披肩', file: 'creeper_shawl_default_64.png', slimFile: 'creeper_shawl_slim_64.png', kind: 'shawl' },
@@ -49,6 +56,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   const [skinName, setSkinName] = useState('Steve 默认皮肤')
   const [shawlId, setShawlId] = useState('office-shawl')
   const [coatId, setCoatId] = useState('none')
+  const [capeId, setCapeId] = useState('cape_office.png')
   const [modelType, setModelType] = useState<'steve' | 'alex'>('steve')
   const [rotation, setRotation] = useState(-13)
   const [pixels, setPixels] = useState<string[]>(Array(4096).fill(''))
@@ -91,7 +99,24 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     return () => { cancelled = true }
   }, [skinUrl, shawlId, coatId, modelType])
 
-  const exportCape = async () => {\n    try {\n      const image = await loadImage(ASSET_ROOT + capeId)\n      const output = document.createElement('canvas')\n      output.width = image.naturalWidth || 64\n      output.height = image.naturalHeight || 32\n      const context = output.getContext('2d')\n      if (!context) throw new Error('canvas unavailable')\n      context.drawImage(image, 0, 0)\n      const link = document.createElement('a')\n      link.download = capeId\n      link.href = output.toDataURL('image/png')\n      link.click()\n      setStatus('已单独导出披风纹理 PNG')\n    } catch { setError('披风纹理加载失败，暂时无法导出。请检查网络连接。') }\n  }\n\n  const exportPng = () => {
+  const exportCape = async () => {
+    try {
+      const image = await loadImage(ASSET_ROOT + capeId)
+      const output = document.createElement('canvas')
+      output.width = image.naturalWidth || 64
+      output.height = image.naturalHeight || 32
+      const context = output.getContext('2d')
+      if (!context) throw new Error('canvas unavailable')
+      context.drawImage(image, 0, 0)
+      const link = document.createElement('a')
+      link.download = capeId
+      link.href = output.toDataURL('image/png')
+      link.click()
+      setStatus('已单独导出披风纹理 PNG')
+    } catch { setError('披风纹理加载失败，暂时无法导出。请检查网络连接。') }
+  }
+
+  const exportPng = () => {
     const canvas = canvasRef.current
     if (!canvas || !ready) return
     const link = document.createElement('a')
@@ -152,7 +177,14 @@ export default function PresetStudio({ onOpenEditor }: Props) {
             {coats.map(item => <button key={item.id} className={'preset-option ' + (coatId === item.id ? 'chosen' : '')} onClick={() => setCoatId(item.id)}><span className="preset-swatch" style={{ backgroundImage: 'url(' + ASSET_ROOT + item.file + ')' }}/><span>{item.label}</span></button>)}
           </div>
         </section>
-        <section className="preset-section">\n          <div className="preset-section-title">披风 <span>CAPE · 独立纹理</span></div>\n          <div className="preset-options">\n            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}><span className="preset-swatch" style={{ backgroundImage: 'url(' + ASSET_ROOT + item.id + ')' }}/><span>{item.label}</span></button>)}\n          </div>\n          <button className="preset-import" onClick={exportCape}><Download size={15}/> 单独导出披风 PNG</button>\n        </section>\n        <div className="preset-attribution">服装纹理参考与素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。素材作者信息见原项目说明。</div>
+        <section className="preset-section">
+          <div className="preset-section-title">披风 <span>CAPE · 独立纹理</span></div>
+          <div className="preset-options">
+            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}><span className="preset-swatch" style={{ backgroundImage: 'url(' + ASSET_ROOT + item.id + ')' }}/><span>{item.label}</span></button>)}
+          </div>
+          <button className="preset-import" onClick={exportCape}><Download size={15}/> 单独导出披风 PNG</button>
+        </section>
+        <div className="preset-attribution">服装纹理参考与素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。素材作者信息见原项目说明。</div>
       </aside>
       <section className="preset-preview-column">
         <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div></div>
