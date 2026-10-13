@@ -124,7 +124,7 @@ export default function PresetThumbnail({ kind, imageUrl, slimImageUrl, modelTyp
         {renderedImage && <img src={renderedImage} alt="" />}
         {failed && <span className="preset-thumbnail-fallback">预览暂不可用</span>}
       </span>
-      {showAuthor && {showAuthor && <small className="preset-author">作者：lonelyang</small>}}
+      {showAuthor && <small className="preset-author">作者：lonelyang</small>}
     </span>
   )
 }
