@@ -368,3 +368,111 @@
 .preset-option {
   gap: 6px;
 }
+
+
+/* Main workspace: preview and current skin first, with three preset columns below. */
+.preset-workspace-label {
+  color: #9aabc4;
+  font-size: 12px;
+  letter-spacing: .02em;
+}
+.preset-export-skin,
+.preset-open-blockbench {
+  width: 100%;
+  min-height: 39px;
+  margin-top: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #3d65a6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #e4edff;
+  background: linear-gradient(135deg, #315fa8, #4c51a0);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.preset-export-skin:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.preset-open-blockbench {
+  border-color: #34445b;
+  color: #c6d3e7;
+  background: #172231;
+}
+@media (min-width: 1181px) {
+  .preset-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 285px);
+    align-items: stretch;
+  }
+  .preset-preview-column {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .preset-properties {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .preset-properties .preset-heading,
+  .preset-properties .preset-skin-card,
+  .preset-properties .preset-import,
+  .preset-properties .preset-export-skin,
+  .preset-properties .preset-open-blockbench,
+  .preset-properties .preset-tip {
+    grid-column: auto;
+  }
+  .preset-library {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    column-gap: 20px;
+  }
+  .preset-library > .preset-heading,
+  .preset-library > .preset-description,
+  .preset-library > .preset-attribution {
+    grid-column: 1 / -1;
+  }
+  .preset-library > .preset-description {
+    margin-bottom: 2px;
+  }
+  .preset-library > .preset-section {
+    margin-top: 10px;
+    min-width: 0;
+  }
+  .preset-library .preset-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1180px) and (min-width: 761px) {
+  .preset-library {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 14px;
+    align-items: start;
+  }
+  .preset-library > .preset-heading,
+  .preset-library > .preset-description,
+  .preset-library > .preset-attribution {
+    grid-column: 1 / -1;
+  }
+  .preset-library > .preset-section {
+    margin-top: 8px;
+    min-width: 0;
+  }
+}
+@media (max-width: 760px) {
+  .preset-workspace-label { display: none; }
+  .preset-top-actions { display: none; }
+  .preset-library { display: block; }
+  .preset-library > .preset-section { margin-top: 20px; }
+  .preset-library .preset-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
