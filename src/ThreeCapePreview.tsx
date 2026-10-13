@@ -8,8 +8,12 @@ type Props = {
   layers: LayerData[]
   side: 'front' | 'back'
   rotation: number
+  tilt: number
+  zoom: number
   modelType: ModelType
   onRotationChange: (value: number) => void
+  onTiltChange: (value: number) => void
+  onZoomChange: (value: number) => void
   capeTextureUrl?: string
   capeVisible?: boolean
   elytraVisible?: boolean
@@ -57,8 +61,12 @@ export default function ThreeCapePreview({
   layers,
   side,
   rotation,
+  tilt,
+  zoom,
   modelType,
   onRotationChange,
+  onTiltChange,
+  onZoomChange,
   capeTextureUrl,
   capeVisible = true,
   elytraVisible = false,
@@ -68,14 +76,22 @@ export default function ThreeCapePreview({
   const viewerRef = useRef<SkinViewer | null>(null)
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
+  const tiltRef = useRef(tilt)
+  const zoomRef = useRef(zoom)
   const onRotationChangeRef = useRef(onRotationChange)
+  const onTiltChangeRef = useRef(onTiltChange)
+  const onZoomChangeRef = useRef(onZoomChange)
   const capeVisibleRef = useRef(capeVisible)
   const elytraVisibleRef = useRef(elytraVisible)
   const capeLoadIdRef = useRef(0)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
+  useEffect(() => { tiltRef.current = tilt }, [tilt])
+  useEffect(() => { zoomRef.current = zoom }, [zoom])
   useEffect(() => { onRotationChangeRef.current = onRotationChange }, [onRotationChange])
+  useEffect(() => { onTiltChangeRef.current = onTiltChange }, [onTiltChange])
+  useEffect(() => { onZoomChangeRef.current = onZoomChange }, [onZoomChange])
   useEffect(() => { capeVisibleRef.current = capeVisible }, [capeVisible])
   useEffect(() => { elytraVisibleRef.current = elytraVisible }, [elytraVisible])
 
@@ -111,27 +127,41 @@ export default function ThreeCapePreview({
     resize()
 
     const applyRotation = () => {
-      viewer.playerObject.rotation.y =
-        (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
+      viewer.playerObject.rotation.y = (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
+      viewer.playerObject.rotation.x = tiltRef.current * Math.PI / 180
+      viewer.camera.zoom = zoomRef.current
+      viewer.camera.updateProjectionMatrix()
     }
     applyRotation()
 
-    let drag: { x: number; rotation: number } | null = null
+    let drag: { x: number; y: number; rotation: number; tilt: number } | null = null
     const canvas = viewer.canvas
     const down = (event: PointerEvent) => {
       if (event.button !== 0) return
-      drag = { x: event.clientX, rotation: rotationRef.current }
+      drag = { x: event.clientX, y: event.clientY, rotation: rotationRef.current, tilt: tiltRef.current }
       canvas.setPointerCapture(event.pointerId)
     }
     const move = (event: PointerEvent) => {
       if (!drag) return
       const next = drag.rotation + (event.clientX - drag.x) * 0.8
+      const nextTilt = Math.max(-35, Math.min(35, drag.tilt + (event.clientY - drag.y) * 0.45))
       rotationRef.current = next
-      viewer.playerObject.rotation.y =
-        (next + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
+      tiltRef.current = nextTilt
+      viewer.playerObject.rotation.y = (next + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
+      viewer.playerObject.rotation.x = nextTilt * Math.PI / 180
       onRotationChangeRef.current(next)
+      onTiltChangeRef.current(nextTilt)
     }
     const up = () => { drag = null }
+    const wheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const next = Math.max(0.65, Math.min(1.8, zoomRef.current - event.deltaY * 0.0015))
+      zoomRef.current = next
+      viewer.camera.zoom = next
+      viewer.camera.updateProjectionMatrix()
+      onZoomChangeRef.current(next)
+    }
+    canvas.addEventListener('wheel', wheel, { passive: false })
     canvas.addEventListener('pointerdown', down)
     canvas.addEventListener('pointermove', move)
     canvas.addEventListener('pointerup', up)
@@ -139,6 +169,7 @@ export default function ThreeCapePreview({
 
     return () => {
       observer.disconnect()
+      canvas.removeEventListener('wheel', wheel)
       canvas.removeEventListener('pointerdown', down)
       canvas.removeEventListener('pointermove', move)
       canvas.removeEventListener('pointerup', up)
@@ -192,9 +223,16 @@ export default function ThreeCapePreview({
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer) return
-    viewer.playerObject.rotation.y =
-      (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
-  }, [rotation, side])
+    viewer.playerObject.rotation.y = (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
+    viewer.playerObject.rotation.x = tilt * Math.PI / 180
+  }, [rotation, side, tilt])
+
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer) return
+    viewer.camera.zoom = zoom
+    viewer.camera.updateProjectionMatrix()
+  }, [zoom])
 
 
   useEffect(() => {
@@ -225,6 +263,19 @@ export default function ThreeCapePreview({
           leftLeg.rotation.x = -0.35
           rightLeg.rotation.x = 0.35
         }
+        // Animate attached back equipment too: otherwise limbs move while the
+        // cape/elytra look frozen. Reset to a neutral pose each frame first.
+        viewer.playerObject.traverse((object: any) => {
+          const name = String(object.name || '').toLowerCase()
+          if (name.includes('cape')) {
+            object.rotation.x = (pose === 'fly' ? -0.85 : pose === 'walk' ? 0.12 : 0.04) + Math.sin(t * (pose === 'walk' ? 5 : 2.2)) * (pose === 'idle' ? 0.025 : 0.09)
+            object.rotation.z = pose === 'wave' ? Math.sin(t * 2.5) * 0.05 : Math.sin(t * 2) * 0.035
+          } else if (name.includes('leftwing') || name.includes('left_wing')) {
+            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3) * 0.08 : Math.sin(t * 2) * 0.015
+          } else if (name.includes('rightwing') || name.includes('right_wing')) {
+            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3 + 0.2) * 0.08 : Math.sin(t * 2) * 0.015
+          }
+        })
       }
       frame = requestAnimationFrame(animate)
     }
