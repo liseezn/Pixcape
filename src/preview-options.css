@@ -1,0 +1,9 @@
+.preset-scene-switch { flex-wrap: wrap; }
+.preset-scene-switch button { padding-inline: 8px; }
+.preset-model-stage.scene-studio { background: radial-gradient(ellipse at 50% 35%, #344d70 0, #1b2b42 45%, #0d1521 100%); }
+.preset-model-stage.scene-sunset { background: radial-gradient(ellipse at 50% 34%, #9b5b53 0, #55354a 42%, #1a1b31 100%); }
+.preset-model-stage.scene-forest { background: radial-gradient(ellipse at 50% 34%, #426b5a 0, #203e3b 43%, #0d1b22 100%); }
+.preset-model-stage.scene-void { background: radial-gradient(ellipse at 50% 30%, #45416e 0, #201f3d 42%, #090d18 100%); }
+.preset-model-stage.scene-sunset:before { background-image: linear-gradient(#ffe8d008 1px, transparent 1px), linear-gradient(90deg,#ffe8d008 1px,transparent 1px); }
+.preset-model-stage.scene-forest:before { background-image: linear-gradient(#d1ffdf08 1px, transparent 1px), linear-gradient(90deg,#d1ffdf08 1px,transparent 1px); }
+@media (max-width: 760px) { .preset-scene-switch { max-width: 100%; } }
