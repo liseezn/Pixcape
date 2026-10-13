@@ -4,7 +4,7 @@ import * as THREE from 'three'
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type FaceRegion = { x: number; y: number; w: number; h: number }
 type ModelType = 'steve' | 'alex'
-type Props = { layers: LayerData[]; side: 'front' | 'back'; rotation: number; modelType: ModelType; onRotationChange: (value: number) => void }
+type Props = { layers: LayerData[]; side: 'front' | 'back'; rotation: number; modelType: ModelType; onRotationChange: (value: number) => void; capeTextureUrl?: string; capeVisible?: boolean }
 
 const UV = {
   head: [
@@ -106,13 +106,13 @@ function makeFaceMaterials(source: HTMLCanvasElement, regions: FaceRegion[], mat
   })
 }
 
-export default function ThreeCapePreview({ layers, side, rotation, modelType, onRotationChange }: Props) {
+export default function ThreeCapePreview({ layers, side, rotation, modelType, onRotationChange, capeTextureUrl, capeVisible = true }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
   const modelTypeRef = useRef(modelType)
   const onRotationChangeRef = useRef(onRotationChange)
-  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[]; outerArmMeshes: THREE.Mesh[] } | null>(null)
+  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[]; outerArmMeshes: THREE.Mesh[]; capeMaterial: THREE.MeshBasicMaterial; capeMesh: THREE.Mesh } | null>(null)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
@@ -199,7 +199,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       renderer.render(scene, camera)
     }
     animate()
-    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm], outerArmMeshes: [leftArmOverlay, rightArmOverlay] }
+    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm], outerArmMeshes: [leftArmOverlay, rightArmOverlay], capeMaterial, capeMesh: cape }
 
     let drag: { x: number; rotation: number } | null = null
     const down = (event: PointerEvent) => {
@@ -253,15 +253,50 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
         material.map = makeTexture(canvas); material.needsUpdate = true; old?.dispose()
       }
     }
-    const capeMaterial = current.materials[current.materials.length - 1]
-    if (capeMaterial) {
-      const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64
-      const ctx = canvas.getContext('2d')
-      if (ctx) ctx.drawImage(source, 0, 32, 64, 32, 0, 0, 64, 64)
-      const old = capeMaterial.map
-      capeMaterial.map = makeTexture(canvas); capeMaterial.needsUpdate = true; old?.dispose()
-    }
   }, [layers])
+
+  useEffect(() => {
+    const current = sceneRef.current
+    if (current) current.capeMesh.visible = capeVisible
+  }, [capeVisible])
+
+  useEffect(() => {
+    const current = sceneRef.current
+    if (!current) return
+    let cancelled = false
+    const applyCape = async () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = 64
+        canvas.height = 32
+        const context = canvas.getContext('2d')
+        if (!context) return
+        if (capeTextureUrl) {
+          const image = new Image()
+          image.crossOrigin = 'anonymous'
+          await new Promise<void>((resolve, reject) => {
+            image.onload = () => resolve()
+            image.onerror = () => reject(new Error('cape texture failed'))
+            image.src = capeTextureUrl
+          })
+          if (cancelled) return
+          context.imageSmoothingEnabled = false
+          context.drawImage(image, 0, 0, 64, 32)
+        } else {
+          const source = makeSource(layers)
+          context.drawImage(source, 0, 32, 64, 32, 0, 0, 64, 32)
+        }
+        const old = current.capeMaterial.map
+        current.capeMaterial.map = makeTexture(canvas)
+        current.capeMaterial.needsUpdate = true
+        old?.dispose()
+      } catch {
+        // Keep the last valid cape texture if a remote texture fails to load.
+      }
+    }
+    void applyCape()
+    return () => { cancelled = true }
+  }, [capeTextureUrl, layers])
 
   useEffect(() => {
     const current = sceneRef.current
