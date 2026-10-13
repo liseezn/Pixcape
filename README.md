@@ -8,7 +8,8 @@ Pixcape 是 Minecraft 皮肤预制与编辑工作台，支持披肩、外套、�
 - Steve / Alex 角色、动作、正反面与 Minecraft 风格场景预览。
 - 导入标准 64 × 64 PNG 皮肤、合成预制并导出 PNG。
 - 将当前皮肤和披风纹理传入完整 Blockbench 编辑器。
-- Minecraft 方块物品栏风格 UI，适配手机和桌面。
+- Minecraft Java 物品栏式 UI：草方块标题条、石头灰面板、凸凹像素边框和物品槽选中态，适配手机和桌面。
+- 远程模板素材不可用时显示备用皮肤，避免工作台卡在加载状态。
 - PWA 安装支持、Service Worker 更新与 Open Graph 分享元数据。
 
 ## 技术栈
@@ -40,6 +41,10 @@ docker compose up --build -d
 ```
 
 默认可从 `http://localhost:8080` 访问，具体端口以仓库 Docker Compose 配置为准。Pixcape 位于 `/`，完整 Blockbench 编辑器位于 `/blockbench/`。
+
+## 加载故障排查
+
+若更新后仍显示旧界面，请先确认托管平台已重新部署最新 Docker 镜像；PWA 旧缓存可在浏览器站点设置中清除。若只有模板缩略图加载失败，请检查网络是否能访问 `raw.githubusercontent.com`。
 
 ## PWA / Open Graph 文档
 
