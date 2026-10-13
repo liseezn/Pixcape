@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity=".06" stroke-width="2"/></pattern>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#7bbce9"/><stop offset="1" stop-color="#c5e6f5"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#1b2c19"/>
+  <rect width="1200" height="470" fill="url(#sky)"/>
+  <path d="M0 385h140v-70h70v40h90v-90h90v120h110v-55h90v70h110v-90h95v55h100v-35h105v55h100v-80h100v80h100v160H0z" fill="#6ca64d"/>
+  <path d="M0 470h1200v160H0z" fill="#8b6847"/>
+  <path d="M0 470h1200v20H0z" fill="#5c963e"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <g transform="translate(110 135)">
+    <rect x="0" y="0" width="180" height="180" fill="#4e8a35" stroke="#213b20" stroke-width="12"/>
+    <rect x="20" y="20" width="140" height="35" fill="#8dc85c"/>
+    <rect x="20" y="68" width="62" height="42" fill="#e7e9d9"/>
+    <rect x="98" y="68" width="62" height="42" fill="#e7e9d9"/>
+    <rect x="38" y="80" width="28" height="28" fill="#304a65"/>
+    <rect x="114" y="80" width="28" height="28" fill="#304a65"/>
+    <rect x="52" y="128" width="76" height="20" fill="#553d2c"/>
+  </g>
+  <g font-family="Arial, sans-serif" fill="#f7f6e8">
+    <text x="345" y="225" font-size="82" font-weight="900" letter-spacing="-3">PIX CAPE</text>
+    <text x="350" y="285" font-size="30" font-weight="700" fill="#c7e6a7">MINECRAFT SKIN WORKSHOP</text>
+    <text x="350" y="365" font-size="31" fill="#f5f1dc">披肩 · 外套 · 披风 · 3D 皮肤预览</text>
+    <text x="350" y="425" font-size="23" fill="#d4e5c4">打造你的方块角色装备</text>
+  </g>
+  <rect x="0" y="598" width="1200" height="32" fill="#314d25"/>
+</svg>
