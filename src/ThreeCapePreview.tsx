@@ -26,8 +26,10 @@ function makeSkinCanvas(layers: LayerData[]) {
     if (!layer.visible) continue
     context.globalAlpha = layer.opacity / 100
     layer.pixels.forEach((color, index) => {
-      if (color) context.fillRect(index % 64, Math.floor(index / 64), 1, 1)
-      if (color) context.fillStyle = color
+      if (color) {
+        context.fillStyle = color
+        context.fillRect(index % 64, Math.floor(index / 64), 1, 1)
+      }
     })
   }
   context.globalAlpha = 1
