@@ -5,6 +5,7 @@ import { Download, Shirt, Upload, RotateCcw, X, ExternalLink } from 'lucide-reac
 import ThreeCapePreview from './ThreeCapePreview'
 import PresetThumbnail from './PresetThumbnail'
 import './preset-studio.css'
+import './minecraft-inventory.css'
 import './preview-options.css'
 
 type GarmentKind = 'shawl' | 'coat'
@@ -103,22 +104,47 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       if (!canvas || !context) return
       setReady(false)
       setError('')
+      let baseImage: HTMLImageElement | null = null
       try {
-        const base = await loadImage(skinUrl)
+        baseImage = await loadImage(skinUrl)
         const selected = [PRESETS.find(item => item.id === coatId), PRESETS.find(item => item.id === shawlId)].filter((item): item is Preset => Boolean(item))
         const overlays = await Promise.all(selected.map(item => loadImage(ASSET_ROOT + (modelType === 'alex' ? item.slimFile : item.file))))
         if (cancelled) return
         context.clearRect(0, 0, 64, 64)
         context.imageSmoothingEnabled = false
-        context.drawImage(base, 0, 0, 64, 64)
+        context.drawImage(baseImage, 0, 0, 64, 64)
         overlays.forEach(image => context.drawImage(image, 0, 0, 64, 64))
         setPixels(canvasPixels(canvas))
         setReady(true)
         setStatus('模板已应用，可旋转预览或导出 PNG')
       } catch {
         if (!cancelled) {
-          setError('模板图片加载失败。请检查网络连接，或重新导入一张皮肤 PNG。')
-          setStatus('加载失败')
+          // Keep the editor usable if the third-party asset host is blocked or offline.
+          context.clearRect(0, 0, 64, 64)
+          context.imageSmoothingEnabled = false
+          if (baseImage) {
+            context.drawImage(baseImage, 0, 0, 64, 64)
+          } else {
+            const pixel = (x: number, y: number, w: number, h: number, color: string) => {
+              context.fillStyle = color
+              context.fillRect(x, y, w, h)
+            }
+            context.fillStyle = '#b98a62'; context.fillRect(0, 0, 64, 64)
+            pixel(8, 0, 8, 8, '#513322'); pixel(16, 0, 8, 8, '#513322')
+            pixel(8, 8, 8, 8, '#d9a477'); pixel(16, 8, 8, 8, '#d9a477')
+            pixel(10, 10, 2, 2, '#3b3026'); pixel(18, 10, 2, 2, '#3b3026')
+            pixel(12, 14, 8, 2, '#8d453a')
+            pixel(20, 20, 8, 12, '#3768a5'); pixel(28, 20, 8, 12, '#3768a5')
+            pixel(44, 20, 4, 12, '#d9a477'); pixel(48, 20, 4, 12, '#d9a477')
+            pixel(4, 20, 4, 12, '#d9a477'); pixel(8, 20, 4, 12, '#d9a477')
+            pixel(20, 36, 8, 12, '#3768a5'); pixel(28, 36, 8, 12, '#3768a5')
+            pixel(4, 36, 4, 12, '#303f73'); pixel(8, 36, 4, 12, '#303f73')
+            pixel(12, 36, 4, 12, '#303f73'); pixel(16, 36, 4, 12, '#303f73')
+          }
+          setPixels(canvasPixels(canvas))
+          setReady(true)
+          setError('部分远程模板素材加载失败，已显示备用皮肤；可继续编辑或重新导入 PNG。')
+          setStatus('备用皮肤已就绪')
         }
       }
     }
