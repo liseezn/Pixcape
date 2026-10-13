@@ -11,7 +11,9 @@ RUN git init \
 RUN npm ci && npm run build-web && test -s dist/bundle.js
 RUN mkdir -p /runtime \
     && cp index.html favicon.png icon_full.png manifest.webmanifest LICENSE.MD /runtime/ \
-    && cp -a assets css content dist font icons js keymaps lang lib themes /runtime/
+    && cp -a assets css content dist font icons js keymaps lang lib themes /runtime/ \
+    && test -s /runtime/dist/bundle.js \
+    && test -s /runtime/LICENSE.MD
 
 # Build the existing Pixcape skin and preset workspace.
 FROM node:22-alpine AS pixcape-build
