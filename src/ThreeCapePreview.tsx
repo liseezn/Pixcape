@@ -4,7 +4,7 @@ import * as THREE from 'three'
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type FaceRegion = { x: number; y: number; w: number; h: number }
 type ModelType = 'steve' | 'alex'
-type Props = { layers: LayerData[]; side: 'front' | 'back'; rotation: number; modelType: ModelType; onRotationChange: (value: number) => void; capeTextureUrl?: string }
+type Props = { layers: LayerData[]; side: 'front' | 'back'; rotation: number; modelType: ModelType; onRotationChange: (value: number) => void; capeTextureUrl?: string; capeVisible?: boolean }
 
 const UV = {
   head: [
@@ -106,13 +106,13 @@ function makeFaceMaterials(source: HTMLCanvasElement, regions: FaceRegion[], mat
   })
 }
 
-export default function ThreeCapePreview({ layers, side, rotation, modelType, onRotationChange, capeTextureUrl }: Props) {
+export default function ThreeCapePreview({ layers, side, rotation, modelType, onRotationChange, capeTextureUrl, capeVisible = true }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
   const modelTypeRef = useRef(modelType)
   const onRotationChangeRef = useRef(onRotationChange)
-  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[]; outerArmMeshes: THREE.Mesh[]; capeMaterial: THREE.MeshBasicMaterial } | null>(null)
+  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[]; outerArmMeshes: THREE.Mesh[]; capeMaterial: THREE.MeshBasicMaterial; capeMesh: THREE.Mesh } | null>(null)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
@@ -199,7 +199,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       renderer.render(scene, camera)
     }
     animate()
-    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm], outerArmMeshes: [leftArmOverlay, rightArmOverlay], capeMaterial }
+    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm], outerArmMeshes: [leftArmOverlay, rightArmOverlay], capeMaterial, capeMesh: cape }
 
     let drag: { x: number; rotation: number } | null = null
     const down = (event: PointerEvent) => {
@@ -254,6 +254,11 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       }
     }
   }, [layers])
+
+  useEffect(() => {
+    const current = sceneRef.current
+    if (current) current.capeMesh.visible = capeVisible
+  }, [capeVisible])
 
   useEffect(() => {
     const current = sceneRef.current
