@@ -26,6 +26,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\\/blockbench(?:\\/|$)/],
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2}'],
       },
     }),
