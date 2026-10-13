@@ -4,7 +4,7 @@ import * as THREE from 'three'
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type FaceRegion = { x: number; y: number; w: number; h: number }
 type ModelType = 'steve' | 'alex'
-type Props = { layers: LayerData[]; side: 'front' | 'back'; rotation: number; modelType: ModelType; onRotationChange: (value: number) => void; capeTextureUrl?: string; capeVisible?: boolean }
+type Props = { layers: LayerData[]; side: 'front' | 'back'; rotation: number; modelType: ModelType; onRotationChange: (value: number) => void; capeTextureUrl?: string; capeVisible?: boolean; elytraVisible?: boolean }
 
 const UV = {
   head: [
@@ -106,13 +106,13 @@ function makeFaceMaterials(source: HTMLCanvasElement, regions: FaceRegion[], mat
   })
 }
 
-export default function ThreeCapePreview({ layers, side, rotation, modelType, onRotationChange, capeTextureUrl, capeVisible = true }: Props) {
+export default function ThreeCapePreview({ layers, side, rotation, modelType, onRotationChange, capeTextureUrl, capeVisible = true, elytraVisible = false }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
   const modelTypeRef = useRef(modelType)
   const onRotationChangeRef = useRef(onRotationChange)
-  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[]; outerArmMeshes: THREE.Mesh[]; capeMaterial: THREE.MeshBasicMaterial; capeMesh: THREE.Mesh } | null>(null)
+  const sceneRef = useRef<{ renderer: THREE.WebGLRenderer; model: THREE.Group; materials: THREE.MeshBasicMaterial[]; armMeshes: THREE.Mesh[]; outerArmMeshes: THREE.Mesh[]; capeMaterial: THREE.MeshBasicMaterial; capeMesh: THREE.Mesh; elytraMeshes: THREE.Mesh[] } | null>(null)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
@@ -172,16 +172,53 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
     box([0.38, 1.22, 0.44], [-0.22, -0.88, 0], OUTER_UV.rightLeg, false)
     box([0.38, 1.22, 0.44], [0.22, -0.88, 0], OUTER_UV.leftLeg, false)
 
-    // The cape remains a separate accessory, using the lower half of the texture canvas.
+    // Minecraft cape art occupies a 10x16 pixel UV rectangle inside a 64x32 texture.
+    // Crop that rectangle before mapping it to a matching 10:16 plane to avoid stretching.
     const capeCanvas = document.createElement('canvas')
     capeCanvas.width = 64; capeCanvas.height = 64
     const capeCtx = capeCanvas.getContext('2d')
-    if (capeCtx) capeCtx.drawImage(source, 0, 32, 64, 32, 0, 0, 64, 64)
-    const capeMaterial = new THREE.MeshBasicMaterial({ map: makeTexture(capeCanvas), transparent: true, side: THREE.DoubleSide, depthWrite: false })
+    if (capeCtx) capeCtx.imageSmoothingEnabled = false
+    if (capeCtx) capeCtx.drawImage(source, 1, 33, 10, 16, 0, 0, 64, 64)
+    const capeMaterial = new THREE.MeshBasicMaterial({ map: makeTexture(capeCanvas), transparent: true, side: THREE.DoubleSide, depthWrite: false, alphaTest: 0.01 })
     materials.push(capeMaterial)
-    const capeGeometry = new THREE.PlaneGeometry(0.95, 1.5)
+    const capeGeometry = new THREE.PlaneGeometry(0.94, 1.5)
     const cape = new THREE.Mesh(capeGeometry, capeMaterial)
     cape.position.set(0, 0.35, -0.29); cape.rotation.x = -0.06; model.add(cape)
+
+    // Independent pixel-art elytra accessory, visible on the back and toggleable separately.
+    const wingCanvas = document.createElement('canvas')
+    wingCanvas.width = 16; wingCanvas.height = 16
+    const wingCtx = wingCanvas.getContext('2d')
+    if (wingCtx) {
+      wingCtx.imageSmoothingEnabled = false
+      wingCtx.clearRect(0, 0, 16, 16)
+      wingCtx.fillStyle = '#49352b'; wingCtx.fillRect(1, 1, 14, 14)
+      wingCtx.fillStyle = '#77513a'; wingCtx.fillRect(2, 2, 12, 12)
+      wingCtx.fillStyle = '#9a704b'; wingCtx.fillRect(3, 3, 9, 10)
+      wingCtx.fillStyle = '#c19a68'; wingCtx.fillRect(4, 4, 6, 8)
+      wingCtx.fillStyle = '#5d4132'; wingCtx.fillRect(2, 12, 12, 2)
+      wingCtx.fillStyle = '#d0b07d'; wingCtx.fillRect(5, 5, 3, 5)
+      wingCtx.fillStyle = '#352a25'; wingCtx.fillRect(7, 2, 2, 12)
+    }
+    const wingMaterial = new THREE.MeshBasicMaterial({ map: makeTexture(wingCanvas), transparent: true, side: THREE.DoubleSide, alphaTest: 0.01 })
+    const wingShape = new THREE.Shape()
+    wingShape.moveTo(0, 0.48)
+    wingShape.lineTo(0.35, 0.38)
+    wingShape.lineTo(0.63, -0.24)
+    wingShape.lineTo(0.34, -0.42)
+    wingShape.lineTo(0.08, -0.12)
+    wingShape.closePath()
+    const leftWing = new THREE.Mesh(new THREE.ShapeGeometry(wingShape), wingMaterial)
+    leftWing.position.set(-0.08, 0.42, -0.38)
+    leftWing.rotation.y = -0.12
+    model.add(leftWing)
+    const rightWing = new THREE.Mesh(new THREE.ShapeGeometry(wingShape), wingMaterial)
+    rightWing.position.set(0.08, 0.42, -0.38)
+    rightWing.scale.x = -1
+    rightWing.rotation.y = 0.12
+    model.add(rightWing)
+    leftWing.visible = elytraVisible
+    rightWing.visible = elytraVisible
 
     const floor = new THREE.Mesh(new THREE.CircleGeometry(1.25, 32), new THREE.MeshBasicMaterial({ color: 0x172438, transparent: true, opacity: 0.45 }))
     floor.rotation.x = -Math.PI / 2; floor.position.y = -1.55; scene.add(floor)
@@ -199,7 +236,7 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
       renderer.render(scene, camera)
     }
     animate()
-    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm], outerArmMeshes: [leftArmOverlay, rightArmOverlay], capeMaterial, capeMesh: cape }
+    sceneRef.current = { renderer, model, materials, armMeshes: [leftArm, rightArm], outerArmMeshes: [leftArmOverlay, rightArmOverlay], capeMaterial, capeMesh: cape, elytraMeshes: [leftWing, rightWing] }
 
     let drag: { x: number; rotation: number } | null = null
     const down = (event: PointerEvent) => {
@@ -262,15 +299,21 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
 
   useEffect(() => {
     const current = sceneRef.current
+    if (current) current.elytraMeshes.forEach(wing => { wing.visible = elytraVisible })
+  }, [elytraVisible])
+
+  useEffect(() => {
+    const current = sceneRef.current
     if (!current) return
     let cancelled = false
     const applyCape = async () => {
       try {
         const canvas = document.createElement('canvas')
         canvas.width = 64
-        canvas.height = 32
+        canvas.height = 64
         const context = canvas.getContext('2d')
         if (!context) return
+        context.imageSmoothingEnabled = false
         if (capeTextureUrl) {
           const image = new Image()
           image.crossOrigin = 'anonymous'
@@ -280,11 +323,11 @@ export default function ThreeCapePreview({ layers, side, rotation, modelType, on
             image.src = capeTextureUrl
           })
           if (cancelled) return
-          context.imageSmoothingEnabled = false
-          context.drawImage(image, 0, 0, 64, 32)
+          // Crop the official 10x16 front-face UV region instead of stretching the atlas.
+          context.drawImage(image, 1, 1, 10, 16, 0, 0, 64, 64)
         } else {
           const source = makeSource(layers)
-          context.drawImage(source, 0, 32, 64, 32, 0, 0, 64, 32)
+          context.drawImage(source, 1, 33, 10, 16, 0, 0, 64, 64)
         }
         const old = current.capeMaterial.map
         current.capeMaterial.map = makeTexture(canvas)
