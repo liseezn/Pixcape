@@ -3,7 +3,7 @@ import ThreeCapePreview from './ThreeCapePreview'
 import PresetStudio from './PresetStudio'
 import {
   Download, Eraser, Paintbrush, RotateCcw, RotateCw, Upload, PaintBucket, Pipette,
-  ZoomIn, ZoomOut, Maximize2, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
+  ZoomIn, ZoomOut, Maximize2, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown, Shirt,
   Minus, Square, Circle, Grid2X2, Save, FileImage, Copy,
 } from 'lucide-react'
 
