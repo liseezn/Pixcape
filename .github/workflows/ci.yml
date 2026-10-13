@@ -20,3 +20,5 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm run build
+      - name: Build complete Pixcape image including Blockbench
+        run: docker build --tag pixcape-integration-test .

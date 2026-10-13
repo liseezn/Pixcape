@@ -3,6 +3,7 @@ import { SkinViewer } from 'skinview3d'
 
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type ModelType = 'steve' | 'alex'
+type Pose = 'idle' | 'wave' | 'walk' | 'fly'
 type Props = {
   layers: LayerData[]
   side: 'front' | 'back'
@@ -12,6 +13,7 @@ type Props = {
   capeTextureUrl?: string
   capeVisible?: boolean
   elytraVisible?: boolean
+  pose?: Pose
 }
 
 function makeSkinCanvas(layers: LayerData[]) {
@@ -60,6 +62,7 @@ export default function ThreeCapePreview({
   capeTextureUrl,
   capeVisible = true,
   elytraVisible = false,
+  pose = 'idle',
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<SkinViewer | null>(null)
@@ -192,6 +195,42 @@ export default function ThreeCapePreview({
     viewer.playerObject.rotation.y =
       (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
   }, [rotation, side])
+
+
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer) return
+    let frame = 0
+    const startedAt = performance.now()
+    const animate = (now: number) => {
+      const skin = viewer.playerObject.skin
+      if (skin) {
+        const t = (now - startedAt) / 1000
+        const { leftArm, rightArm, leftLeg, rightLeg } = skin
+        leftArm.rotation.set(0, 0, 0)
+        rightArm.rotation.set(0, 0, 0)
+        leftLeg.rotation.set(0, 0, 0)
+        rightLeg.rotation.set(0, 0, 0)
+        if (pose === 'wave') {
+          rightArm.rotation.z = -2.35 + Math.sin(t * 5) * 0.22
+          rightArm.rotation.x = Math.sin(t * 3) * 0.12
+        } else if (pose === 'walk') {
+          leftArm.rotation.x = Math.sin(t * 5) * 0.65
+          rightArm.rotation.x = -Math.sin(t * 5) * 0.65
+          leftLeg.rotation.x = -Math.sin(t * 5) * 0.72
+          rightLeg.rotation.x = Math.sin(t * 5) * 0.72
+        } else if (pose === 'fly') {
+          leftArm.rotation.z = 0.95
+          rightArm.rotation.z = -0.95
+          leftLeg.rotation.x = -0.35
+          rightLeg.rotation.x = 0.35
+        }
+      }
+      frame = requestAnimationFrame(animate)
+    }
+    frame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frame)
+  }, [pose, modelType])
 
   return (
     <div
