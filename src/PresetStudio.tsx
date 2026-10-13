@@ -5,8 +5,8 @@ import { Download, Shirt, Upload, RotateCcw, X, ExternalLink } from 'lucide-reac
 import ThreeCapePreview from './ThreeCapePreview'
 import PresetThumbnail from './PresetThumbnail'
 import './preset-studio.css'
-import './minecraft-inventory.css'
 import './preview-options.css'
+import './minecraft-inventory.css'
 
 type GarmentKind = 'shawl' | 'coat'
 type Preset = { id: string; label: string; file: string; slimFile: string; kind: GarmentKind }
