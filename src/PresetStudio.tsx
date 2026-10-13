@@ -146,6 +146,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     setSkinName('Steve 默认皮肤')
     setShawlId('office-shawl')
     setCoatId('none')
+    setCapeId('cape_office.png')
     setModelType('steve')
     setRotation(-13)
     setStatus('已恢复默认模板')
