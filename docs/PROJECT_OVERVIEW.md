@@ -10,6 +10,7 @@ Pixcape 是面向 Minecraft 皮肤的预制与编辑工作台，主流程为：�
 - Lucide React：工具栏图标。
 - Radix UI Tabs：披肩 / 外套 / 披风分类切换。
 - Radix UI Tooltip：操作提示。
+- Radix Tooltip 必须在 `Tooltip.Provider` 内使用；当前导出按钮已显式包裹 Provider，避免工作台在渲染阶段因缺少 Provider 而白屏。
 - vite-plugin-pwa + Workbox：Web App Manifest、Service Worker 和静态资源预缓存。
 - Nginx + Docker：生产环境托管 Pixcape 与独立的 Blockbench Web 编辑器。
 
