@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Shirt, Upload, RotateCcw, UserRound, Layers, ArrowRight, X } from 'lucide-react'
 import ThreeCapePreview from './ThreeCapePreview'
+import PresetThumbnail from './PresetThumbnail'
 import './preset-studio.css'
 
 type GarmentKind = 'shawl' | 'coat'
@@ -193,7 +194,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
           <div className="preset-section-title">披肩 <span>SHAWL</span></div>
           <div className="preset-options">
             <button className={'preset-option ' + (shawlId === 'none' ? 'chosen' : '')} onClick={() => setShawlId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用披肩</span></button>
-            {shawls.map(item => <button key={item.id} className={'preset-option ' + (shawlId === item.id ? 'chosen' : '')} onClick={() => setShawlId(item.id)}><span className="preset-swatch" style={{ backgroundImage: 'url(' + ASSET_ROOT + item.file + ')' }}/><span>{item.label}</span></button>)}
+            {shawls.map(item => <button key={item.id} className={'preset-option ' + (shawlId === item.id ? 'chosen' : '')} onClick={() => setShawlId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
           </div>
         </section>
         <section className="preset-section">
@@ -206,11 +207,11 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         <section className="preset-section">
           <div className="preset-section-title">披风 <span>CAPE · 独立纹理</span></div>
           <div className="preset-options">
-            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}><span className={'preset-swatch ' + (item.id === 'none' ? 'no-swatch' : '')} style={item.id === 'none' ? undefined : { backgroundImage: 'url(' + ASSET_ROOT + item.id + ')' }}>{item.id === 'none' ? <X size={18}/> : null}</span><span>{item.label}</span></button>)}
+            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}>{item.id === 'none' ? <span className="preset-swatch no-swatch"><X size={18}/></span> : <PresetThumbnail kind="cape" imageUrl={ASSET_ROOT + item.id}/>}<span>{item.label}</span></button>)}
           </div>
           <button className="preset-import" onClick={exportCape} disabled={capeId === 'none'}><Download size={15}/> 单独导出披风 PNG</button>
         </section>
-        <div className="preset-attribution">服装纹理参考与素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。素材作者信息见原项目说明。</div>
+        <div className="preset-attribution">模板素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。披肩、外套和披风的缩略图使用角色 3D 渲染图；作者标注在各预览图下方。</div>
       </aside>
       <section className="preset-preview-column">
         <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>正面</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>背面</button></div><div className="preset-model-switch"><button className={elytraVisible ? 'active' : ''} onClick={() => setElytraVisible(value => !value)}>{elytraVisible ? '切换为披风' : '切换为鞘翅'}</button></div></div></div>
