@@ -130,17 +130,31 @@ export default function PresetStudio({ onOpenEditor }: Props) {
 
   const importSkin = (file?: File) => {
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      setError('请选择 PNG 或其他图片文件。')
+    if (file.type !== 'image/png') {
+      setError('请导入 PNG 格式的 Minecraft 皮肤。')
       return
     }
     const url = URL.createObjectURL(file)
-    setSkinUrl(previous => {
-      if (previous.startsWith('blob:')) URL.revokeObjectURL(previous)
-      return url
-    })
-    setSkinName(file.name)
-    setStatus('已导入皮肤，正在应用模板…')
+    const probe = new Image()
+    probe.onload = () => {
+      if (probe.naturalWidth !== 64 || probe.naturalHeight !== 64) {
+        URL.revokeObjectURL(url)
+        setError('皮肤尺寸必须是标准的 64 × 64 PNG，未修改当前皮肤。')
+        return
+      }
+      setSkinUrl(previous => {
+        if (previous.startsWith('blob:')) URL.revokeObjectURL(previous)
+        return url
+      })
+      setSkinName(file.name)
+      setError('')
+      setStatus('已导入皮肤，正在应用模板…')
+    }
+    probe.onerror = () => {
+      URL.revokeObjectURL(url)
+      setError('无法读取这张 PNG 图片，请选择有效的皮肤文件。')
+    }
+    probe.src = url
   }
 
   const reset = () => {
@@ -199,7 +213,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         <div className="preset-heading"><div><small>YOUR SKIN</small><h2>当前皮肤</h2></div><UserRound size={21}/></div>
         <div className="preset-skin-card"><div className="preset-skin-thumb"><canvas ref={canvasRef} width={64} height={64}/></div><div className="preset-skin-meta"><strong>{skinName}</strong><small>64 × 64 · PNG</small></div></div>
         <button className="preset-import" onClick={() => skinInputRef.current?.click()}><Upload size={16}/> 导入自己的皮肤</button>
-        <input ref={skinInputRef} hidden type="file" accept="image/png,image/*" onChange={event => { importSkin(event.target.files?.[0]); event.currentTarget.value = '' }}/>
+        <input ref={skinInputRef} hidden type="file" accept="image/png" onChange={event => { importSkin(event.target.files?.[0]); event.currentTarget.value = '' }}/>
         <div className="preset-tip"><strong>使用提示</strong><p>导入标准 Minecraft 64 × 64 皮肤后，选择披肩或外套。导出结果是合成后的皮肤 PNG，可继续用于 Minecraft 皮肤工具。</p></div>
         <div className="preset-next"><span>下一阶段</span><strong>完整皮肤编辑器</strong><p>后续增加逐像素绘制、图层管理和更完整的纹理编辑。</p></div>
       </aside>
