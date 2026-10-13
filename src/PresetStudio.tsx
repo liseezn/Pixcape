@@ -9,6 +9,7 @@ type Preset = { id: string; label: string; file: string; slimFile: string; kind:
 const ASSET_ROOT = 'https://raw.githubusercontent.com/lonelyang/CapeSkinImage/master/examples/img/'
 const BASE_SKIN = ASSET_ROOT + 'stevea.png'
 const CAPES = [
+  { id: 'none', label: '不使用披风' },
   { id: 'cape_office.png', label: '眼眸花披风' },
   { id: 'cape_MCC.png', label: 'MCC 披风' },
   { id: 'cape_creeper.png', label: '苦力怕披风' },
@@ -100,6 +101,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   }, [skinUrl, shawlId, coatId, modelType])
 
   const exportCape = async () => {
+    if (capeId === 'none') return
     try {
       const image = await loadImage(ASSET_ROOT + capeId)
       const output = document.createElement('canvas')
@@ -181,15 +183,15 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         <section className="preset-section">
           <div className="preset-section-title">披风 <span>CAPE · 独立纹理</span></div>
           <div className="preset-options">
-            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}><span className="preset-swatch" style={{ backgroundImage: 'url(' + ASSET_ROOT + item.id + ')' }}/><span>{item.label}</span></button>)}
+            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}><span className={'preset-swatch ' + (item.id === 'none' ? 'no-swatch' : '')} style={item.id === 'none' ? undefined : { backgroundImage: 'url(' + ASSET_ROOT + item.id + ')' }}>{item.id === 'none' ? <X size={18}/> : null}</span><span>{item.label}</span></button>)}
           </div>
-          <button className="preset-import" onClick={exportCape}><Download size={15}/> 单独导出披风 PNG</button>
+          <button className="preset-import" onClick={exportCape} disabled={capeId === 'none'}><Download size={15}/> 单独导出披风 PNG</button>
         </section>
         <div className="preset-attribution">服装纹理参考与素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。素材作者信息见原项目说明。</div>
       </aside>
       <section className="preset-preview-column">
         <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div></div>
-        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side="front" rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={ASSET_ROOT + capeId}/><div className="preset-model-caption">拖动角色旋转 · 披风独立预览</div></div>
+        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side="front" rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'}/><div className="preset-model-caption">拖动角色旋转 · 披风独立预览</div></div>
         {error && <div className="preset-error">{error}</div>}
         <div className="preset-preview-footer"><span className={ready ? 'preset-status-ready' : ''}><i/> {status}</span><button onClick={reset}><RotateCcw size={14}/> 重置</button></div>
       </section>
