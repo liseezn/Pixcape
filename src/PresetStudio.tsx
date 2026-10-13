@@ -58,6 +58,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   const [shawlId, setShawlId] = useState('office-shawl')
   const [coatId, setCoatId] = useState('none')
   const [capeId, setCapeId] = useState('cape_office.png')
+  const [elytraVisible, setElytraVisible] = useState(false)
   const [modelType, setModelType] = useState<'steve' | 'alex'>('steve')
   const [viewSide, setViewSide] = useState<'front' | 'back'>('front')
   const [rotation, setRotation] = useState(-13)
@@ -168,6 +169,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     setShawlId('office-shawl')
     setCoatId('none')
     setCapeId('cape_office.png')
+    setElytraVisible(false)
     setModelType('steve')
     setViewSide('front')
     setRotation(-13)
@@ -211,8 +213,8 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         <div className="preset-attribution">服装纹理参考与素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。素材作者信息见原项目说明。</div>
       </aside>
       <section className="preset-preview-column">
-        <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>正面</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>背面</button></div></div></div>
-        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side={viewSide} rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'}/><div className="preset-model-caption">拖动旋转 · 可切换正面 / 背面</div></div>
+        <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>正面</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>背面</button></div><div className="preset-model-switch"><button className={elytraVisible ? 'active' : ''} onClick={() => setElytraVisible(value => !value)}>{elytraVisible ? '隐藏鞘翅' : '显示鞘翅'}</button></div></div></div>
+        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side={viewSide} rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'} elytraVisible={elytraVisible}/><div className="preset-model-caption">拖动旋转 · 可切换正面 / 背面</div></div>
         {error && <div className="preset-error">{error}</div>}
         <div className="preset-preview-footer"><span className={ready ? 'preset-status-ready' : ''}><i/> {status}</span><button onClick={reset}><RotateCcw size={14}/> 重置</button></div>
       </section>
