@@ -50,7 +50,17 @@ function canvasPixels(canvas: HTMLCanvasElement): string[] {
   })
 }
 
-type Props = { onOpenEditor: () => void }
+export type PresetEditorPayload = {
+  skinDataUrl: string
+  skinName: string
+  modelType: 'steve' | 'alex'
+  shawlName: string
+  coatName: string
+  capeName?: string
+  capeDataUrl?: string
+}
+
+type Props = { onOpenEditor: (payload: PresetEditorPayload) => void }
 
 export default function PresetStudio({ onOpenEditor }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -109,6 +119,39 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     void render()
     return () => { cancelled = true }
   }, [skinUrl, shawlId, coatId, modelType])
+
+  const openEditorWithPreset = async () => {
+    const canvas = canvasRef.current
+    if (!canvas || !ready) {
+      setError('皮肤仍在加载，请稍后再打开编辑器。')
+      return
+    }
+    try {
+      let capeDataUrl: string | undefined
+      if (capeId !== 'none') {
+        const capeImage = await loadImage(ASSET_ROOT + capeId)
+        const capeCanvas = document.createElement('canvas')
+        capeCanvas.width = capeImage.naturalWidth || 64
+        capeCanvas.height = capeImage.naturalHeight || 32
+        const capeContext = capeCanvas.getContext('2d')
+        if (!capeContext) throw new Error('cape canvas unavailable')
+        capeContext.drawImage(capeImage, 0, 0)
+        capeDataUrl = capeCanvas.toDataURL('image/png')
+      }
+      onOpenEditor({
+        skinDataUrl: canvas.toDataURL('image/png'),
+        skinName: 'pixcape-preset-skin.png',
+        modelType,
+        shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
+        coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
+        capeName: capeId === 'none' ? undefined : (CAPES.find(item => item.id === capeId)?.label || capeId) + '.png',
+        capeDataUrl,
+      })
+      setStatus('已将当前预制皮肤发送到 Blockbench')
+    } catch {
+      setError('无法打包当前预制，请检查皮肤与披风图片是否加载成功。')
+    }
+  }
 
   const exportCape = async () => {
     if (capeId === 'none') return
@@ -226,7 +269,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         <div className="preset-skin-card"><div className="preset-skin-thumb"><canvas ref={canvasRef} width={64} height={64}/></div><div className="preset-skin-meta"><strong>{skinName}</strong><small>64 × 64 · PNG</small></div></div>
         <button className="preset-import" onClick={() => skinInputRef.current?.click()}><Upload size={16}/> 导入自己的皮肤</button>
         <button className="preset-export-skin" onClick={exportPng} disabled={!ready}><Download size={16}/> 导出当前皮肤 PNG</button>
-        <button className="preset-open-blockbench" onClick={onOpenEditor}><ExternalLink size={15}/> 打开 Blockbench 完整编辑器</button>
+        <button className="preset-open-blockbench" onClick={openEditorWithPreset}><ExternalLink size={15}/> 打开 Blockbench 完整编辑器</button>
         <input ref={skinInputRef} hidden type="file" accept="image/png" onChange={event => { importSkin(event.target.files?.[0]); event.currentTarget.value = '' }}/>
         <div className="preset-tip"><strong>使用提示</strong><p>导入标准 Minecraft 64 × 64 皮肤后，选择披肩或外套。导出结果是合成后的皮肤 PNG，可继续用于 Minecraft 皮肤工具。</p></div>
 
