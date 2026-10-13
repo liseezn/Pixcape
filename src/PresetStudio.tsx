@@ -189,7 +189,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       </aside>
       <section className="preset-preview-column">
         <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div></div>
-        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side="front" rotation={rotation} modelType={modelType} onRotationChange={setRotation}/><div className="preset-model-caption">拖动角色旋转 · 64 × 64 皮肤纹理</div></div>
+        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side="front" rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={ASSET_ROOT + capeId}/><div className="preset-model-caption">拖动角色旋转 · 披风独立预览</div></div>
         {error && <div className="preset-error">{error}</div>}
         <div className="preset-preview-footer"><span className={ready ? 'preset-status-ready' : ''}><i/> {status}</span><button onClick={reset}><RotateCcw size={14}/> 重置</button></div>
       </section>
