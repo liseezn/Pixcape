@@ -4,19 +4,19 @@ import ThreeCapePreview from './ThreeCapePreview'
 import './preset-studio.css'
 
 type GarmentKind = 'shawl' | 'coat'
-type Preset = { id: string; label: string; file: string; kind: GarmentKind }
+type Preset = { id: string; label: string; file: string; slimFile: string; kind: GarmentKind }
 
 const ASSET_ROOT = 'https://raw.githubusercontent.com/lonelyang/CapeSkinImage/master/examples/img/'
 const BASE_SKIN = ASSET_ROOT + 'stevea.png'
 const PRESETS: Preset[] = [
-  { id: 'office-shawl', label: '眼眸花披肩', file: 'office_shawl_default_64.png', kind: 'shawl' },
-  { id: 'mcc-shawl', label: 'MCC 披肩', file: 'MCC_shawl_default_64.png', kind: 'shawl' },
-  { id: 'creeper-shawl', label: '苦力怕披肩', file: 'creeper_shawl_default_64.png', kind: 'shawl' },
-  { id: 'tiktok-shawl', label: 'TikTok 披肩', file: 'tiktok_shawl_default_64.png', kind: 'shawl' },
-  { id: 'twitch-shawl', label: 'Twitch 披肩', file: 'twitch_shawl_default_64.png', kind: 'shawl' },
-  { id: 'creeper-coat', label: '苦力怕外套', file: 'creeper_coat_default_64.png', kind: 'coat' },
-  { id: 'tiktok-coat', label: 'TikTok 外套', file: 'tiktok_coat_default_64.png', kind: 'coat' },
-  { id: 'twitch-coat', label: 'Twitch 外套', file: 'twitch_coat_default_64.png', kind: 'coat' },
+  { id: 'office-shawl', label: '眼眸花披肩', file: 'office_shawl_default_64.png', slimFile: 'office_shawl_slim_64.png', kind: 'shawl' },
+  { id: 'mcc-shawl', label: 'MCC 披肩', file: 'MCC_shawl_default_64.png', slimFile: 'MCC_shawl_slim_64.png', kind: 'shawl' },
+  { id: 'creeper-shawl', label: '苦力怕披肩', file: 'creeper_shawl_default_64.png', slimFile: 'creeper_shawl_slim_64.png', kind: 'shawl' },
+  { id: 'tiktok-shawl', label: 'TikTok 披肩', file: 'tiktok_shawl_default_64.png', slimFile: 'tiktok_shawl_slim_64.png', kind: 'shawl' },
+  { id: 'twitch-shawl', label: 'Twitch 披肩', file: 'twitch_shawl_default_64.png', slimFile: 'twitch_shawl_slim_64.png', kind: 'shawl' },
+  { id: 'creeper-coat', label: '苦力怕外套', file: 'creeper_coat_default_64.png', slimFile: 'creeper_coat_slim_64.png', kind: 'coat' },
+  { id: 'tiktok-coat', label: 'TikTok 外套', file: 'tiktok_coat_default_64.png', slimFile: 'tiktok_coat_slim_64.png', kind: 'coat' },
+  { id: 'twitch-coat', label: 'Twitch 外套', file: 'twitch_coat_default_64.png', slimFile: 'twitch_coat_slim_64.png', kind: 'coat' },
 ]
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -71,7 +71,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       try {
         const base = await loadImage(skinUrl)
         const selected = [PRESETS.find(item => item.id === coatId), PRESETS.find(item => item.id === shawlId)].filter((item): item is Preset => Boolean(item))
-        const overlays = await Promise.all(selected.map(item => loadImage(ASSET_ROOT + item.file)))
+        const overlays = await Promise.all(selected.map(item => loadImage(ASSET_ROOT + (modelType === 'alex' ? item.slimFile : item.file))))
         if (cancelled) return
         context.clearRect(0, 0, 64, 64)
         context.imageSmoothingEnabled = false
@@ -89,7 +89,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     }
     void render()
     return () => { cancelled = true }
-  }, [skinUrl, shawlId, coatId])
+  }, [skinUrl, shawlId, coatId, modelType])
 
   const exportPng = () => {
     const canvas = canvasRef.current
