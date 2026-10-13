@@ -6,6 +6,7 @@ type Props = {
   imageUrl: string
   slimImageUrl?: string
   modelType?: 'steve' | 'alex'
+  showAuthor?: boolean
 }
 
 const BASE_SKIN = 'https://raw.githubusercontent.com/lonelyang/CapeSkinImage/master/examples/img/stevea.png'
@@ -52,7 +53,7 @@ async function createRenderedPreview(
   }
 }
 
-export default function PresetThumbnail({ kind, imageUrl, slimImageUrl, modelType = 'steve' }: Props) {
+export default function PresetThumbnail({ kind, imageUrl, slimImageUrl, modelType = 'steve', showAuthor = true }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const [renderedImage, setRenderedImage] = useState('')
   const [failed, setFailed] = useState(false)
@@ -123,7 +124,7 @@ export default function PresetThumbnail({ kind, imageUrl, slimImageUrl, modelTyp
         {renderedImage && <img src={renderedImage} alt="" />}
         {failed && <span className="preset-thumbnail-fallback">预览暂不可用</span>}
       </span>
-      <small className="preset-author">作者：lonelyang</small>
+      {showAuthor && <small className="preset-author">作者：lonelyang</small>}
     </span>
   )
 }
