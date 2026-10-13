@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import * as Tabs from '@radix-ui/react-tabs'
 import { Download, Shirt, Upload, RotateCcw, X, ExternalLink } from 'lucide-react'
 import ThreeCapePreview from './ThreeCapePreview'
 import PresetThumbnail from './PresetThumbnail'
@@ -253,32 +254,40 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       <aside className="preset-library">
         <div className="preset-heading"><div><small>LIBRARY</small><h1>预制服装</h1></div><Shirt size={22}/></div>
         <p className="preset-description">披肩、外套、披风分栏展示。披肩与外套可合成到皮肤；披风作为独立纹理选择与导出。完整模型、纹理和动画编辑请打开 Blockbench。</p>
-        <div className="preset-category-tabs" role="tablist" aria-label="预制服装分类">
-          <button role="tab" aria-selected={activeCategory === 'shawl'} className={activeCategory === 'shawl' ? 'active' : ''} onClick={() => setActiveCategory('shawl')}>披肩 <small>SHAWL</small></button>
-          <button role="tab" aria-selected={activeCategory === 'coat'} className={activeCategory === 'coat' ? 'active' : ''} onClick={() => setActiveCategory('coat')}>外套 <small>COAT</small></button>
-          <button role="tab" aria-selected={activeCategory === 'cape'} className={activeCategory === 'cape' ? 'active' : ''} onClick={() => setActiveCategory('cape')}>披风 <small>CAPE</small></button>
-        </div>
-        {activeCategory === 'shawl' && <section className="preset-section" role="tabpanel">
-          <div className="preset-section-title">选择披肩 <span>{shawls.length} 款</span></div>
-          <div className="preset-options">
-            <button className={'preset-option ' + (shawlId === 'none' ? 'chosen' : '')} onClick={() => setShawlId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用披肩</span></button>
-            {shawls.map(item => <button key={item.id} className={'preset-option ' + (shawlId === item.id ? 'chosen' : '')} onClick={() => setShawlId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
-          </div>
-        </section>}
-        {activeCategory === 'coat' && <section className="preset-section" role="tabpanel">
-          <div className="preset-section-title">选择外套 <span>{coats.length} 款</span></div>
-          <div className="preset-options">
-            <button className={'preset-option ' + (coatId === 'none' ? 'chosen' : '')} onClick={() => setCoatId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用外套</span></button>
-            {coats.map(item => <button key={item.id} className={'preset-option ' + (coatId === item.id ? 'chosen' : '')} onClick={() => setCoatId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
-          </div>
-        </section>}
-        {activeCategory === 'cape' && <section className="preset-section" role="tabpanel">
-          <div className="preset-section-title">选择披风 <span>独立纹理</span></div>
-          <div className="preset-options">
-            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}>{item.id === 'none' ? <span className="preset-swatch no-swatch"><X size={18}/></span> : <PresetThumbnail kind="cape" imageUrl={ASSET_ROOT + item.id} showAuthor={false}/>}<span>{item.label}</span></button>)}
-          </div>
-          <button className="preset-import" onClick={exportCape} disabled={capeId === 'none'}><Download size={15}/> 单独导出披风 PNG</button>
-        </section>}
+        <Tabs.Root className="preset-tabs-root" value={activeCategory} onValueChange={value => setActiveCategory(value as 'shawl' | 'coat' | 'cape')}>
+          <Tabs.List className="preset-category-tabs" aria-label="预制服装分类">
+            <Tabs.Trigger value="shawl" className="preset-category-tab">披肩 <small>SHAWL</small></Tabs.Trigger>
+            <Tabs.Trigger value="coat" className="preset-category-tab">外套 <small>COAT</small></Tabs.Trigger>
+            <Tabs.Trigger value="cape" className="preset-category-tab">披风 <small>CAPE</small></Tabs.Trigger>
+          </Tabs.List>
+          <Tabs.Content value="shawl" className="preset-tab-panel">
+            <section className="preset-section">
+              <div className="preset-section-title">选择披肩 <span>{shawls.length} 款</span></div>
+              <div className="preset-options">
+                <button className={'preset-option ' + (shawlId === 'none' ? 'chosen' : '')} onClick={() => setShawlId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用披肩</span></button>
+                {shawls.map(item => <button key={item.id} className={'preset-option ' + (shawlId === item.id ? 'chosen' : '')} onClick={() => setShawlId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
+              </div>
+            </section>
+          </Tabs.Content>
+          <Tabs.Content value="coat" className="preset-tab-panel">
+            <section className="preset-section">
+              <div className="preset-section-title">选择外套 <span>{coats.length} 款</span></div>
+              <div className="preset-options">
+                <button className={'preset-option ' + (coatId === 'none' ? 'chosen' : '')} onClick={() => setCoatId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用外套</span></button>
+                {coats.map(item => <button key={item.id} className={'preset-option ' + (coatId === item.id ? 'chosen' : '')} onClick={() => setCoatId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
+              </div>
+            </section>
+          </Tabs.Content>
+          <Tabs.Content value="cape" className="preset-tab-panel">
+            <section className="preset-section">
+              <div className="preset-section-title">选择披风 <span>独立纹理</span></div>
+              <div className="preset-options">
+                {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}>{item.id === 'none' ? <span className="preset-swatch no-swatch"><X size={18}/></span> : <PresetThumbnail kind="cape" imageUrl={ASSET_ROOT + item.id} showAuthor={false}/>}<span>{item.label}</span></button>)}
+              </div>
+              <button className="preset-import" onClick={exportCape} disabled={capeId === 'none'}><Download size={15}/> 单独导出披风 PNG</button>
+            </section>
+          </Tabs.Content>
+        </Tabs.Root>
         <div className="preset-attribution">模板素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。披肩和外套使用角色 3D 渲染图；作者仅标注在披肩、外套预览图下方；披风不显示作者。</div>
       </aside>
       <section className="preset-preview-column">
