@@ -476,3 +476,48 @@
   .preset-library > .preset-section { margin-top: 20px; }
   .preset-library .preset-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+
+/* Focused preset workflow: current skin first, then one selected category at a time. */
+.preset-current-skin{width:calc(100% - 40px);max-width:1640px;margin:20px auto 0;padding:15px 18px;display:grid;grid-template-columns:minmax(145px,190px) minmax(230px,1fr) auto;align-items:center;gap:16px;border:1px solid #2c4261;border-radius:13px;background:linear-gradient(110deg,#14243a,#101a29)}
+.preset-current-skin-title{display:flex;flex-direction:column;gap:9px}
+.preset-current-skin-title small{display:block;color:#7f95b8;font-size:9px;letter-spacing:1.8px;font-weight:800;margin-bottom:4px}
+.preset-current-skin-title h2{margin:0;color:#f0f5ff;font-size:18px}
+.preset-current-skin-title>span{display:flex;align-items:center;gap:7px;color:#a1b1ca;font-size:11px}
+.preset-current-skin-title>span i{width:7px;height:7px;border-radius:50%;background:#d8a34e}
+.preset-current-skin-title>span.preset-current-ready i{background:#51d5a2}
+.preset-current-skin .preset-skin-card{margin:0;min-width:0}
+.preset-current-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;max-width:440px}
+.preset-current-actions .preset-import,.preset-current-actions .preset-export-skin,.preset-current-actions .preset-open-blockbench{width:auto;margin:0;min-height:38px;padding:9px 12px;white-space:nowrap}
+.preset-current-actions .preset-export-skin,.preset-open-blockbench{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #3a65a5;border-radius:8px;padding:10px 13px;color:#e0ebff;background:#203b67;font-size:12px;font-weight:650;cursor:pointer}
+.preset-current-actions .preset-open-blockbench{background:#3977ed;border-color:#3977ed;color:#fff}
+.preset-current-actions button:disabled{opacity:.45;cursor:not-allowed}
+.preset-layout{grid-template-columns:minmax(260px,320px) minmax(320px,1fr);align-items:stretch}
+.preset-properties{display:none}
+.preset-category-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:16px 0 8px;padding:5px;border:1px solid #293950;border-radius:10px;background:#0d1624}
+.preset-category-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;border:1px solid transparent;border-radius:7px;padding:10px 5px;background:transparent;color:#9eafc9;font-size:13px;font-weight:750;cursor:pointer}
+.preset-category-tabs button small{font-size:8px;letter-spacing:1.2px;color:#7187a8}
+.preset-category-tabs button.active{background:#294a7e;border-color:#4778c6;color:#fff;box-shadow:0 2px 10px #0002}
+.preset-category-tabs button.active small{color:#c9dcff}
+.preset-library>.preset-section{margin-top:12px}
+.preset-library .preset-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+.preset-library .preset-attribution{margin-top:18px}
+@media(max-width:1050px){
+  .preset-current-skin{grid-template-columns:150px minmax(0,1fr);gap:12px}
+  .preset-current-actions{grid-column:1/-1;max-width:none;justify-content:flex-start}
+  .preset-layout{grid-template-columns:minmax(230px,290px) minmax(0,1fr);padding:14px;gap:12px}
+  .preset-current-skin{width:calc(100% - 28px)}
+}
+@media(max-width:760px){
+  .preset-current-skin{grid-template-columns:1fr;align-items:stretch;margin-top:12px;padding:13px}
+  .preset-current-skin-title{flex-direction:row;align-items:center;justify-content:space-between}
+  .preset-current-skin .preset-skin-card{margin:0}
+  .preset-current-actions{display:grid;grid-template-columns:1fr;gap:8px}
+  .preset-current-actions .preset-import,.preset-current-actions .preset-export-skin,.preset-current-actions .preset-open-blockbench{width:100%}
+  .preset-layout{grid-template-columns:minmax(0,1fr);padding:12px}
+  .preset-library{order:1}
+  .preset-preview-column{order:2;min-height:560px}
+  .preset-preview-heading{align-items:flex-start;flex-direction:column}
+  .preset-preview-controls{width:100%;display:flex;flex-wrap:wrap;gap:6px}
+  .preset-model-stage,.preset-model-stage .three-preview-canvas,.preset-model-stage .three-preview-canvas canvas{min-height:420px}
+}
