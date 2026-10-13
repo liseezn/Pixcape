@@ -6,7 +6,7 @@ Pixcape embeds a separately built web application derived from Blockbench under 
 
 - Upstream project: https://github.com/JannisX11/blockbench
 - Pixcape-maintained fork: https://github.com/liseezn/blockbench
-- Integrated source revision: `9f90309271d0bb86665eed866241c7f1c5a2ad3c`
+- Integrated source revision: `66883a036a4a3188b99687cdddccd229b8133868`
 - License: GNU General Public License, version 3 or (at your option) any later version (GPL-3.0-or-later).
 - The corresponding license text is shipped with the embedded editor at `/blockbench/LICENSE.MD`.
 - Pixcape-specific changes to the Blockbench source are maintained in the public fork linked above.
