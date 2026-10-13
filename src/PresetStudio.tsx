@@ -3,6 +3,7 @@ import { Download, Shirt, Upload, RotateCcw, UserRound, Layers, ArrowRight, X } 
 import ThreeCapePreview from './ThreeCapePreview'
 import PresetThumbnail from './PresetThumbnail'
 import './preset-studio.css'
+import './preview-options.css'
 
 type GarmentKind = 'shawl' | 'coat'
 type Preset = { id: string; label: string; file: string; slimFile: string; kind: GarmentKind }
@@ -63,6 +64,8 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   const [modelType, setModelType] = useState<'steve' | 'alex'>('steve')
   const [viewSide, setViewSide] = useState<'front' | 'back'>('front')
   const [rotation, setRotation] = useState(-13)
+  const [backgroundTheme, setBackgroundTheme] = useState<'studio' | 'sunset' | 'forest' | 'void'>('studio')
+  const [pose, setPose] = useState<'idle' | 'wave' | 'walk' | 'fly'>('idle')
   const [pixels, setPixels] = useState<string[]>(Array(4096).fill(''))
   const [status, setStatus] = useState('正在加载模板…')
   const [error, setError] = useState('')
@@ -174,6 +177,8 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     setModelType('steve')
     setViewSide('front')
     setRotation(-13)
+    setBackgroundTheme('studio')
+    setPose('idle')
     setError('')
     setStatus('已恢复默认模板')
   }
@@ -201,21 +206,21 @@ export default function PresetStudio({ onOpenEditor }: Props) {
           <div className="preset-section-title">外套 <span>COAT</span></div>
           <div className="preset-options">
             <button className={'preset-option ' + (coatId === 'none' ? 'chosen' : '')} onClick={() => setCoatId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用外套</span></button>
-            {coats.map(item => <button key={item.id} className={'preset-option ' + (coatId === item.id ? 'chosen' : '')} onClick={() => setCoatId(item.id)}><span className="preset-swatch" style={{ backgroundImage: 'url(' + ASSET_ROOT + item.file + ')' }}/><span>{item.label}</span></button>)}
+            {coats.map(item => <button key={item.id} className={'preset-option ' + (coatId === item.id ? 'chosen' : '')} onClick={() => setCoatId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
           </div>
         </section>
         <section className="preset-section">
           <div className="preset-section-title">披风 <span>CAPE · 独立纹理</span></div>
           <div className="preset-options">
-            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}>{item.id === 'none' ? <span className="preset-swatch no-swatch"><X size={18}/></span> : <PresetThumbnail kind="cape" imageUrl={ASSET_ROOT + item.id}/>}<span>{item.label}</span></button>)}
+            {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}>{item.id === 'none' ? <span className="preset-swatch no-swatch"><X size={18}/></span> : <PresetThumbnail kind="cape" imageUrl={ASSET_ROOT + item.id} showAuthor={false}/>}<span>{item.label}</span></button>)}
           </div>
           <button className="preset-import" onClick={exportCape} disabled={capeId === 'none'}><Download size={15}/> 单独导出披风 PNG</button>
         </section>
-        <div className="preset-attribution">模板素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。披肩、外套和披风的缩略图使用角色 3D 渲染图；作者标注在各预览图下方。</div>
+        <div className="preset-attribution">模板素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。披肩和外套使用角色 3D 渲染图；作者仅标注在披肩、外套预览图下方。</div>
       </aside>
       <section className="preset-preview-column">
-        <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>正面</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>背面</button></div><div className="preset-model-switch"><button className={elytraVisible ? 'active' : ''} onClick={() => setElytraVisible(value => !value)}>{elytraVisible ? '切换为披风' : '切换为鞘翅'}</button></div></div></div>
-        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side={viewSide} rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'} elytraVisible={elytraVisible}/><div className="preset-model-caption">拖动旋转 · 可切换正面 / 背面</div></div>
+        <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>正面</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>背面</button></div><div className="preset-model-switch"><button className={elytraVisible ? 'active' : ''} onClick={() => setElytraVisible(value => !value)}>{elytraVisible ? '切换为披风' : '切换为鞘翅'}</button></div><div className="preset-model-switch preset-scene-switch" aria-label="预览背景"><button className={backgroundTheme === 'studio' ? 'active' : ''} onClick={() => setBackgroundTheme('studio')}>工作室</button><button className={backgroundTheme === 'sunset' ? 'active' : ''} onClick={() => setBackgroundTheme('sunset')}>日落</button><button className={backgroundTheme === 'forest' ? 'active' : ''} onClick={() => setBackgroundTheme('forest')}>森林</button><button className={backgroundTheme === 'void' ? 'active' : ''} onClick={() => setBackgroundTheme('void')}>深空</button></div><div className="preset-model-switch preset-scene-switch" aria-label="角色动作"><button className={pose === 'idle' ? 'active' : ''} onClick={() => setPose('idle')}>站立</button><button className={pose === 'wave' ? 'active' : ''} onClick={() => setPose('wave')}>挥手</button><button className={pose === 'walk' ? 'active' : ''} onClick={() => setPose('walk')}>行走</button><button className={pose === 'fly' ? 'active' : ''} onClick={() => setPose('fly')}>飞行</button></div></div></div>
+        <div className={'preset-model-stage scene-' + backgroundTheme}><ThreeCapePreview layers={layers} side={viewSide} rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'} elytraVisible={elytraVisible} pose={pose}/><div className="preset-model-caption">拖动旋转 · 切换背景与动作 · 正面 / 背面</div></div>
         {error && <div className="preset-error">{error}</div>}
         <div className="preset-preview-footer"><span className={ready ? 'preset-status-ready' : ''}><i/> {status}</span><button onClick={reset}><RotateCcw size={14}/> 重置</button></div>
       </section>
