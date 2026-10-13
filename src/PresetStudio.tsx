@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Shirt, Upload, RotateCcw, UserRound, Layers, ArrowRight, X } from 'lucide-react'
+import { Download, Shirt, Upload, RotateCcw, UserRound, X, ExternalLink } from 'lucide-react'
 import ThreeCapePreview from './ThreeCapePreview'
 import PresetThumbnail from './PresetThumbnail'
 import './preset-studio.css'
@@ -186,15 +186,12 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   return <div className="preset-shell">
     <header className="preset-topbar">
       <a className="preset-brand" href="#" onClick={event => event.preventDefault()}><span>✦</span> Pixcape <small>PRESET STUDIO</small></a>
-      <div className="preset-top-actions">
-        <button className="preset-secondary" onClick={onOpenEditor}><Layers size={16}/> 像素编辑器 <ArrowRight size={15}/></button>
-        <button className="preset-primary" onClick={exportPng} disabled={!ready}><Download size={16}/> 导出皮肤 PNG</button>
-      </div>
+      <div className="preset-top-actions"><span className="preset-workspace-label">Minecraft 皮肤与服装工作台</span></div>
     </header>
     <main className="preset-layout">
       <aside className="preset-library">
         <div className="preset-heading"><div><small>LIBRARY</small><h1>预制服装</h1></div><Shirt size={22}/></div>
-        <p className="preset-description">选择披肩和外套，实时合成到皮肤纹理。披风作为独立纹理单独选择与导出，不会覆盖披肩或外套。</p>
+        <p className="preset-description">披肩、外套、披风分栏展示。披肩与外套可合成到皮肤；披风作为独立纹理选择与导出。完整模型、纹理和动画编辑请打开 Blockbench。</p>
         <section className="preset-section">
           <div className="preset-section-title">披肩 <span>SHAWL</span></div>
           <div className="preset-options">
@@ -216,7 +213,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
           </div>
           <button className="preset-import" onClick={exportCape} disabled={capeId === 'none'}><Download size={15}/> 单独导出披风 PNG</button>
         </section>
-        <div className="preset-attribution">模板素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。披肩和外套使用角色 3D 渲染图；作者仅标注在披肩、外套预览图下方。</div>
+        <div className="preset-attribution">模板素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。披肩和外套使用角色 3D 渲染图；作者仅标注在披肩、外套预览图下方；披风不显示作者。</div>
       </aside>
       <section className="preset-preview-column">
         <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>正面</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>背面</button></div><div className="preset-model-switch"><button className={elytraVisible ? 'active' : ''} onClick={() => setElytraVisible(value => !value)}>{elytraVisible ? '切换为披风' : '切换为鞘翅'}</button></div><div className="preset-model-switch preset-scene-switch" aria-label="预览背景"><button className={backgroundTheme === 'studio' ? 'active' : ''} onClick={() => setBackgroundTheme('studio')}>工作室</button><button className={backgroundTheme === 'sunset' ? 'active' : ''} onClick={() => setBackgroundTheme('sunset')}>日落</button><button className={backgroundTheme === 'forest' ? 'active' : ''} onClick={() => setBackgroundTheme('forest')}>森林</button><button className={backgroundTheme === 'void' ? 'active' : ''} onClick={() => setBackgroundTheme('void')}>深空</button></div><div className="preset-model-switch preset-scene-switch" aria-label="角色动作"><button className={pose === 'idle' ? 'active' : ''} onClick={() => setPose('idle')}>站立</button><button className={pose === 'wave' ? 'active' : ''} onClick={() => setPose('wave')}>挥手</button><button className={pose === 'walk' ? 'active' : ''} onClick={() => setPose('walk')}>行走</button><button className={pose === 'fly' ? 'active' : ''} onClick={() => setPose('fly')}>飞行</button></div></div></div>
@@ -228,9 +225,11 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         <div className="preset-heading"><div><small>YOUR SKIN</small><h2>当前皮肤</h2></div><UserRound size={21}/></div>
         <div className="preset-skin-card"><div className="preset-skin-thumb"><canvas ref={canvasRef} width={64} height={64}/></div><div className="preset-skin-meta"><strong>{skinName}</strong><small>64 × 64 · PNG</small></div></div>
         <button className="preset-import" onClick={() => skinInputRef.current?.click()}><Upload size={16}/> 导入自己的皮肤</button>
+        <button className="preset-export-skin" onClick={exportPng} disabled={!ready}><Download size={16}/> 导出当前皮肤 PNG</button>
+        <button className="preset-open-blockbench" onClick={onOpenEditor}><ExternalLink size={15}/> 打开 Blockbench 完整编辑器</button>
         <input ref={skinInputRef} hidden type="file" accept="image/png" onChange={event => { importSkin(event.target.files?.[0]); event.currentTarget.value = '' }}/>
         <div className="preset-tip"><strong>使用提示</strong><p>导入标准 Minecraft 64 × 64 皮肤后，选择披肩或外套。导出结果是合成后的皮肤 PNG，可继续用于 Minecraft 皮肤工具。</p></div>
-        <div className="preset-next"><span>下一阶段</span><strong>完整皮肤编辑器</strong><p>后续增加逐像素绘制、图层管理和更完整的纹理编辑。</p></div>
+
       </aside>
     </main>
     <footer className="preset-footer"><span>Pixcape · 预制服装工作台</span><span>披肩 / 外套模板 · 实时 3D 预览</span></footer>
