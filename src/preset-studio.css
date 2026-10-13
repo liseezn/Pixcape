@@ -717,3 +717,133 @@
   .preset-model-stage .three-preview-canvas,
   .preset-model-stage .three-preview-canvas canvas { min-height: 320px !important; }
 }
+
+
+/* Minecraft-inspired block UI: grass, dirt, stone, square corners and inventory slots. */
+.preset-shell {
+  --mc-grass: #5e963e;
+  --mc-grass-light: #83bc57;
+  --mc-dirt: #795438;
+  --mc-stone: #4b4f4b;
+  --mc-ink: #20251c;
+  --mc-panel: #c6c6c6;
+  --mc-slot: #8b8b8b;
+  font-family: "Trebuchet MS", "Arial", sans-serif;
+  background-color: #2d4528;
+  background-image: linear-gradient(135deg,#314d2a 25%,transparent 25%),linear-gradient(225deg,#314d2a 25%,transparent 25%),linear-gradient(45deg,#314d2a 25%,transparent 25%),linear-gradient(315deg,#314d2a 25%,#263b22 25%);
+  background-position: 12px 0,12px 0,0 0,0 0;
+  background-size: 24px 24px;
+  color: #f6f3df;
+}
+.preset-topbar {
+  min-height: 66px;
+  border: 0;
+  border-bottom: 5px solid #2e4b25;
+  background: linear-gradient(#6da94a 0 10px,#4f8436 10px 100%);
+  box-shadow: 0 4px 0 #1b2b17;
+  padding: 0 clamp(12px,2vw,28px);
+}
+.preset-brand { color: #fff9df; text-shadow: 2px 2px 0 #294321; letter-spacing: .3px; }
+.preset-brand > span {
+  width: 34px; height: 34px; border-radius: 0;
+  background: #9e744b; border: 3px solid #e0bd81;
+  box-shadow: inset -4px -4px 0 #6e4c32, inset 3px 3px 0 #d3a873;
+}
+.preset-brand small { color: #e2efcc; letter-spacing: 1px; }
+.preset-current-skin {
+  border: 4px solid #5b5b5b;
+  border-radius: 0;
+  background: #c6c6c6;
+  color: #242424;
+  box-shadow: inset 4px 4px 0 #f4f4f4, inset -4px -4px 0 #777, 0 5px 0 #172416;
+}
+.preset-current-skin-title h2 { color: #242424; font-weight: 900; letter-spacing: 0; }
+.preset-current-skin-title small { color: #3d6731; letter-spacing: 1px; }
+.preset-current-skin-title > span { color: #454545; }
+.preset-current-skin .preset-skin-card {
+  border: 3px solid #777;
+  border-radius: 0;
+  background: #9a9a9a;
+  box-shadow: inset 3px 3px 0 #686868, inset -3px -3px 0 #e0e0e0;
+}
+.preset-current-skin .preset-skin-meta strong { color: #222; }
+.preset-current-skin .preset-skin-meta small { color: #454545; }
+.preset-current-skin .preset-skin-thumb { border: 3px solid #555; border-radius: 0; }
+.preset-layout { gap: 14px; }
+.preset-library,.preset-preview-column,.preset-properties {
+  border: 4px solid #555;
+  border-radius: 0;
+  background: #c6c6c6;
+  color: #252525;
+  box-shadow: inset 4px 4px 0 #f4f4f4, inset -4px -4px 0 #777, 0 5px 0 #182416;
+}
+.preset-heading h1,.preset-heading h2,.preset-preview-heading h2 { color: #242424; letter-spacing: 0; font-weight: 900; }
+.preset-heading small,.preset-preview-heading small { color: #477336; letter-spacing: 1px; }
+.preset-heading > svg { color: #426e32; }
+.preset-description { color: #424242; }
+.preset-category-tabs {
+  gap: 4px; padding: 5px; border: 3px solid #666; border-radius: 0;
+  background: #8b8b8b; box-shadow: inset 3px 3px 0 #686868, inset -3px -3px 0 #ddd;
+}
+.preset-category-tabs .preset-category-tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; min-width: 0; padding: 11px 5px; border: 3px solid #555;
+  border-radius: 0; background: #a7a7a7; color: #2a2a2a;
+  font-weight: 900; font-size: 13px; box-shadow: inset 3px 3px 0 #dedede, inset -3px -3px 0 #777;
+}
+.preset-category-tabs .preset-category-tab small { color: #454545; font-size: 8px; letter-spacing: 1px; }
+.preset-category-tabs .preset-category-tab[data-state="active"] {
+  background: #5b8f3d; color: #fffce5; border-color: #304f25;
+  box-shadow: inset 3px 3px 0 #8fbd65, inset -3px -3px 0 #355b2b;
+}
+.preset-category-tabs .preset-category-tab[data-state="active"] small { color: #e2f2c9; }
+.preset-tabs-root { min-width: 0; }
+.preset-tab-panel { outline: none; }
+.preset-section-title { color: #282828; border-bottom: 2px solid #888; }
+.preset-section-title span { color: #4a4a4a; }
+.preset-options { gap: 8px; }
+.preset-option {
+  border: 3px solid #777; border-radius: 0; background: #9b9b9b; color: #252525;
+  box-shadow: inset 3px 3px 0 #cfcfcf, inset -3px -3px 0 #686868;
+  transition: transform .08s, background .08s, border-color .08s;
+}
+.preset-option:hover { border-color: #486e32; background: #b4c69c; transform: translateY(-1px); }
+.preset-option.chosen {
+  border-color: #315a27; border-radius: 0; background: #d4e7bf; color: #1d3119;
+  box-shadow: inset 3px 3px 0 #f1ffe4, inset -3px -3px 0 #7aa35e;
+}
+.preset-swatch,.preset-skin-thumb { border-radius: 0; }
+.preset-import,.preset-export-skin,.preset-open-blockbench,.preset-current-actions .preset-open-blockbench {
+  border: 3px solid #294d23; border-radius: 0; color: #fffbe7;
+  background: #558b38; box-shadow: inset 3px 3px 0 #80b85a, inset -3px -3px 0 #345b28;
+  text-shadow: 1px 1px #2c4b24; font-weight: 900;
+}
+.preset-open-blockbench,.preset-current-actions .preset-open-blockbench { background: #467cbb; border-color: #244c79; box-shadow: inset 3px 3px 0 #79a8d6, inset -3px -3px 0 #2b5686; }
+.preset-current-actions .preset-import { background: #936c43; border-color: #60432b; box-shadow: inset 3px 3px 0 #c69a65, inset -3px -3px 0 #65462c; }
+.preset-model-stage {
+  border: 4px solid #555; border-radius: 0;
+  box-shadow: inset 4px 4px 0 #ffffff36, inset -4px -4px 0 #00000045;
+}
+.preset-model-switch { border: 3px solid #777; border-radius: 0; background: #8b8b8b; gap: 3px; padding: 3px; }
+.preset-model-switch button { border-radius: 0; color: #272727; font-weight: 800; }
+.preset-model-switch button.active { background: #5c913e; color: #fff; box-shadow: inset 2px 2px 0 #8bbf63, inset -2px -2px 0 #315c27; }
+.preset-view-adjust button,.preset-preview-footer button {
+  border: 3px solid #555; border-radius: 0; background: #999; color: #202020;
+  box-shadow: inset 2px 2px 0 #ddd, inset -2px -2px 0 #666;
+}
+.preset-attribution { color: #444; border-color: #888; }
+.preset-attribution a { color: #285e29; font-weight: 800; }
+.preset-tooltip {
+  z-index: 10000; max-width: 260px; padding: 9px 11px;
+  border: 3px solid #354f2b; background: #e1edce; color: #25351f;
+  box-shadow: 3px 3px 0 #172415; font-size: 12px; line-height: 1.5;
+}
+.preset-tooltip-arrow { fill: #e1edce; }
+.preset-footer { color: #e0edcf; text-shadow: 1px 1px #1c3018; }
+@media(max-width:760px) {
+  .preset-current-skin { width: calc(100% - 16px); }
+  .preset-layout { padding: 8px !important; }
+  .preset-library,.preset-preview-column { padding: 12px; }
+  .preset-current-actions button { min-height: 44px; }
+  .preset-category-tabs .preset-category-tab { min-height: 48px; }
+}
