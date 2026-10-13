@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Shirt, Upload, RotateCcw, UserRound, Layers, ArrowRight, X } from 'lucide-react'
 import ThreeCapePreview from './ThreeCapePreview'
+import './preset-studio.css'
 
 type GarmentKind = 'shawl' | 'coat'
 type Preset = { id: string; label: string; file: string; kind: GarmentKind }
