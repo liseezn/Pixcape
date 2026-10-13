@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import ThreeCapePreview from './ThreeCapePreview'
+import PresetStudio from './PresetStudio'
 import {
   Download, Eraser, Paintbrush, RotateCcw, RotateCw, Upload, PaintBucket, Pipette,
   ZoomIn, ZoomOut, Maximize2, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
@@ -41,6 +42,7 @@ export default function App() {
   const [previewSide, setPreviewSide] = useState<'front' | 'back'>('back')
   const [modelType, setModelType] = useState<'steve' | 'alex'>('steve')
   const [previewRotation, setPreviewRotation] = useState(-13)
+  const [appMode, setAppMode] = useState<'presets' | 'editor'>('presets')
 
   const setLayers = useCallback((next: Layer[] | ((old: Layer[]) => Layer[])) => {
     setLayersState(old => {
@@ -294,11 +296,13 @@ export default function App() {
     { id: 'ellipse', label: '椭圆', key: 'O', icon: Circle },
   ]
 
+  if (appMode === 'presets') return <PresetStudio onOpenEditor={() => setAppMode('editor')} />
+
   return <div className={'editor-shell ' + (editorMode === 'simple' ? 'simple-mode' : 'professional-mode')}>
     <header className="topbar">
       <a className="brand" href="#" onClick={e => e.preventDefault()}><span className="brand-mark">✦</span><span>Pixcape</span><small>STUDIO</small></a>
       <nav className="main-menu"><button onClick={saveLocal}>文件</button><button onClick={undo}>编辑</button><button onClick={() => setShowGrid(v => !v)}>视图</button><button onClick={() => setStatus('快捷键：B 画笔 / E 橡皮 / G 填充 / Ctrl+Z 撤销')}>帮助</button></nav>
-      <div className="top-actions"><div className="mode-switch" role="group" aria-label="编辑器模式"><button className={editorMode === 'simple' ? 'active' : ''} aria-pressed={editorMode === 'simple'} onClick={() => setEditorMode('simple')}>简单模式</button><button className={editorMode === 'professional' ? 'active' : ''} aria-pressed={editorMode === 'professional'} onClick={() => setEditorMode('professional')}>专业模式</button></div><span className={'save-state ' + (saved ? 'is-saved' : '')}><span />{saved ? '已保存' : '未保存'}</span><button className="primary-btn" onClick={exportPng}><Download size={15}/> 导出 PNG</button></div>
+      <div className="top-actions"><button className="primary-btn" onClick={() => setAppMode('presets')}><Shirt size={15}/> 预制服装</button><div className="mode-switch" role="group" aria-label="编辑器模式"><button className={editorMode === 'simple' ? 'active' : ''} aria-pressed={editorMode === 'simple'} onClick={() => setEditorMode('simple')}>简单模式</button><button className={editorMode === 'professional' ? 'active' : ''} aria-pressed={editorMode === 'professional'} onClick={() => setEditorMode('professional')}>专业模式</button></div><span className={'save-state ' + (saved ? 'is-saved' : '')}><span />{saved ? '已保存' : '未保存'}</span><button className="primary-btn" onClick={exportPng}><Download size={15}/> 导出 PNG</button></div>
     </header>
     <main className="editor-layout">
       <aside className="left-sidebar">
