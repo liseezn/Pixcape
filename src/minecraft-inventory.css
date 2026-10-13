@@ -1,0 +1,177 @@
+/* Minecraft Java inventory-inspired UI: pixel edges, stone slots, grass/dirt surfaces. */
+.preset-shell {
+  --mc-stone: #c6c6c6;
+  --mc-stone-light: #f0f0f0;
+  --mc-stone-dark: #555;
+  --mc-slot: #8b8b8b;
+  --mc-green: #5d913b;
+  --mc-green-light: #8fbd62;
+  --mc-dirt: #795435;
+  min-height: 100vh;
+  color: #262626;
+  font-family: "Minecraft", "Trebuchet MS", monospace;
+  background-color: #4a7135;
+  background-image:
+    linear-gradient(180deg, #73a94b 0 7px, #4c7c32 7px 13px, transparent 13px),
+    repeating-linear-gradient(90deg, #00000008 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(0deg, #00000008 0 2px, transparent 2px 18px);
+  image-rendering: pixelated;
+}
+.preset-shell button, .preset-shell input, .preset-shell a { font-family: inherit; }
+.preset-topbar {
+  position: relative;
+  height: 58px;
+  padding: 0 18px;
+  background: linear-gradient(#6da94a 0 8px, #4f8436 8px 100%);
+  border: 0;
+  border-bottom: 5px solid #2d4c24;
+  box-shadow: 0 4px 0 #1c3218;
+}
+.preset-brand { color: #fffde8; font-size: 17px; text-shadow: 2px 2px #304b24; letter-spacing: .2px; }
+.preset-brand > span {
+  width: 30px; height: 30px; border: 3px solid #e0bd81; border-radius: 0;
+  background: #9b7046; box-shadow: inset 3px 3px #c9a16a, inset -3px -3px #63452d;
+}
+.preset-brand small { color: #edf5d8; letter-spacing: 1px; }
+.preset-workspace-label { color: #f3f4d7; text-shadow: 1px 1px #2b4923; font-size: 11px; }
+.preset-current-skin {
+  width: calc(100% - 28px); max-width: 1640px; margin: 16px auto 0;
+  padding: 12px 14px; border: 4px solid #555; border-radius: 0;
+  background: #c6c6c6; color: #262626;
+  box-shadow: inset 4px 4px #f4f4f4, inset -4px -4px #777, 0 5px #263c20;
+}
+.preset-current-skin-title { border-bottom: 2px solid #8a8a8a; padding-bottom: 8px; }
+.preset-current-skin-title small, .preset-heading small, .preset-preview-heading small {
+  color: #416d2f; letter-spacing: 1px; font-size: 9px; text-shadow: none;
+}
+.preset-current-skin-title h2, .preset-heading h1, .preset-heading h2, .preset-preview-heading h2 {
+  color: #242424; font-weight: 900; text-shadow: 1px 1px #fff; letter-spacing: 0;
+}
+.preset-current-skin-title > span { color: #444; }
+.preset-current-skin-title i, .preset-preview-footer i { border-radius: 0; }
+.preset-skin-card { gap: 12px; }
+.preset-skin-thumb {
+  border: 3px solid #555; border-radius: 0; background: #8b8b8b;
+  box-shadow: inset 3px 3px #666, inset -3px -3px #ddd;
+}
+.preset-skin-thumb canvas { image-rendering: pixelated; }
+.preset-skin-meta strong { color: #242424; }
+.preset-skin-meta small { color: #4a4a4a; }
+.preset-current-actions button, .preset-import, .preset-preview-footer button, .preset-view-adjust button {
+  border: 3px solid #555; border-radius: 0; padding: 9px 12px; font-weight: 900;
+  background: #a0a0a0; color: #222;
+  box-shadow: inset 3px 3px #e0e0e0, inset -3px -3px #666;
+}
+.preset-current-actions .preset-import, .preset-import {
+  color: #fffde8; border-color: #315526; background: #558b38;
+  box-shadow: inset 3px 3px #8fbd62, inset -3px -3px #315b27; text-shadow: 1px 1px #2c4b24;
+}
+.preset-current-actions .preset-open-blockbench {
+  color: #fff; border-color: #244c79; background: #477fbd;
+  box-shadow: inset 3px 3px #83b1df, inset -3px -3px #2c5684;
+}
+.preset-current-actions button:disabled, .preset-import:disabled { opacity: .5; }
+.preset-layout {
+  max-width: 1680px; padding: 14px; gap: 14px;
+  grid-template-columns: minmax(270px, 330px) minmax(0, 1fr);
+}
+.preset-library, .preset-preview-column, .preset-properties {
+  border: 4px solid #555; border-radius: 0; background: #c6c6c6; color: #262626;
+  box-shadow: inset 4px 4px #f0f0f0, inset -4px -4px #777, 0 5px #263c20;
+}
+.preset-library { padding: 14px; }
+.preset-preview-column { padding: 14px; }
+.preset-heading h1, .preset-heading h2, .preset-preview-heading h2 { font-size: 17px; }
+.preset-heading > svg { color: #416d2f; }
+.preset-description { color: #3d3d3d; font-size: 11px; line-height: 1.65; }
+.preset-category-tabs {
+  gap: 4px; padding: 5px; border: 3px solid #666; border-radius: 0;
+  background: #8b8b8b; box-shadow: inset 3px 3px #686868, inset -3px -3px #ddd;
+}
+.preset-category-tabs .preset-category-tab {
+  min-height: 52px; border: 3px solid #555; border-radius: 0;
+  background: #a0a0a0; color: #222; font-weight: 900;
+  box-shadow: inset 3px 3px #dedede, inset -3px -3px #777;
+}
+.preset-category-tabs .preset-category-tab small { color: #414141; }
+.preset-category-tabs .preset-category-tab[data-state="active"] {
+  background: #5b8f3d; color: #fff; border-color: #304f25;
+  box-shadow: inset 3px 3px #8fbd65, inset -3px -3px #355b2b;
+}
+.preset-category-tabs .preset-category-tab[data-state="active"] small { color: #edf8dc; }
+.preset-section-title { color: #242424; border-bottom: 2px solid #888; }
+.preset-section-title span { color: #414141; }
+.preset-options { gap: 7px; }
+.preset-option {
+  min-height: 102px; gap: 7px; padding: 9px 5px;
+  border: 3px solid #777; border-radius: 0; background: #9b9b9b; color: #242424;
+  box-shadow: inset 3px 3px #d4d4d4, inset -3px -3px #686868;
+  transition: background .08s, transform .08s;
+}
+.preset-option:hover { border-color: #486e32; background: #b4c69c; transform: translateY(-1px); }
+.preset-option.chosen {
+  border-color: #315a27; border-radius: 0; background: #d4e7bf; color: #1d3119;
+  box-shadow: inset 3px 3px #f1ffe4, inset -3px -3px #7aa35e;
+}
+.preset-option > span:last-child { font-size: 11px; font-weight: 800; }
+.preset-swatch, .preset-skin-thumb, .preset-option img { border-radius: 0; image-rendering: pixelated; }
+.preset-model-switch {
+  gap: 2px; padding: 3px; border: 3px solid #777; border-radius: 0; background: #8b8b8b;
+  box-shadow: inset 2px 2px #686868, inset -2px -2px #ddd;
+}
+.preset-model-switch button {
+  border-radius: 0; padding: 7px 8px; color: #252525; font-weight: 800; font-size: 10px;
+}
+.preset-model-switch button.active {
+  color: #fff; background: #5c913e;
+  box-shadow: inset 2px 2px #8bbf63, inset -2px -2px #315c27;
+}
+.preset-model-stage {
+  min-height: 420px; border: 4px solid #555; border-radius: 0;
+  background-color: #86b9dc;
+  box-shadow: inset 4px 4px #ffffff40, inset -4px -4px #00000045;
+}
+.preset-model-stage:before {
+  background-image: linear-gradient(#ffffff18 2px, transparent 2px), linear-gradient(90deg,#ffffff18 2px,transparent 2px);
+  background-size: 32px 32px;
+}
+.preset-model-caption {
+  left: 8px; bottom: 8px; padding: 6px 8px; border: 2px solid #555; border-radius: 0;
+  color: #222; background: #c6c6c6; box-shadow: inset 2px 2px #f0f0f0, inset -2px -2px #777;
+}
+.preset-view-adjust button { padding: 7px 10px; }
+.preset-view-adjust input { accent-color: #568b38; }
+.preset-attribution { color: #414141; border-color: #888; }
+.preset-attribution a { color: #285e29; font-weight: 900; }
+.preset-tooltip {
+  z-index: 10000; max-width: 260px; padding: 9px 11px;
+  border: 3px solid #354f2b; border-radius: 0; background: #e1edce; color: #25351f;
+  box-shadow: 3px 3px 0 #172415; font-size: 12px; line-height: 1.5;
+}
+.preset-tooltip-arrow { fill: #e1edce; }
+.preset-footer {
+  padding: 10px 18px; border-top: 4px solid #2d4c24;
+  background: #4f8436; color: #f4f5d9; text-shadow: 1px 1px #263c20;
+}
+.preset-error { border: 3px solid #8b2828; border-radius: 0; background: #f5d4d4; color: #6b1717; }
+@media (max-width: 900px) {
+  .preset-layout { grid-template-columns: minmax(0, 1fr); }
+  .preset-library { order: 1; }
+  .preset-preview-column { order: 2; }
+  .preset-model-stage { min-height: 360px; }
+}
+@media (max-width: 560px) {
+  .preset-topbar { padding: 0 10px; }
+  .preset-brand { font-size: 15px; }
+  .preset-brand small { display: none; }
+  .preset-workspace-label { font-size: 9px; }
+  .preset-current-skin { width: calc(100% - 16px); padding: 9px; margin-top: 12px; }
+  .preset-current-actions { display: grid; grid-template-columns: 1fr; }
+  .preset-current-actions button { width: 100%; min-height: 44px; }
+  .preset-layout { padding: 8px; gap: 10px; }
+  .preset-library, .preset-preview-column { padding: 10px; }
+  .preset-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .preset-model-stage { min-height: 320px; }
+  .preset-preview-heading { align-items: flex-start; flex-direction: column; }
+  .preset-preview-controls { width: 100%; }
+}
