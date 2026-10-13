@@ -307,3 +307,20 @@
   .preset-model-stage .three-preview-canvas canvas { min-height: 330px; }
   .preset-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Keyboard accessibility and reduced-motion support */
+.preset-shell button:focus-visible,
+.preset-shell a:focus-visible {
+  outline: 2px solid #8db4ff;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .preset-shell *,
+  .preset-shell *::before,
+  .preset-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
