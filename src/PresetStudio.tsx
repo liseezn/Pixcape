@@ -59,6 +59,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   const [coatId, setCoatId] = useState('none')
   const [capeId, setCapeId] = useState('cape_office.png')
   const [modelType, setModelType] = useState<'steve' | 'alex'>('steve')
+  const [viewSide, setViewSide] = useState<'front' | 'back'>('front')
   const [rotation, setRotation] = useState(-13)
   const [pixels, setPixels] = useState<string[]>(Array(4096).fill(''))
   const [status, setStatus] = useState('正在加载模板…')
@@ -68,6 +69,10 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   const shawls = useMemo(() => PRESETS.filter(item => item.kind === 'shawl'), [])
   const coats = useMemo(() => PRESETS.filter(item => item.kind === 'coat'), [])
   const layers = useMemo(() => [{ pixels, visible: true, opacity: 100 }], [pixels])
+
+  useEffect(() => () => {
+    if (skinUrl.startsWith('blob:')) URL.revokeObjectURL(skinUrl)
+  }, [skinUrl])
 
   useEffect(() => {
     let cancelled = false
@@ -164,7 +169,9 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     setCoatId('none')
     setCapeId('cape_office.png')
     setModelType('steve')
+    setViewSide('front')
     setRotation(-13)
+    setError('')
     setStatus('已恢复默认模板')
   }
 
@@ -204,8 +211,8 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         <div className="preset-attribution">服装纹理参考与素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。素材作者信息见原项目说明。</div>
       </aside>
       <section className="preset-preview-column">
-        <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div></div>
-        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side="front" rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'}/><div className="preset-model-caption">拖动角色旋转 · 披风独立预览</div></div>
+        <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>角色预览</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>Steve 粗臂</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>Alex 细臂</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>正面</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>背面</button></div></div></div>
+        <div className="preset-model-stage"><ThreeCapePreview layers={layers} side={viewSide} rotation={rotation} modelType={modelType} onRotationChange={setRotation} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'}/><div className="preset-model-caption">拖动旋转 · 可切换正面 / 背面</div></div>
         {error && <div className="preset-error">{error}</div>}
         <div className="preset-preview-footer"><span className={ready ? 'preset-status-ready' : ''}><i/> {status}</span><button onClick={reset}><RotateCcw size={14}/> 重置</button></div>
       </section>
