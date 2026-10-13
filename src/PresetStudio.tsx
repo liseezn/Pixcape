@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Shirt, Upload, RotateCcw, UserRound, X, ExternalLink } from 'lucide-react'
+import { Download, Shirt, Upload, RotateCcw, X, ExternalLink } from 'lucide-react'
 import ThreeCapePreview from './ThreeCapePreview'
 import PresetThumbnail from './PresetThumbnail'
 import './preset-studio.css'
@@ -70,6 +70,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
   const [shawlId, setShawlId] = useState('office-shawl')
   const [coatId, setCoatId] = useState('none')
   const [capeId, setCapeId] = useState('cape_office.png')
+  const [activeCategory, setActiveCategory] = useState<'shawl' | 'coat' | 'cape'>('shawl')
   const [elytraVisible, setElytraVisible] = useState(false)
   const [modelType, setModelType] = useState<'steve' | 'alex'>('steve')
   const [viewSide, setViewSide] = useState<'front' | 'back'>('front')
@@ -231,31 +232,47 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       <a className="preset-brand" href="#" onClick={event => event.preventDefault()}><span>✦</span> Pixcape <small>PRESET STUDIO</small></a>
       <div className="preset-top-actions"><span className="preset-workspace-label">Minecraft 皮肤与服装工作台</span></div>
     </header>
+        <section className="preset-current-skin">
+      <div className="preset-current-skin-title"><div><small>YOUR SKIN</small><h2>当前皮肤</h2></div><span className={ready ? 'preset-current-ready' : ''}><i/> {ready ? '已就绪' : '正在加载'}</span></div>
+      <div className="preset-skin-card"><div className="preset-skin-thumb"><canvas ref={canvasRef} width={64} height={64}/></div><div className="preset-skin-meta"><strong>{skinName}</strong><small>64 × 64 · PNG · 已应用所选披肩 / 外套</small></div></div>
+      <div className="preset-current-actions">
+        <button className="preset-import" onClick={() => skinInputRef.current?.click()}><Upload size={16}/> 导入皮肤</button>
+        <button className="preset-export-skin" onClick={exportPng} disabled={!ready}><Download size={16}/> 导出合成皮肤 PNG</button>
+        <button className="preset-open-blockbench" onClick={openEditorWithPreset} disabled={!ready}><ExternalLink size={15}/> 发送到 Blockbench 编辑</button>
+      </div>
+      <input ref={skinInputRef} hidden type="file" accept="image/png" onChange={event => { importSkin(event.target.files?.[0]); event.currentTarget.value = '' }}/>
+      {error && <div className="preset-error">{error}</div>}
+    </section>
     <main className="preset-layout">
       <aside className="preset-library">
         <div className="preset-heading"><div><small>LIBRARY</small><h1>预制服装</h1></div><Shirt size={22}/></div>
         <p className="preset-description">披肩、外套、披风分栏展示。披肩与外套可合成到皮肤；披风作为独立纹理选择与导出。完整模型、纹理和动画编辑请打开 Blockbench。</p>
-        <section className="preset-section">
-          <div className="preset-section-title">披肩 <span>SHAWL</span></div>
+        <div className="preset-category-tabs" role="tablist" aria-label="预制服装分类">
+          <button role="tab" aria-selected={activeCategory === 'shawl'} className={activeCategory === 'shawl' ? 'active' : ''} onClick={() => setActiveCategory('shawl')}>披肩 <small>SHAWL</small></button>
+          <button role="tab" aria-selected={activeCategory === 'coat'} className={activeCategory === 'coat' ? 'active' : ''} onClick={() => setActiveCategory('coat')}>外套 <small>COAT</small></button>
+          <button role="tab" aria-selected={activeCategory === 'cape'} className={activeCategory === 'cape' ? 'active' : ''} onClick={() => setActiveCategory('cape')}>披风 <small>CAPE</small></button>
+        </div>
+        {activeCategory === 'shawl' && <section className="preset-section" role="tabpanel">
+          <div className="preset-section-title">选择披肩 <span>{shawls.length} 款</span></div>
           <div className="preset-options">
             <button className={'preset-option ' + (shawlId === 'none' ? 'chosen' : '')} onClick={() => setShawlId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用披肩</span></button>
             {shawls.map(item => <button key={item.id} className={'preset-option ' + (shawlId === item.id ? 'chosen' : '')} onClick={() => setShawlId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
           </div>
-        </section>
-        <section className="preset-section">
-          <div className="preset-section-title">外套 <span>COAT</span></div>
+        </section>}
+        {activeCategory === 'coat' && <section className="preset-section" role="tabpanel">
+          <div className="preset-section-title">选择外套 <span>{coats.length} 款</span></div>
           <div className="preset-options">
             <button className={'preset-option ' + (coatId === 'none' ? 'chosen' : '')} onClick={() => setCoatId('none')}><span className="preset-swatch no-swatch"><X size={18}/></span><span>不使用外套</span></button>
             {coats.map(item => <button key={item.id} className={'preset-option ' + (coatId === item.id ? 'chosen' : '')} onClick={() => setCoatId(item.id)}><PresetThumbnail kind="skin" imageUrl={ASSET_ROOT + item.file} slimImageUrl={ASSET_ROOT + item.slimFile} modelType={modelType}/><span>{item.label}</span></button>)}
           </div>
-        </section>
-        <section className="preset-section">
-          <div className="preset-section-title">披风 <span>CAPE · 独立纹理</span></div>
+        </section>}
+        {activeCategory === 'cape' && <section className="preset-section" role="tabpanel">
+          <div className="preset-section-title">选择披风 <span>独立纹理</span></div>
           <div className="preset-options">
             {CAPES.map(item => <button key={item.id} className={'preset-option ' + (capeId === item.id ? 'chosen' : '')} onClick={() => setCapeId(item.id)}>{item.id === 'none' ? <span className="preset-swatch no-swatch"><X size={18}/></span> : <PresetThumbnail kind="cape" imageUrl={ASSET_ROOT + item.id} showAuthor={false}/>}<span>{item.label}</span></button>)}
           </div>
           <button className="preset-import" onClick={exportCape} disabled={capeId === 'none'}><Download size={15}/> 单独导出披风 PNG</button>
-        </section>
+        </section>}
         <div className="preset-attribution">模板素材来源：<a href="https://github.com/lonelyang/CapeSkinImage" target="_blank" rel="noreferrer">CapeSkinImage</a>。披肩和外套使用角色 3D 渲染图；作者仅标注在披肩、外套预览图下方；披风不显示作者。</div>
       </aside>
       <section className="preset-preview-column">
@@ -264,16 +281,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         {error && <div className="preset-error">{error}</div>}
         <div className="preset-preview-footer"><span className={ready ? 'preset-status-ready' : ''}><i/> {status}</span><button onClick={reset}><RotateCcw size={14}/> 重置</button></div>
       </section>
-      <aside className="preset-properties">
-        <div className="preset-heading"><div><small>YOUR SKIN</small><h2>当前皮肤</h2></div><UserRound size={21}/></div>
-        <div className="preset-skin-card"><div className="preset-skin-thumb"><canvas ref={canvasRef} width={64} height={64}/></div><div className="preset-skin-meta"><strong>{skinName}</strong><small>64 × 64 · PNG</small></div></div>
-        <button className="preset-import" onClick={() => skinInputRef.current?.click()}><Upload size={16}/> 导入自己的皮肤</button>
-        <button className="preset-export-skin" onClick={exportPng} disabled={!ready}><Download size={16}/> 导出当前皮肤 PNG</button>
-        <button className="preset-open-blockbench" onClick={openEditorWithPreset}><ExternalLink size={15}/> 打开 Blockbench 完整编辑器</button>
-        <input ref={skinInputRef} hidden type="file" accept="image/png" onChange={event => { importSkin(event.target.files?.[0]); event.currentTarget.value = '' }}/>
-        <div className="preset-tip"><strong>使用提示</strong><p>导入标准 Minecraft 64 × 64 皮肤后，选择披肩或外套。导出结果是合成后的皮肤 PNG，可继续用于 Minecraft 皮肤工具。</p></div>
 
-      </aside>
     </main>
     <footer className="preset-footer"><span>Pixcape · 预制服装工作台</span><span>披肩 / 外套模板 · 实时 3D 预览</span></footer>
   </div>
