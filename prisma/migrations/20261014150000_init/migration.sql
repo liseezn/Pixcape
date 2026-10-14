@@ -54,15 +54,6 @@ CREATE TABLE "AuditLog" (
 );
 CREATE INDEX "AuditLog_targetType_targetId_createdAt_idx" ON "AuditLog"("targetType", "targetId", "createdAt");
 
-CREATE TABLE "LoginRateLimit" (
-  "key" TEXT NOT NULL,
-  "windowStartedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "count" INTEGER NOT NULL DEFAULT 0,
-  "updatedAt" TIMESTAMP(3) NOT NULL,
-  CONSTRAINT "LoginRateLimit_pkey" PRIMARY KEY ("key")
-);
-CREATE INDEX "LoginRateLimit_windowStartedAt_idx" ON "LoginRateLimit"("windowStartedAt");
-
 CREATE TABLE "Account" (
   "userId" TEXT NOT NULL,
   "type" TEXT NOT NULL,
