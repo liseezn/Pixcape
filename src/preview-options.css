@@ -49,3 +49,36 @@
 .preset-language-switch{display:flex;align-items:center;gap:6px;color:#f7f4df;font-size:11px;font-weight:700;text-shadow:1px 1px #304624}
 .preset-language-switch select{max-width:120px;min-height:30px;padding:4px 7px;border:2px solid #555;background:#c6c6c6;color:#222;font-weight:700}
 @media(max-width:560px){.preset-language-switch{font-size:9px}.preset-language-switch select{max-width:90px}}
+
+/* Use real in-game Minecraft screenshots as the preview environment, not CSS-drawn terrain. */
+.preset-model-stage {
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  background-color: #24313b;
+}
+.preset-model-stage.scene-day,
+.preset-model-stage.scene-plains {
+  background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg') !important;
+}
+.preset-model-stage.scene-night {
+  background-image: linear-gradient(rgba(8, 13, 28, .42), rgba(8, 13, 28, .42)), url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg') !important;
+}
+.preset-model-stage.scene-desert {
+  background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-structures.jpg') !important;
+}
+.preset-model-stage.scene-forest {
+  background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg') !important;
+}
+.preset-model-stage.scene-nether {
+  background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/waste-carousel1.jpg') !important;
+}
+.preset-model-stage.scene-end {
+  background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/highlands-carousel1.jpg') !important;
+}
+.preset-model-stage:not(.scene-custom)::before,
+.preset-model-stage:not(.scene-custom)::after {
+  content: none !important;
+  display: none !important;
+}
+.preset-model-stage .three-preview-canvas { background: transparent !important; }
