@@ -37,3 +37,15 @@
 .preset-model-stage .three-preview-canvas canvas{touch-action:none;cursor:grab}
 .preset-model-stage .three-preview-canvas canvas:active{cursor:grabbing}
 @media(max-width:760px){.preset-view-adjust{flex-wrap:wrap}.preset-view-adjust label{width:100%}.preset-biome-switch{max-width:100%}}
+
+/* Pixel-art voxel scene dressing for Minecraft biome previews. */
+.preset-model-stage{isolation:isolate;overflow:hidden;background-size:100% 100%}
+.preset-model-stage:before{content:"";position:absolute;z-index:0;inset:0;pointer-events:none;opacity:.98;background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
+.preset-model-stage.scene-day:before,.preset-model-stage.scene-plains:before{background-image:linear-gradient(90deg,transparent 0 7%,#3e7b32 7% 10%,#6fb64a 10% 14%,#3e7b32 14% 17%,transparent 17%),linear-gradient(90deg,transparent 0 72%,#4d8c37 72% 75%,#6fb64a 75% 80%,#3d7831 80% 83%,transparent 83%);background-size:100% 100%}
+.preset-model-stage.scene-day:after,.preset-model-stage.scene-plains:after{height:26%;opacity:1;background:linear-gradient(180deg,#75bd4d 0 12%,#57953b 12% 18%,#875b35 18% 100%);clip-path:polygon(0 20%,18% 20%,18% 0,34% 0,34% 27%,52% 27%,52% 9%,68% 9%,68% 31%,82% 31%,82% 14%,100% 14%,100% 100%,0 100%)}
+.preset-model-stage.scene-desert:after{height:25%;background:linear-gradient(180deg,#e8cc83 0 12%,#cba35d 12% 20%,#a97842 20% 100%);clip-path:polygon(0 32%,20% 32%,20% 15%,39% 15%,39% 0,64% 0,64% 28%,83% 28%,83% 12%,100% 12%,100% 100%,0 100%)}
+.preset-model-stage.scene-nether:after{height:28%;background:linear-gradient(180deg,#c24d34 0 15%,#73372c 15% 26%,#3c202b 26% 100%);clip-path:polygon(0 24%,14% 24%,14% 0,26% 0,26% 31%,47% 31%,47% 8%,63% 8%,63% 34%,80% 34%,80% 16%,100% 16%,100% 100%,0 100%)}
+.preset-model-stage.scene-end:after{height:22%;background:linear-gradient(180deg,#8d80a8 0 16%,#554b6c 16% 26%,#29243e 26% 100%);clip-path:polygon(0 27%,22% 27%,22% 7%,39% 7%,39% 33%,61% 33%,61% 0,78% 0,78% 25%,100% 25%,100% 100%,0 100%)}
+.preset-language-switch{display:flex;align-items:center;gap:6px;color:#f7f4df;font-size:11px;font-weight:700;text-shadow:1px 1px #304624}
+.preset-language-switch select{max-width:120px;min-height:30px;padding:4px 7px;border:2px solid #555;background:#c6c6c6;color:#222;font-weight:700}
+@media(max-width:560px){.preset-language-switch{font-size:9px}.preset-language-switch select{max-width:90px}}

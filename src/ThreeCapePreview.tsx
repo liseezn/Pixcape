@@ -249,6 +249,8 @@ export default function ThreeCapePreview({
         rightArm.rotation.set(0, 0, 0)
         leftLeg.rotation.set(0, 0, 0)
         rightLeg.rotation.set(0, 0, 0)
+        skin.body.rotation.x = 0
+        skin.head.rotation.x = 0
         if (pose === 'wave') {
           rightArm.rotation.z = -2.35 + Math.sin(t * 5) * 0.22
           rightArm.rotation.x = Math.sin(t * 3) * 0.12
@@ -258,10 +260,18 @@ export default function ThreeCapePreview({
           leftLeg.rotation.x = -Math.sin(t * 5) * 0.72
           rightLeg.rotation.x = Math.sin(t * 5) * 0.72
         } else if (pose === 'fly') {
-          leftArm.rotation.z = 0.95
-          rightArm.rotation.z = -0.95
-          leftLeg.rotation.x = -0.35
-          rightLeg.rotation.x = 0.35
+          // Elytra-like glide: arms forward, legs trailing behind.
+          leftArm.rotation.x = -1.18
+          rightArm.rotation.x = -1.18
+          leftArm.rotation.z = 0.08
+          rightArm.rotation.z = -0.08
+          leftLeg.rotation.x = 0.72
+          rightLeg.rotation.x = 0.82
+          skin.body.rotation.x = -0.58
+          skin.head.rotation.x = 0.32
+        } else {
+          skin.body.rotation.x = 0
+          skin.head.rotation.x = 0
         }
         // Animate attached back equipment too: otherwise limbs move while the
         // cape/elytra look frozen. Reset to a neutral pose each frame first.
