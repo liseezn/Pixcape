@@ -10,6 +10,8 @@ on:
       - 'next.config.ts'
       - 'tsconfig.next.json'
       - 'package.json'
+      - 'package-lock.json'
+      - 'docs/NEXTJS-USER-ROLES-MIGRATION.md'
       - '.github/workflows/next-preview.yml'
   workflow_dispatch:
 
