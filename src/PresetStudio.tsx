@@ -16,7 +16,7 @@ const BASE_SKIN = ASSET_ROOT + 'stevea.png'
 const PREVIEW_BACKGROUNDS: Record<'day' | 'night' | 'plains' | 'desert' | 'forest' | 'nether' | 'end', string> = {
   day: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg',
   plains: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg',
-  night: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg',
+  night: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/MCV_holiday_release_Eyeblossom_NightTrail_1280x720_01.jpg',
   desert: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-structures.jpg',
   forest: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg',
   nether: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/waste-carousel1.jpg',

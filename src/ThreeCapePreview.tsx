@@ -120,13 +120,13 @@ export default function ThreeCapePreview({
         height: Math.max(1, host.clientHeight),
         enableControls: false,
         pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-        background: Number.parseInt(backgroundColor.replace('#', ''), 16),
       })
     } catch {
       host.dataset.webglUnavailable = 'true'
       return
     }
 
+    viewer.renderer.setClearColor(0x000000, 0)
     viewer.controls.enabled = false
     viewerRef.current = viewer
 
@@ -288,7 +288,7 @@ export default function ThreeCapePreview({
         const latestUrl = backgroundImageRef.current
         if (latestUrl) {
           void viewer.loadBackground(latestUrl).catch(() => {
-            viewer.background = Number.parseInt(backgroundColorRef.current.replace('#', ''), 16)
+            viewer.background = null
           })
         } else {
           viewer.background = Number.parseInt(backgroundColorRef.current.replace('#', ''), 16)
@@ -296,7 +296,7 @@ export default function ThreeCapePreview({
       }
     }).catch(() => {
       if (requestId === backgroundRequestRef.current) {
-        viewer.background = fallback
+        viewer.background = null
         if (hostRef.current) hostRef.current.dataset.backgroundFallback = 'true'
       }
     })

@@ -58,7 +58,7 @@
 /* Real in-game Minecraft screenshots are loaded into the skinview3d WebGL background. */
 .preset-model-stage{background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important;background-color:#24313b}
 .preset-model-stage.scene-day,.preset-model-stage.scene-plains{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg')!important}
-.preset-model-stage.scene-night{background-image:linear-gradient(rgba(8,13,28,.42),rgba(8,13,28,.42)),url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg')!important}
+.preset-model-stage.scene-night{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/MCV_holiday_release_Eyeblossom_NightTrail_1280x720_01.jpg')!important}
 .preset-model-stage.scene-desert{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-structures.jpg')!important}
 .preset-model-stage.scene-forest{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg')!important}
 .preset-model-stage.scene-nether{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/waste-carousel1.jpg')!important}
