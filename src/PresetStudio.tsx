@@ -205,39 +205,36 @@ export default function PresetStudio({ onOpenEditor }: Props) {
     return () => { cancelled = true }
   }, [skinUrl, shawlId, coatId, modelType])
 
-  const openEditorWithPreset = async () => {
+  const openEditorWithPreset = () => {
     const canvas = canvasRef.current
     if (!canvas || !ready) {
       setError('皮肤仍在加载，请稍后再打开编辑器。')
       return
     }
+
+    // Opening Blockbench must not wait for remote cape/template hosts.
+    // The visible canvas is already the successfully composed 64x64 skin.
+    let skinDataUrl: string
     try {
-      let capeDataUrl: string | undefined
-      if (capeId !== 'none') {
-        const capeImage = await loadImage(ASSET_ROOT + capeId)
-        const capeCanvas = document.createElement('canvas')
-        capeCanvas.width = capeImage.naturalWidth || 64
-        capeCanvas.height = capeImage.naturalHeight || 32
-        const capeContext = capeCanvas.getContext('2d')
-        if (!capeContext) throw new Error('cape canvas unavailable')
-        capeContext.drawImage(capeImage, 0, 0)
-        capeDataUrl = capeCanvas.toDataURL('image/png')
-      }
-      const skinDataUrl = await composeSkinDataUrl(skinUrl, shawlId, coatId, modelType)
-      onOpenEditor({
-        skinDataUrl,
-        skinName: (skinName.replace(/\.png$/i, '') || 'pixcape-skin') + '-pixcape.png',
-        modelType,
-        shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
-        coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
-        capeName: capeId === 'none' ? undefined : (CAPES.find(item => item.id === capeId)?.label || capeId) + '.png',
-        capeDataUrl,
-        language,
-      })
-      setStatus('已将当前预制皮肤发送到 Blockbench')
+      skinDataUrl = canvas.toDataURL('image/png')
     } catch {
-      setError('无法打包当前预制，请检查皮肤与披风图片是否加载成功。')
+      setError('无法导出当前皮肤，请重新导入 PNG 后再试。')
+      return
     }
+
+    onOpenEditor({
+      skinDataUrl,
+      skinName: (skinName.replace(/\\.png$/i, '') || 'pixcape-skin') + '-pixcape.png',
+      modelType,
+      shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
+      coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
+      capeName: capeId === 'none' ? undefined : (CAPES.find(item => item.id === capeId)?.label || capeId) + '.png',
+      // Cape texture loading is intentionally optional: a slow third-party
+      // asset host must never prevent the full editor from opening.
+      capeDataUrl: undefined,
+      language,
+    })
+    setStatus('已将当前预制皮肤发送到 Blockbench')
   }
 
   const exportCape = async () => {
