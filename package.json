@@ -22,7 +22,9 @@
     "skinview3d": "^3.0.1",
     "three": "^0.180.0",
     "@radix-ui/react-tabs": "^1.1.2",
-    "@radix-ui/react-tooltip": "^1.1.6"
+    "@radix-ui/react-tooltip": "^1.1.6",
+    "next-auth": "^5.0.0-beta.30",
+    "@auth/prisma-adapter": "^2.11.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
