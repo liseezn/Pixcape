@@ -215,7 +215,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       }
       onOpenEditor({
         skinDataUrl: canvas.toDataURL('image/png'),
-        skinName: skinName || 'pixcape-preset-skin.png',
+        skinName: (skinName || 'pixcape-preset-skin').toLowerCase().endsWith('.png') ? (skinName || 'pixcape-preset-skin.png') : (skinName || 'pixcape-preset-skin') + '.png',
         modelType,
         shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
         coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
