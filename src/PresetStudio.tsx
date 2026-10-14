@@ -224,7 +224,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
 
     onOpenEditor({
       skinDataUrl,
-      skinName: (skinName.replace(/\\.png$/i, '') || 'pixcape-skin') + '-pixcape.png',
+      skinName: (skinName.replace(/\.png$/i, '') || 'pixcape-skin') + '-pixcape.png',
       modelType,
       shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
       coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
