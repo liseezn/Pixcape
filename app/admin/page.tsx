@@ -1,0 +1,2 @@
+import Link from 'next/link'
+export default function AdminPage(){return <main className="inventory-shell"><header className="topbar"><div><p className="eyebrow">SERVER OPERATIONS</p><h1>管理员后台</h1></div><Link className="pixel-button" href="/">返回</Link></header><section className="hero inventory-panel"><h2>管理控制台</h2><p>管理员后台在接入真实认证前不会执行任何管理操作。正式实现将要求服务端 admin 角色校验，并记录角色变更、审核、封禁和删除等审计日志。</p></section></main>}
