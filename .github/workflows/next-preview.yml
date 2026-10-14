@@ -1,4 +1,4 @@
-name: Next.js Preview Build
+name: Next.js Preview Build and Security Tests
 
 on:
   pull_request:
@@ -8,9 +8,11 @@ on:
       - 'auth.ts'
       - 'lib/**'
       - 'prisma/**'
+      - 'tests/**'
       - 'next.config.ts'
       - 'tsconfig.next.json'
       - 'package.json'
+      - '.env.example'
       - 'docs/NEXTJS-USER-ROLES-MIGRATION.md'
       - '.github/workflows/next-preview.yml'
   workflow_dispatch:
@@ -19,22 +21,66 @@ permissions:
   contents: read
 
 jobs:
-  next-build:
+  security-tests:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: pixcape
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d pixcape"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/pixcape?schema=public
+      NEXTAUTH_SECRET: ci-only-secret-not-for-production
+      NEXTAUTH_URL: http://127.0.0.1:3000
+      LOGIN_RATE_LIMIT_MAX: '10'
+      LOGIN_RATE_LIMIT_WINDOW_SECONDS: '900'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           check-latest: true
-      - run: npm install
-      - name: Generate Prisma client
+      - name: Install dependencies
+        run: npm install
+      - name: Generate Prisma Client
         run: npm run db:generate
       - name: Validate Prisma schema
         run: npx prisma validate
-        env:
-          DATABASE_URL: postgresql://ci:ci@localhost:5432/pixcape?schema=public
-      - name: Build Next.js App Router preview
+      - name: Apply migrations to a real PostgreSQL service
+        run: npm run db:migrate
+      - name: Run RBAC and ownership unit tests
+        run: npm run test:unit
+      - name: Run PostgreSQL integration tests
+        run: npm run test:integration
+      - name: Build existing Vite app
+        run: npm run build
+      - name: Build Next.js app
         run: npm run next:build
-        env:
-          DATABASE_URL: postgresql://ci:ci@localhost:5432/pixcape?schema=public
+      - name: Start Next.js for security E2E
+        run: |
+          nohup npm run next:start -- --port 3000 > /tmp/pixcape-next.log 2>&1 &
+          echo $! > /tmp/pixcape-next.pid
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/pixcape-next.log
+          exit 1
+      - name: Run security end-to-end tests
+        run: npm run test:e2e
+      - name: Stop Next.js
+        if: always()
+        run: |
+          if [ -f /tmp/pixcape-next.pid ]; then kill "$(cat /tmp/pixcape-next.pid)" || true; fi
+          cat /tmp/pixcape-next.log || true
