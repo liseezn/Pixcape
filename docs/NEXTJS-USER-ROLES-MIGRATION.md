@@ -12,9 +12,13 @@
 - [x] 添加基础 HTTP 安全响应头，生产环境启用当前主机的 HSTS（不默认覆盖其他子域名）。
 - [x] 管理员审核和封禁操作加入条件更新，降低并发重复审核和状态竞争风险。
 - [x] 封禁用户时删除其数据库会话并记录审计日志。
-- [ ] 创建并验证 PostgreSQL migration，配置预览环境数据库。
+- [x] 建立独立的登录限流增量迁移，避免修改可能已执行过的初始 migration。
+- [x] 增加 PostgreSQL 持久化限流，按可信反向代理提供的 IP 标识做原子固定窗口计数；默认每 IP 每 15 分钟 10 次，数据库不可用时认证入口失败关闭。
+- [x] 增加 Node.js 内置测试运行器的 RBAC / 资源所有权单元测试、PostgreSQL 集成测试和 HTTP 安全 E2E 测试。
+- [x] CI 使用真实 PostgreSQL 服务执行 migrate deploy、RBAC/所有权测试、并发限流测试、Vite/Next 构建与 E2E。
+- [ ] 等待并修复 CI 的实际执行结果，确认所有测试通过。
 - [ ] 配置 GitHub OAuth 与数据库后端，完成真实登录、会话撤销、审核和封禁端到端测试。
-- [ ] 增加 RBAC / 资源所有权自动化测试与安全回归测试。
+- [x] 增加 RBAC / 资源所有权自动化测试与安全回归测试。
 - [x] 将构建运行时切换为 Node.js 24 LTS，并更新 GitHub Actions checkout/setup-node 到稳定主版本。
 - [x] 将 Next.js、React、Vite、TypeScript、skinview3d、Three.js、Radix UI、Lucide、PWA 插件和 PostgreSQL 驱动升级到已发布稳定版本。
 - [x] 将 Prisma 升级到 7.10 稳定版，增加 prisma.config.ts 与 PostgreSQL driver adapter；需由 CI 验证生成、schema 与构建兼容性。
@@ -55,4 +59,4 @@ Next.js App Router + TypeScript、Auth.js、PostgreSQL + Prisma。部署仍需�
 5. 创作者只能编辑自己的项目；管理员操作有审计记录。
 6. 验证皮肤 PNG 导入导出、skinview3d 预览、Blockbench 深层路径、PWA 缓存和 Docker 镜像。
 
-> 当前依赖已切换到发布的稳定版本线；版本更新已提交，但 CI 尚未全部完成，因此不能视为构建通过。登录仍需要配置 OAuth 和数据库；创作者申请及审核逻辑尚未完成真实环境端到端验证。限流、自动化安全测试、真实数据库迁移和端到端验证仍未完成。未完成认证、构建与回归测试前，不应切换生产入口。
+> 登录限流和自动化测试代码已加入；CI 将在隔离的 PostgreSQL 服务中执行真实迁移及测试。只有最新 CI 全部通过，才可把自动化验证标记为通过。OAuth 真实提供商登录、部署平台上的实际数据库迁移、生产反向代理 IP 头配置及 Blockbench/PWA/Docker 回归仍需要在真实部署环境完成。未完成这些验证前，不应切换生产入口。
