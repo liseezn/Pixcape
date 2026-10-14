@@ -287,8 +287,6 @@ export default function ThreeCapePreview({
           rightArm.rotation.x = -Math.sin(t * 5) * 0.65
           leftLeg.rotation.x = -Math.sin(t * 5) * 0.72
           rightLeg.rotation.x = Math.sin(t * 5) * 0.72
-        } else if (pose === 'fly') {
-          // Flight is handled by skinview3d's FlyingAnimation above.
         } else {
           skin.body.rotation.x = 0
           skin.head.rotation.x = 0
@@ -298,12 +296,12 @@ export default function ThreeCapePreview({
         viewer.playerObject.traverse((object: any) => {
           const name = String(object.name || '').toLowerCase()
           if (name.includes('cape')) {
-            object.rotation.x = (pose === 'fly' ? -0.85 : pose === 'walk' ? 0.12 : 0.04) + Math.sin(t * (pose === 'walk' ? 5 : 2.2)) * (pose === 'idle' ? 0.025 : 0.09)
+            object.rotation.x = (pose === 'walk' ? 0.12 : 0.04) + Math.sin(t * (pose === 'walk' ? 5 : 2.2)) * (pose === 'idle' ? 0.025 : 0.09)
             object.rotation.z = pose === 'wave' ? Math.sin(t * 2.5) * 0.05 : Math.sin(t * 2) * 0.035
           } else if (name.includes('leftwing') || name.includes('left_wing')) {
-            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3) * 0.08 : Math.sin(t * 2) * 0.015
+            object.rotation.x = Math.sin(t * 2) * 0.015
           } else if (name.includes('rightwing') || name.includes('right_wing')) {
-            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3 + 0.2) * 0.08 : Math.sin(t * 2) * 0.015
+            object.rotation.x = Math.sin(t * 2) * 0.015
           }
         })
       }
