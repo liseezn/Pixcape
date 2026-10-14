@@ -40,6 +40,10 @@ export default function App() {
               {pendingPayload?.language === 'en-US' ? 'Open in new tab' : '在新标签页打开'} <ExternalLink size={14} />
             </a>
           </div>
+          <div role="note" aria-label="Independent project and asset credits" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', alignItems: 'center', padding: '8px 14px', borderBottom: '1px solid #65552d', background: '#28251b', color: '#f2e4b7', fontSize: 12, lineHeight: 1.5 }}>
+            <span>{pendingPayload?.language === 'en-US' ? 'Independent project: not an official Minecraft product; not approved by, affiliated with, or endorsed by Mojang Studios or Microsoft.' : '独立项目声明：Pixcape 并非官方 Minecraft 产品，未获 Mojang Studios 或 Microsoft 批准、授权或背书，且与其无关联。'}</span>
+            <span>{pendingPayload?.language === 'en-US' ? 'Coat & shawl asset credits: 邹陈云飞 · Th千' : '外套与披肩素材署名：邹陈云飞、Th千'}</span>
+          </div>
           <iframe
             ref={iframeRef}
             title="Pixcape 内置 Blockbench 完整模型编辑器"
