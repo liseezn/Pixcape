@@ -53,15 +53,9 @@ docker compose up --build -d
 
 部署到正式域名后，建议将 Open Graph 图片 URL 设置为绝对 HTTPS 地址，并验证目标社交平台是否支持 SVG 分享图。
 
-## 独立项目声明
+## 声明与素材署名
 
-Pixcape 是独立的第三方社区工具，**不是官方 Minecraft 产品，未获 Mojang Studios 或 Microsoft 批准、授权、赞助或背书，且与 Mojang Studios / Microsoft 无关联**。Minecraft 及相关名称、标识和知识产权归其各自权利人所有；本项目仅以兼容性描述等方式提及 Minecraft，不代表官方合作或认可。
-
-## 素材署名与归属
-
-- **外套与披肩素材署名：邹陈云飞、Th千。**
-- 当前部分预制服装与示例皮肤素材来自 [lonelyang/CapeSkinImage](https://github.com/lonelyang/CapeSkinImage)。各素材仍按其原始来源与适用许可证使用；重新分发前请核对上游授权、署名及其他限制。
-- 用户导入的皮肤、纹理和其他素材由用户自行确认拥有相应使用权。
+Pixcape 是非官方 Minecraft 社区项目，与 Mojang Studios / Microsoft 无关联。外套与披肩素材署名：**邹陈云飞、Th千**。部分素材来自 [CapeSkinImage](https://github.com/lonelyang/CapeSkinImage)，请遵守其原始许可证。
 
 ## 第三方编辑器
 
