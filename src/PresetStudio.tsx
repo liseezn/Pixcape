@@ -48,9 +48,36 @@ function canvasPixels(canvas: HTMLCanvasElement): string[] {
   const data = context.getImageData(0, 0, 64, 64).data
   return Array.from({ length: 4096 }, (_, index) => {
     const offset = index * 4
-    if (data[offset + 3] < 24) return ''
-    return '#' + [data[offset], data[offset + 1], data[offset + 2]].map(value => value.toString(16).padStart(2, '0')).join('')
+    const alpha = data[offset + 3]
+    if (alpha < 24) return ''
+    const [red, green, blue] = [data[offset], data[offset + 1], data[offset + 2]]
+    // Keep alpha for the Minecraft outer skin layer instead of turning every
+    // non-transparent pixel into an opaque color in the 3D preview.
+    return `rgba(${red}, ${green}, ${blue}, ${(alpha / 255).toFixed(3)})`
   })
+}
+
+const CLOTHING_UV_REGIONS = [
+  { x: 16, y: 16, width: 24, height: 16 }, // torso base layer
+  { x: 16, y: 32, width: 24, height: 16 }, // torso outer layer
+  { x: 40, y: 16, width: 16, height: 16 }, // right arm base layer
+  { x: 40, y: 32, width: 16, height: 16 }, // right arm outer layer
+  { x: 32, y: 48, width: 16, height: 16 }, // left arm base layer
+  { x: 48, y: 48, width: 16, height: 16 }, // left arm outer layer
+]
+
+function drawClothingTemplate(context: CanvasRenderingContext2D, image: HTMLImageElement) {
+  // Preset PNGs are complete skin atlases. Only copy torso/arm UVs so the
+  // template cannot overwrite the user's face, hair, or leg textures.
+  context.save()
+  context.beginPath()
+  CLOTHING_UV_REGIONS.forEach(({ x, y, width, height }) => {
+    context.rect(x, y, width, height)
+  })
+  context.clip()
+  context.imageSmoothingEnabled = false
+  context.drawImage(image, 0, 0, 64, 64)
+  context.restore()
 }
 
 export type PresetEditorPayload = {
@@ -120,7 +147,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         context.clearRect(0, 0, 64, 64)
         context.imageSmoothingEnabled = false
         context.drawImage(baseImage, 0, 0, 64, 64)
-        overlays.forEach(image => context.drawImage(image, 0, 0, 64, 64))
+        overlays.forEach(image => drawClothingTemplate(context, image))
         setPixels(canvasPixels(canvas))
         setReady(true)
         setStatus('模板已应用，可旋转预览或导出 PNG')
@@ -179,7 +206,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       }
       onOpenEditor({
         skinDataUrl: canvas.toDataURL('image/png'),
-        skinName: 'pixcape-preset-skin.png',
+        skinName: skinName || 'pixcape-preset-skin.png',
         modelType,
         shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
         coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
