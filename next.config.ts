@@ -13,7 +13,8 @@ const nextConfig: NextConfig = {
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
     ]
     if (process.env.NODE_ENV === 'production') {
-      securityHeaders.push({ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' })
+      // Only the current host is covered; avoid imposing HTTPS on unverified subdomains.
+      securityHeaders.push({ key: 'Strict-Transport-Security', value: 'max-age=31536000' })
     }
     return [{ source: '/:path*', headers: securityHeaders }]
   },
