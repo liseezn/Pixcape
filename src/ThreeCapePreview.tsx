@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { SkinViewer } from 'skinview3d'
+import { FlyingAnimation, SkinViewer } from 'skinview3d'
 
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type ModelType = 'steve' | 'alex'
@@ -18,6 +18,8 @@ type Props = {
   capeVisible?: boolean
   elytraVisible?: boolean
   pose?: Pose
+  backgroundImageUrl?: string
+  backgroundColor?: string
 }
 
 function makeSkinCanvas(layers: LayerData[]) {
@@ -71,6 +73,8 @@ export default function ThreeCapePreview({
   capeVisible = true,
   elytraVisible = false,
   pose = 'idle',
+  backgroundImageUrl,
+  backgroundColor = '#76b9ee',
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<SkinViewer | null>(null)
@@ -234,10 +238,34 @@ export default function ThreeCapePreview({
     viewer.camera.updateProjectionMatrix()
   }, [zoom])
 
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer) return
+    const fallbackColor = Number.parseInt(backgroundColor.replace('#', ''), 16)
+    if (!backgroundImageUrl) {
+      viewer.background = fallbackColor
+      return
+    }
+    void viewer.loadBackground(backgroundImageUrl).catch(() => {
+      // Keep the viewer usable if the official screenshot host is unavailable.
+      viewer.background = fallbackColor
+      if (hostRef.current) hostRef.current.dataset.backgroundFallback = 'true'
+    })
+  }, [backgroundImageUrl, backgroundColor])
 
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer) return
+    // skinview3d's built-in FlyingAnimation implements the same whole-player
+    // pitch and elytra-wing spread used by its own demo; hand-rotating only
+    // individual limbs produced a broken, disconnected-looking flight pose.
+    if (pose === 'fly') {
+      viewer.animation = new FlyingAnimation()
+      return () => {
+        viewer.animation = null
+      }
+    }
+    viewer.animation = null
     let frame = 0
     const startedAt = performance.now()
     const animate = (now: number) => {
@@ -260,17 +288,7 @@ export default function ThreeCapePreview({
           leftLeg.rotation.x = -Math.sin(t * 5) * 0.72
           rightLeg.rotation.x = Math.sin(t * 5) * 0.72
         } else if (pose === 'fly') {
-          // Minecraft Elytra glide: torso nearly horizontal, arms extended
-          // forward, legs trailing behind, and head lifted slightly to look ahead.
-          // The previous negative torso pitch bent the body in the wrong direction.
-          skin.body.rotation.x = 1.35
-          skin.head.rotation.x = 0.42
-          leftArm.rotation.x = -1.25
-          rightArm.rotation.x = -1.25
-          leftArm.rotation.z = 0.10
-          rightArm.rotation.z = -0.10
-          leftLeg.rotation.x = 1.28
-          rightLeg.rotation.x = 1.32
+          // Flight is handled by skinview3d's FlyingAnimation above.
         } else {
           skin.body.rotation.x = 0
           skin.head.rotation.x = 0
