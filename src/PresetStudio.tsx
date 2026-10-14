@@ -69,23 +69,6 @@ function drawClothingTemplate(context: CanvasRenderingContext2D, image: HTMLImag
   context.restore()
 }
 
-async function composeSkinDataUrl(skinUrl: string, shawlId: string, coatId: string, modelType: 'steve' | 'alex'): Promise<string> {
-  const baseImage = await loadImage(skinUrl)
-  const selected = [PRESETS.find(item => item.id === coatId), PRESETS.find(item => item.id === shawlId)]
-    .filter((item): item is Preset => Boolean(item))
-  const overlays = await Promise.all(selected.map(item => loadImage(ASSET_ROOT + (modelType === 'alex' ? item.slimFile : item.file))))
-  const canvas = document.createElement('canvas')
-  canvas.width = 64
-  canvas.height = 64
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('skin canvas unavailable')
-  context.imageSmoothingEnabled = false
-  context.clearRect(0, 0, 64, 64)
-  context.drawImage(baseImage, 0, 0, 64, 64)
-  overlays.forEach(image => drawClothingTemplate(context, image))
-  return canvas.toDataURL('image/png')
-}
-
 function canvasPixels(canvas: HTMLCanvasElement): string[] {
   const context = canvas.getContext('2d')
   if (!context) return Array(4096).fill('')
