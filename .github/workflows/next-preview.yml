@@ -27,5 +27,13 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - name: Generate Prisma client
+        run: npm run db:generate
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/pixcape?schema=public
       - name: Build Next.js App Router preview
         run: npm run next:build
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/pixcape?schema=public
