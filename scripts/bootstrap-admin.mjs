@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 const email = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
 if (!email) {
@@ -10,7 +11,7 @@ if (!process.env.DATABASE_URL) {
   process.exit(1)
 }
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) })
 try {
   const target = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, role: true, status: true } })
   if (!target) {
