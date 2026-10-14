@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'app/**'
+      - 'pages/**'
       - 'auth.ts'
       - 'lib/**'
       - 'prisma/**'
