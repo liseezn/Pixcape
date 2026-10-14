@@ -11,6 +11,7 @@ const providers = process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers,
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   session: { strategy: 'database', maxAge: 8 * 60 * 60, updateAge: 60 * 60 },
   useSecureCookies: process.env.NODE_ENV === 'production',
   pages: { signIn: '/login' },
