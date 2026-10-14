@@ -1,4 +1,4 @@
--- Initial PostgreSQL schema for Pixcape accounts and creator review.
+-- Initial PostgreSQL schema for Pixcape accounts, creator review, and login rate limiting.
 CREATE TYPE "UserRole" AS ENUM ('USER', 'CREATOR', 'ADMIN');
 CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DELETED');
 CREATE TYPE "CreatorReviewStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
@@ -53,6 +53,15 @@ CREATE TABLE "AuditLog" (
   CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
 );
 CREATE INDEX "AuditLog_targetType_targetId_createdAt_idx" ON "AuditLog"("targetType", "targetId", "createdAt");
+
+CREATE TABLE "LoginRateLimit" (
+  "key" TEXT NOT NULL,
+  "windowStartedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "count" INTEGER NOT NULL DEFAULT 0,
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "LoginRateLimit_pkey" PRIMARY KEY ("key")
+);
+CREATE INDEX "LoginRateLimit_windowStartedAt_idx" ON "LoginRateLimit"("windowStartedAt");
 
 CREATE TABLE "Account" (
   "userId" TEXT NOT NULL,
