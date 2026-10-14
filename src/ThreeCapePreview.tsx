@@ -260,15 +260,17 @@ export default function ThreeCapePreview({
           leftLeg.rotation.x = -Math.sin(t * 5) * 0.72
           rightLeg.rotation.x = Math.sin(t * 5) * 0.72
         } else if (pose === 'fly') {
-          // Elytra-like glide: arms forward, legs trailing behind.
-          leftArm.rotation.x = -1.18
-          rightArm.rotation.x = -1.18
-          leftArm.rotation.z = 0.08
-          rightArm.rotation.z = -0.08
-          leftLeg.rotation.x = 0.72
-          rightLeg.rotation.x = 0.82
-          skin.body.rotation.x = -0.58
-          skin.head.rotation.x = 0.32
+          // Minecraft Elytra glide: torso nearly horizontal, arms extended
+          // forward, legs trailing behind, and head lifted slightly to look ahead.
+          // The previous negative torso pitch bent the body in the wrong direction.
+          skin.body.rotation.x = 1.35
+          skin.head.rotation.x = 0.42
+          leftArm.rotation.x = -1.25
+          rightArm.rotation.x = -1.25
+          leftArm.rotation.z = 0.10
+          rightArm.rotation.z = -0.10
+          leftLeg.rotation.x = 1.28
+          rightLeg.rotation.x = 1.32
         } else {
           skin.body.rotation.x = 0
           skin.head.rotation.x = 0
