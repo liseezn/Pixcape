@@ -1,129 +1,12 @@
 import { useEffect, useRef } from 'react'
-import * as THREE from 'three'
 import { FlyingAnimation, IdleAnimation, SkinViewer, WalkingAnimation } from 'skinview3d'
 
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type ModelType = 'steve' | 'alex'
 type Pose = 'idle' | 'wave' | 'walk' | 'fly'
-type SceneTheme = 'day' | 'night' | 'plains' | 'desert' | 'forest' | 'nether' | 'end' | 'custom'
-
-type BiomePalette = { sky: string; top: string; dirt: string; stone: string; leaves: string; wood: string; accent: string }
-function biomePalette(theme: SceneTheme, customBackground: string): BiomePalette {
-  const palettes: Record<Exclude<SceneTheme, 'custom'>, BiomePalette> = {
-    day: { sky: '#87ceeb', top: '#5f9b3d', dirt: '#80512e', stone: '#777d83', leaves: '#2f7d32', wood: '#76502d', accent: '#fff0a3' },
-    plains: { sky: '#87ceeb', top: '#5f9b3d', dirt: '#80512e', stone: '#777d83', leaves: '#2f7d32', wood: '#76502d', accent: '#fff0a3' },
-    night: { sky: '#101a3a', top: '#294c36', dirt: '#47352f', stone: '#343b50', leaves: '#183d2b', wood: '#49352b', accent: '#dce7ff' },
-    desert: { sky: '#74c8ed', top: '#d8c27a', dirt: '#c2a15f', stone: '#a88d62', leaves: '#5e7541', wood: '#6d4a2e', accent: '#ffe4a1' },
-    forest: { sky: '#80c5e5', top: '#39763b', dirt: '#68472e', stone: '#686f70', leaves: '#245b2c', wood: '#68452a', accent: '#fff0a3' },
-    nether: { sky: '#321d35', top: '#713b32', dirt: '#4b2930', stone: '#513c49', leaves: '#4e292e', wood: '#4c2527', accent: '#ff7043' },
-    end: { sky: '#211b42', top: '#817391', dirt: '#5a506c', stone: '#77708a', leaves: '#62516f', wood: '#51455f', accent: '#d4c4ff' },
-  }
-  return theme === 'custom' ? { ...palettes.plains, sky: customBackground } : palettes[theme]
-}
-
-function createVoxelBackdrop(theme: SceneTheme, customBackground: string): THREE.Group {
-  const palette = biomePalette(theme, customBackground)
-  const group = new THREE.Group()
-  const geometry = new THREE.BoxGeometry(4, 4, 4)
-  const loader = new THREE.TextureLoader()
-  const textures: THREE.Texture[] = []
-  const textureMaterial = (name: string, fallback: string) => {
-    const material = new THREE.MeshStandardMaterial({ color: fallback, roughness: 1, flatShading: true })
-    const texture = loader.load(
-      `https://raw.githubusercontent.com/misode/mcmeta/1.21.4-assets/assets/minecraft/textures/block/${name}.png`,
-      loaded => {
-        loaded.magFilter = THREE.NearestFilter
-        loaded.minFilter = THREE.NearestFilter
-        loaded.generateMipmaps = false
-        loaded.colorSpace = THREE.SRGBColorSpace
-        material.map = loaded
-        material.color.set('#ffffff')
-        material.needsUpdate = true
-      },
-      undefined,
-      () => {
-        material.map = null
-        material.color.set(fallback)
-        material.needsUpdate = true
-      },
-    )
-    textures.push(texture)
-    return material
-  }
-  const isDesert = theme === 'desert'
-  const isNether = theme === 'nether'
-  const isEnd = theme === 'end'
-  const groundTexture = isDesert ? 'sand' : isNether ? 'netherrack' : isEnd ? 'end_stone' : 'grass_block_top'
-  const groundTop = textureMaterial(groundTexture, palette.top)
-  const groundSide = isDesert || isNether || isEnd ? groundTop : textureMaterial('grass_block_side', palette.top)
-  const dirt = textureMaterial(isDesert ? 'sandstone' : isNether ? 'soul_soil' : isEnd ? 'end_stone' : 'dirt', palette.dirt)
-  const stone = textureMaterial(isNether ? 'netherrack' : isEnd ? 'end_stone' : 'stone', palette.stone)
-  const leaves = textureMaterial('oak_leaves', palette.leaves)
-  const wood = textureMaterial('oak_log', palette.wood)
-  const grassBlockMaterials: THREE.Material[] = [groundSide, groundSide, groundTop, dirt, groundSide, groundSide]
-  const materials = { groundTop, groundSide, dirt, stone, leaves, wood }
-  const addBlock = (x: number, y: number, z: number, material: THREE.Material | THREE.Material[], sx = 1, sy = 1, sz = 1) => {
-    const block = new THREE.Mesh(geometry, material)
-    block.position.set(x, y, z)
-    block.scale.set(sx, sy, sz)
-    group.add(block)
-  }
-  for (let x = -40; x <= 40; x += 4) {
-    const column = Math.round((x + 40) / 4)
-    const rise = theme === 'desert' ? (column % 5 === 0 ? 4 : 0) : (column % 7 === 0 ? 4 : column % 11 === 0 ? 8 : 0)
-    for (let z = -40; z <= -20; z += 4) {
-      const topY = -8 + rise + (z < -32 && column % 4 === 0 ? 4 : 0)
-      addBlock(x, topY, z, grassBlockMaterials)
-      addBlock(x, topY - 4, z, dirt)
-      addBlock(x, topY - 8, z, stone)
-    }
-  }
-  if (theme === 'forest' || theme === 'plains' || theme === 'day' || theme === 'custom') {
-    for (const [tx, tz, height] of [[-20, -28, 3], [20, -36, 4], [32, -24, 2]] as const) {
-      for (let h = 0; h < height; h++) addBlock(tx, -4 + h * 4, tz, wood)
-      addBlock(tx, -4 + height * 4, tz, leaves, 2, 1, 2)
-      addBlock(tx - 4, -4 + height * 4, tz, leaves)
-      addBlock(tx + 4, -4 + height * 4, tz, leaves)
-      addBlock(tx, -4 + height * 4, tz - 4, leaves)
-      addBlock(tx, -4 + height * 4, tz + 4, leaves)
-    }
-  }
-  if (theme === 'desert') {
-    addBlock(-24, -4, -32, groundTop, 2, 2, 2)
-    addBlock(-24, 4, -32, groundTop, 2, 1, 2)
-    addBlock(24, -4, -36, groundTop, 3, 2, 2)
-  }
-  if (theme === 'nether') {
-    const glow = new THREE.MeshBasicMaterial({ color: palette.accent })
-    for (let i = 0; i < 8; i++) addBlock(-32 + i * 8, -1 + (i % 3) * 4, -36, glow, 0.12, 0.12, 0.12)
-    ;(group.userData as any).extraResources = [glow]
-  }
-  if (theme === 'end') {
-    addBlock(-24, -3, -32, stone, 2, 2, 2)
-    addBlock(24, -5, -36, stone, 3, 1, 2)
-  }
-  if (theme === 'night') {
-    const starGeometry = new THREE.BoxGeometry(0.45, 0.45, 0.45)
-    const starMaterial = new THREE.MeshBasicMaterial({ color: '#f5f4d6' })
-    for (let i = 0; i < 28; i++) {
-      const star = new THREE.Mesh(starGeometry, starMaterial)
-      star.position.set(-34 + ((i * 17) % 68), 5 + ((i * 11) % 18), -38 - (i % 4) * 2)
-      group.add(star)
-    }
-    ;(group.userData as any).extraResources = [...((group.userData as any).extraResources || []), starGeometry, starMaterial]
-  }
-  ;(group.userData as any).resources = [geometry, ...Object.values(materials), ...textures]
-  return group
-}
-function disposeVoxelBackdrop(group: THREE.Group) {
-  group.removeFromParent()
-  const resources = [...((group.userData as any).resources || []), ...((group.userData as any).extraResources || [])] as Array<{ dispose?: () => void }>
-  resources.forEach(resource => resource.dispose?.())
-}
-
 type Props = {
-  sceneTheme: SceneTheme
-  customBackground: string
+  backgroundImageUrl?: string
+  backgroundColor?: string
   layers: LayerData[]
   side: 'front' | 'back'
   rotation: number
@@ -177,8 +60,8 @@ function makeFallbackCape(skin: HTMLCanvasElement) {
 }
 
 export default function ThreeCapePreview({
-  sceneTheme,
-  customBackground,
+  backgroundImageUrl,
+  backgroundColor = '#76b9ee',
   layers,
   side,
   rotation,
@@ -195,8 +78,10 @@ export default function ThreeCapePreview({
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<SkinViewer | null>(null)
-  const backdropRef = useRef<THREE.Group | null>(null)
   const poseRef = useRef(pose)
+  const backgroundRequestRef = useRef(0)
+  const backgroundImageRef = useRef(backgroundImageUrl)
+  const backgroundColorRef = useRef(backgroundColor)
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
   const tiltRef = useRef(tilt)
@@ -217,6 +102,8 @@ export default function ThreeCapePreview({
   useEffect(() => { onZoomChangeRef.current = onZoomChange }, [onZoomChange])
   useEffect(() => { capeVisibleRef.current = capeVisible }, [capeVisible])
   useEffect(() => { poseRef.current = pose }, [pose])
+  useEffect(() => { backgroundImageRef.current = backgroundImageUrl }, [backgroundImageUrl])
+  useEffect(() => { backgroundColorRef.current = backgroundColor }, [backgroundColor])
   useEffect(() => { elytraVisibleRef.current = elytraVisible }, [elytraVisible])
 
   useEffect(() => {
@@ -233,7 +120,7 @@ export default function ThreeCapePreview({
         height: Math.max(1, host.clientHeight),
         enableControls: false,
         pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
-        background: biomePalette(sceneTheme, customBackground).sky,
+        background: Number.parseInt(backgroundColor.replace('#', ''), 16),
       })
     } catch {
       host.dataset.webglUnavailable = 'true'
@@ -299,10 +186,6 @@ export default function ThreeCapePreview({
       canvas.removeEventListener('pointermove', move)
       canvas.removeEventListener('pointerup', up)
       canvas.removeEventListener('pointercancel', up)
-      if (backdropRef.current) {
-        disposeVoxelBackdrop(backdropRef.current)
-        backdropRef.current = null
-      }
       viewer.dispose()
       canvas.remove()
       viewerRef.current = null
@@ -394,18 +277,33 @@ export default function ThreeCapePreview({
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer) return
-    (viewer.scene as any).background = new THREE.Color(biomePalette(sceneTheme, customBackground).sky)
-    if (backdropRef.current) disposeVoxelBackdrop(backdropRef.current)
-    const backdrop = createVoxelBackdrop(sceneTheme, customBackground)
-    (viewer.scene as any).add(backdrop)
-    backdropRef.current = backdrop
-    return () => {
-      if (backdropRef.current === backdrop) {
-        disposeVoxelBackdrop(backdrop)
-        backdropRef.current = null
-      }
+    const requestId = ++backgroundRequestRef.current
+    const fallback = Number.parseInt(backgroundColor.replace('#', ''), 16)
+    if (!backgroundImageUrl) {
+      viewer.background = fallback
+      return
     }
-  }, [sceneTheme, customBackground])
+    void viewer.loadBackground(backgroundImageUrl).then(() => {
+      if (requestId !== backgroundRequestRef.current) {
+        const latestUrl = backgroundImageRef.current
+        if (latestUrl) {
+          void viewer.loadBackground(latestUrl).catch(() => {
+            viewer.background = Number.parseInt(backgroundColorRef.current.replace('#', ''), 16)
+          })
+        } else {
+          viewer.background = Number.parseInt(backgroundColorRef.current.replace('#', ''), 16)
+        }
+      }
+    }).catch(() => {
+      if (requestId === backgroundRequestRef.current) {
+        viewer.background = fallback
+        if (hostRef.current) hostRef.current.dataset.backgroundFallback = 'true'
+      }
+    })
+    return () => {
+      backgroundRequestRef.current += 1
+    }
+  }, [backgroundImageUrl, backgroundColor])
 
 
 

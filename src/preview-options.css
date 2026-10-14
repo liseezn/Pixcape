@@ -54,3 +54,14 @@
 .preset-model-stage.scene-day,.preset-model-stage.scene-night,.preset-model-stage.scene-plains,.preset-model-stage.scene-desert,.preset-model-stage.scene-forest,.preset-model-stage.scene-nether,.preset-model-stage.scene-end,.preset-model-stage.scene-custom{background:#87ceeb!important}
 .preset-model-stage.scene-day:before,.preset-model-stage.scene-night:before,.preset-model-stage.scene-plains:before,.preset-model-stage.scene-desert:before,.preset-model-stage.scene-forest:before,.preset-model-stage.scene-nether:before,.preset-model-stage.scene-end:before,.preset-model-stage.scene-day:after,.preset-model-stage.scene-night:after,.preset-model-stage.scene-plains:after,.preset-model-stage.scene-desert:after,.preset-model-stage.scene-forest:after,.preset-model-stage.scene-nether:after,.preset-model-stage.scene-end:after{display:none!important}
 .preset-model-stage .three-preview-canvas{position:relative;z-index:1}
+
+/* Real in-game Minecraft screenshots are loaded into the skinview3d WebGL background. */
+.preset-model-stage{background-size:cover!important;background-position:center center!important;background-repeat:no-repeat!important;background-color:#24313b}
+.preset-model-stage.scene-day,.preset-model-stage.scene-plains{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg')!important}
+.preset-model-stage.scene-night{background-image:linear-gradient(rgba(8,13,28,.42),rgba(8,13,28,.42)),url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg')!important}
+.preset-model-stage.scene-desert{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-structures.jpg')!important}
+.preset-model-stage.scene-forest{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg')!important}
+.preset-model-stage.scene-nether{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/waste-carousel1.jpg')!important}
+.preset-model-stage.scene-end{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/highlands-carousel1.jpg')!important}
+.preset-model-stage:not(.scene-custom):before,.preset-model-stage:not(.scene-custom):after{content:none!important;display:none!important}
+.preset-model-stage .three-preview-canvas{background:transparent!important}
