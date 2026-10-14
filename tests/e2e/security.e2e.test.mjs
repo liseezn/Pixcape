@@ -19,6 +19,15 @@ for (const path of ['/account', '/creator', '/admin']) {
   })
 }
 
+test('NextAuth CSRF endpoint issues a token and cookie', async () => {
+  const response = await fetch(new URL('/api/auth/csrf', base), { redirect: 'manual' })
+  assert.equal(response.status, 200)
+  const body = await response.json()
+  assert.equal(typeof body.csrfToken, 'string')
+  assert.ok(body.csrfToken.length > 10)
+  assert.match(response.headers.get('set-cookie') || '', /csrf-token/i)
+})
+
 test('login entry point is rate-limited and emits Retry-After', async () => {
   let finalResponse
   for (let i = 0; i < 12; i++) {
@@ -31,4 +40,11 @@ test('login entry point is rate-limited and emits Retry-After', async () => {
   assert.equal(finalResponse.status, 429)
   assert.ok(Number(finalResponse.headers.get('retry-after')) > 0)
   assert.equal(finalResponse.headers.get('cache-control'), 'no-store')
+
+  const otherAddress = await fetch(new URL('/api/auth/signin/github', base), {
+    method: 'GET',
+    redirect: 'manual',
+    headers: { 'x-real-ip': '198.51.100.78' },
+  })
+  assert.notEqual(otherAddress.status, 429, 'rate limit must be isolated by client address')
 })
