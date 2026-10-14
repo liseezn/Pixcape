@@ -10,7 +10,6 @@ on:
       - 'next.config.ts'
       - 'tsconfig.next.json'
       - 'package.json'
-      - 'package-lock.json'
       - '.github/workflows/next-preview.yml'
   workflow_dispatch:
 
@@ -25,7 +24,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
       - run: npm install
       - name: Build Next.js App Router preview
         run: npm run next:build
