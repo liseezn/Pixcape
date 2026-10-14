@@ -75,7 +75,6 @@ CREATE TABLE "Session" (
   "expires" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "Session_pkey" PRIMARY KEY ("sessionToken")
 );
-CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
 CREATE TABLE "VerificationToken" (
   "identifier" TEXT NOT NULL,
