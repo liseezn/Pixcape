@@ -72,6 +72,8 @@ jobs:
             }
           }
           NODE
+      - name: Fail on high or critical dependency advisories
+        run: npm audit --audit-level=high
       - name: Generate Prisma Client
         run: npm run db:generate
       - name: Validate Prisma schema
