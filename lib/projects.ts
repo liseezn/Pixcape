@@ -1,6 +1,6 @@
 import 'server-only'
 import { prisma } from '@/lib/prisma'
-import { isActiveProjectActor, projectAccessWhere } from '@/lib/project-access'
+import { canSetProjectVisibility, isActiveProjectActor, projectAccessWhere } from '@/lib/project-access'
 
 async function loadActor(actorId: string) {
   const actor = await prisma.user.findUnique({
@@ -31,6 +31,8 @@ export async function createProjectForActor(
   if (!actor) return null
   const title = input.title.trim()
   const description = (input.description ?? '').trim()
+  const visibility = input.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE'
+  if (!canSetProjectVisibility(actor.role, visibility)) throw new Error('Creator approval is required to publish projects.')
   if (title.length < 1 || title.length > 100 || description.length > 2000) {
     throw new Error('Invalid project title or description.')
   }
@@ -39,7 +41,7 @@ export async function createProjectForActor(
       ownerId: actor.id,
       title,
       description,
-      visibility: input.visibility === 'PUBLIC' ? 'PUBLIC' : 'PRIVATE',
+      visibility,
     },
   })
 }
@@ -61,6 +63,10 @@ export async function updateProjectForActor(
     const description = input.description.trim()
     if (description.length > 2000) throw new Error('Invalid project description.')
     data.description = description
+  }
+  if (input.visibility !== undefined) {
+    if (!canSetProjectVisibility(actor.role, input.visibility)) throw new Error('Creator approval is required to publish projects.')
+    data.visibility = input.visibility
   }
   if (Object.keys(data).length === 0) throw new Error('No project changes were provided.')
   const result = await prisma.project.updateMany({ where: projectAccessWhere(actor, projectId), data })
