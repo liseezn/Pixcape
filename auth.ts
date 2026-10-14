@@ -1,17 +1,16 @@
 import 'server-only'
-import NextAuth from 'next-auth'
-import GitHub from 'next-auth/providers/github'
-import { PrismaAdapter } from '@auth/prisma-adapter'
+import type { NextAuthOptions } from 'next-auth'
+import GitHubProvider from 'next-auth/providers/github'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 
 const providers = process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
-  ? [GitHub({ clientId: process.env.AUTH_GITHUB_ID, clientSecret: process.env.AUTH_GITHUB_SECRET })]
+  ? [GitHubProvider({ clientId: process.env.AUTH_GITHUB_ID, clientSecret: process.env.AUTH_GITHUB_SECRET })]
   : []
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers,
-  // Database sessions let role/status changes take effect without trusting client JWT claims.
   session: { strategy: 'database', maxAge: 8 * 60 * 60, updateAge: 60 * 60 },
   useSecureCookies: process.env.NODE_ENV === 'production',
   pages: { signIn: '/login' },
@@ -30,4 +29,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return record?.status === 'ACTIVE'
     },
   },
-})
+}
