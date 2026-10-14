@@ -30,6 +30,34 @@ test('PostgreSQL migration, RBAC ownership constraints, and atomic rate limiting
     ])
     createdUserIds.push(owner.id, other.id, admin.id, suspended.id)
 
+    const profile = await prisma.creatorProfile.create({ data: { userId: owner.id, displayName: 'Test Creator' } })
+    const reviewResults = await Promise.all([
+      prisma.creatorProfile.updateMany({ where: { id: profile.id, reviewStatus: 'PENDING' }, data: { reviewStatus: 'APPROVED' } }),
+      prisma.creatorProfile.updateMany({ where: { id: profile.id, reviewStatus: 'PENDING' }, data: { reviewStatus: 'REJECTED' } }),
+    ])
+    assert.equal(reviewResults.reduce((sum, result) => sum + result.count, 0), 1, 'only one concurrent creator review may win')
+
+    const session = await prisma.session.create({
+      data: { sessionToken: `session-${suffix}`, userId: other.id, expires: new Date(Date.now() + 60 * 60 * 1000) },
+    })
+    await prisma.$transaction(async (tx) => {
+      const suspendedResult = await tx.user.updateMany({
+        where: { id: other.id, status: 'ACTIVE', role: { not: 'ADMIN' } },
+        data: { status: 'SUSPENDED' },
+      })
+      assert.equal(suspendedResult.count, 1)
+      await tx.auditLog.create({
+        data: { actorId: admin.id, action: 'USER_SUSPENDED', targetType: 'User', targetId: other.id, details: { test: true } },
+      })
+      await tx.session.deleteMany({ where: { userId: other.id } })
+    })
+    assert.equal(await prisma.session.count({ where: { id: session.id } }), 0, 'suspension must revoke active sessions')
+    const adminProtection = await prisma.user.updateMany({
+      where: { id: admin.id, role: { not: 'ADMIN' } },
+      data: { status: 'SUSPENDED' },
+    })
+    assert.equal(adminProtection.count, 0, 'admin accounts must be protected from self-service status changes')
+
     const project = await prisma.project.create({ data: { ownerId: owner.id, title: 'Owner-only test project' } })
     assert.ok(await prisma.project.findFirst({ where: projectAccessWhere({ id: owner.id, role: owner.role, status: owner.status }, project.id) }))
     assert.equal(await prisma.project.findFirst({ where: projectAccessWhere({ id: other.id, role: other.role, status: other.status }, project.id) }), null)
@@ -63,7 +91,10 @@ test('PostgreSQL migration, RBAC ownership constraints, and atomic rate limiting
     assert.equal(applied.length, 2, 'both forward migrations must be recorded as applied')
   } finally {
     await prisma.loginRateLimit.deleteMany({ where: { key: rateKey } })
-    if (createdUserIds.length) await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } })
+    if (createdUserIds.length) {
+      await prisma.auditLog.deleteMany({ where: { actorId: { in: createdUserIds } } })
+      await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } })
+    }
   }
 })
 
