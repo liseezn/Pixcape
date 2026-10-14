@@ -82,3 +82,12 @@
   display: none !important;
 }
 .preset-model-stage .three-preview-canvas { background: transparent !important; }
+
+/* The real screenshot is rendered inside skinview3d's WebGL scene. CSS remains only as a fallback. */
+.preset-model-stage.scene-day,
+.preset-model-stage.scene-plains { background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg') !important; }
+.preset-model-stage.scene-night { background-image: linear-gradient(rgba(8,13,28,.42),rgba(8,13,28,.42)),url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg') !important; }
+.preset-model-stage.scene-desert { background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-structures.jpg') !important; }
+.preset-model-stage.scene-forest { background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg') !important; }
+.preset-model-stage.scene-nether { background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/waste-carousel1.jpg') !important; }
+.preset-model-stage.scene-end { background-image: url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/highlands-carousel1.jpg') !important; }
