@@ -12,11 +12,11 @@ export default function App() {
   const handleEditorLoad = () => {
     if (!pendingPayload) return
     iframeRef.current?.contentWindow?.postMessage(
-      { type: 'pixcape:import-preset', payload: pendingPayload },
+      { type: 'pixcape:set-language', language: pendingPayload.language || 'zh-CN' },
       window.location.origin,
     )
     iframeRef.current?.contentWindow?.postMessage(
-      { type: 'pixcape:set-language', language: pendingPayload.language || 'zh-CN' },
+      { type: 'pixcape:import-preset', payload: pendingPayload },
       window.location.origin,
     )
   }
@@ -33,9 +33,9 @@ export default function App() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#111318', color: '#f5f5f5' }}>
           <div style={{ height: 48, minHeight: 48, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px', borderBottom: '1px solid #30333b', background: '#17191f' }}>
             <button onClick={() => setEditorOpen(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid #454955', borderRadius: 8, padding: '7px 12px', color: 'inherit', background: '#252832', cursor: 'pointer' }}>
-              <ArrowLeft size={16} /> 返回皮肤工作台
+              <ArrowLeft size={16} /> {pendingPayload?.language === 'en-US' ? 'Back to Studio' : '返回皮肤工作台'}
             </button>
-            <span style={{ fontSize: 13, color: '#b7bbc6' }}>Pixcape Studio · Blockbench（GPL-3.0-or-later）</span>
+            <span style={{ fontSize: 13, color: '#b7bbc6' }}>{pendingPayload?.language === 'en-US' ? 'Pixcape Studio · Blockbench (GPL-3.0-or-later)' : 'Pixcape Studio · Blockbench（GPL-3.0-or-later）'}</span>
             <a href={BLOCKBENCH_PATH} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, color: '#c8c9ff', fontSize: 13 }}>
               {pendingPayload?.language === 'en-US' ? 'Open in new tab' : '在新标签页打开'} <ExternalLink size={14} />
             </a>
