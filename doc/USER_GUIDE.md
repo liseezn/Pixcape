@@ -81,3 +81,5 @@ Pixcape 是一个轻量级像素画工作区，使用 64×64 像素画布创建�
 - 预览背景使用 Minecraft 官方页面中的实际游戏截图，不再用 CSS 多边形伪造地形；不同群系选择对应的游戏截图。
 - 飞行动作将身体调整为接近水平的滑翔姿态，手臂前伸、双腿后拖。
 - 披肩/外套模板只合成到 Minecraft 皮肤图集的躯干与手臂 UV 区域，避免模板覆盖用户的头部、头发和腿部纹理；3D 预览保留透明像素的 Alpha。
+
+Screenshot references: [Minecraft Overworld](https://www.minecraft.net/en-us/article/exploring-minecraft), [Minecraft Forest](https://www.minecraft.net/en-us/article/forest), [Minecraft Nether Wastes](https://www.minecraft.net/en-us/article/around-block--nether-wastes), and [Minecraft End Highlands](https://www.minecraft.net/en-us/article/around-block--end-highlands). The viewer loads the linked in-game screenshots as its actual WebGL background; CSS only supplies a fallback.
