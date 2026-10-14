@@ -5,9 +5,6 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 
 const authSecret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET
-if (process.env.NODE_ENV === 'production' && !authSecret) {
-  throw new Error('NEXTAUTH_SECRET must be configured before running Pixcape authentication in production.')
-}
 
 const providers = process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
   ? [GitHubProvider({ clientId: process.env.AUTH_GITHUB_ID, clientSecret: process.env.AUTH_GITHUB_SECRET })]
