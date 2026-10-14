@@ -12,3 +12,8 @@ export function projectAccessWhere(actor: ProjectActor, projectId?: string) {
 export function isActiveProjectActor(actor: ProjectActor | null | undefined): actor is ProjectActor {
   return Boolean(actor && actor.status === 'ACTIVE')
 }
+
+/** Ordinary users may save private drafts; publishing requires creator approval or admin role. */
+export function canSetProjectVisibility(role: ProjectRole, visibility: 'PRIVATE' | 'PUBLIC'): boolean {
+  return visibility !== 'PUBLIC' || role === 'CREATOR' || role === 'ADMIN'
+}
