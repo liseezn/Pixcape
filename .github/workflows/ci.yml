@@ -19,7 +19,6 @@ jobs:
         with:
           node-version: 24
           check-latest: true
-          cache: npm
       - run: npm install
       - run: npm run build
       - name: Build complete Pixcape image including Blockbench
