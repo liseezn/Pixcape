@@ -10,13 +10,14 @@ const providers = process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers,
-  session: { strategy: 'database' },
+  // Database sessions let role/status changes take effect without trusting client JWT claims.
+  session: { strategy: 'database', maxAge: 8 * 60 * 60, updateAge: 60 * 60 },
+  useSecureCookies: process.env.NODE_ENV === 'production',
   pages: { signIn: '/login' },
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id
-        // role is read from the database-backed adapter user, never from client input.
         session.user.role = user.role
         session.user.status = user.status
       }
