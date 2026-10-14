@@ -40,6 +40,9 @@ export default function App() {
               {pendingPayload?.language === 'en-US' ? 'Open in new tab' : '在新标签页打开'} <ExternalLink size={14} />
             </a>
           </div>
+          <div role="note" aria-label="Project disclaimer and asset credits" style={{ padding: '6px 14px', borderBottom: '1px solid #65552d', background: '#28251b', color: '#f2e4b7', fontSize: 11, lineHeight: 1.4 }}>
+            {pendingPayload?.language === 'en-US' ? 'Unofficial Minecraft project · Coat & shawl assets: 邹陈云飞, Th千' : '非官方 Minecraft 项目 · 外套与披肩素材：邹陈云飞、Th千'}
+          </div>
           <iframe
             ref={iframeRef}
             title="Pixcape 内置 Blockbench 完整模型编辑器"

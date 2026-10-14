@@ -301,7 +301,10 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       <a className="preset-brand" href="#" onClick={event => event.preventDefault()}><span>✦</span> Pixcape <small>PRESET STUDIO</small></a>
       <div className="preset-top-actions"><span className="preset-workspace-label">{tr('Minecraft 皮肤与服装工作台', language)}</span><label className="preset-language-switch">{tr('选择语言', language)} <select aria-label="Language" value={language} onChange={event => { const next = event.target.value as StudioLanguage; setLanguage(next); localStorage.setItem('pixcape-language', next); document.documentElement.lang = next }}><option value="zh-CN">简体中文</option><option value="en-US">English</option></select></label></div>
     </header>
-        <section className="preset-current-skin">
+    <aside role="note" aria-label="项目声明与素材署名" style={{ padding: '6px 16px', borderBottom: '1px solid #65552d', background: '#28251b', color: '#f2e4b7', fontSize: 11, lineHeight: 1.4 }}>
+      {language === 'en-US' ? 'Unofficial Minecraft project · Coat & shawl assets: 邹陈云飞, Th千' : '非官方 Minecraft 项目 · 外套与披肩素材：邹陈云飞、Th千'}
+    </aside>
+    <section className="preset-current-skin">
       <div className="preset-current-skin-title"><div><small>YOUR SKIN</small><h2>{tr('当前皮肤', language)}</h2></div><span className={ready ? 'preset-current-ready' : ''}><i/> {tr(ready ? '已就绪' : '正在加载', language)}</span></div>
       <div className="preset-skin-card"><div className="preset-skin-thumb"><canvas ref={canvasRef} width={64} height={64}/></div><div className="preset-skin-meta"><strong>{skinName}</strong><small>64 × 64 · PNG · 已应用所选披肩 / 外套</small></div></div>
       <div className="preset-current-actions">
@@ -362,6 +365,6 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       </section>
 
     </main>
-    <footer className="preset-footer"><span>Pixcape · 预制服装工作台</span><span>披肩 / 外套模板 · 实时 3D 预览</span></footer>
+    <footer className="preset-footer"><span>Pixcape · 预制服装工作台</span><span>外套与披肩素材：邹陈云飞、Th千</span></footer>
   </div>
 }

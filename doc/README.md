@@ -20,3 +20,8 @@ Pixcape 是一个基于 React、TypeScript、Vite 和 Canvas 2D 的轻量级 64�
 - 任何新增工具、快捷键或导出格式，都应同步更新使用指南。
 - 修改 Docker、Nginx、GitHub Actions 或域名配置时，应同步更新部署文档。
 - 对尚未实现的功能应明确标注为计划事项，不要描述为现有能力。
+
+
+## 声明与素材署名
+
+Pixcape 是非官方 Minecraft 社区项目，与 Mojang Studios / Microsoft 无关联。外套与披肩素材：邹陈云飞、Th千。部分素材来自 [CapeSkinImage](https://github.com/lonelyang/CapeSkinImage)，请遵守原始许可证。
