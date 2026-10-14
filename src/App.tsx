@@ -15,6 +15,10 @@ export default function App() {
       { type: 'pixcape:import-preset', payload: pendingPayload },
       window.location.origin,
     )
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'pixcape:set-language', language: pendingPayload.language || 'zh-CN' },
+      window.location.origin,
+    )
   }
 
   return (
@@ -33,7 +37,7 @@ export default function App() {
             </button>
             <span style={{ fontSize: 13, color: '#b7bbc6' }}>Pixcape Studio · Blockbench（GPL-3.0-or-later）</span>
             <a href={BLOCKBENCH_PATH} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, color: '#c8c9ff', fontSize: 13 }}>
-              在新标签页打开 <ExternalLink size={14} />
+              {pendingPayload?.language === 'en-US' ? 'Open in new tab' : '在新标签页打开'} <ExternalLink size={14} />
             </a>
           </div>
           <iframe
