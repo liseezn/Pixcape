@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { projectAccessWhere } from '../../lib/project-access.ts'
@@ -29,6 +30,16 @@ test('PostgreSQL migration, RBAC ownership constraints, and atomic rate limiting
       prisma.user.create({ data: { email: email('suspended'), name: 'Suspended', status: 'SUSPENDED' } }),
     ])
     createdUserIds.push(owner.id, other.id, admin.id, suspended.id)
+
+    const bootstrapTarget = await prisma.user.create({ data: { email: email('bootstrap'), name: 'Bootstrap Admin' } })
+    createdUserIds.push(bootstrapTarget.id)
+    const bootstrapOutput = execFileSync(process.execPath, ['scripts/bootstrap-admin.mjs'], {
+      env: { ...process.env, BOOTSTRAP_ADMIN_EMAIL: bootstrapTarget.email },
+      encoding: 'utf8',
+    })
+    assert.match(bootstrapOutput, /Initial administrator granted/)
+    const bootstrapped = await prisma.user.findUnique({ where: { id: bootstrapTarget.id }, select: { role: true } })
+    assert.equal(bootstrapped.role, 'ADMIN', 'bootstrap script must grant the role through the Prisma 7 PostgreSQL adapter')
 
     const profile = await prisma.creatorProfile.create({ data: { userId: owner.id, displayName: 'Test Creator' } })
     const reviewResults = await Promise.all([
