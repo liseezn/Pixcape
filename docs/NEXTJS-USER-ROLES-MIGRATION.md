@@ -7,9 +7,12 @@
 - [x] 增加 Prisma PostgreSQL 数据模型草案：用户、角色、创作者资料、项目、审计日志及 Auth.js Adapter 表。
 - [x] 增加服务端授权原语与环境变量示例。
 - [x] 增加独立 Next.js 构建工作流。
-- [ ] 接入 Auth.js 会话与登录 provider，并完成数据库迁移。
-- [ ] 实现真实注册、登录、退出、创作者申请审核和管理员操作。
+- [x] 接入 Auth.js 数据库会话与条件启用的 GitHub OAuth provider（仍需部署端密钥和数据库）。
+- [ ] 创建并验证 PostgreSQL migration，配置预览环境数据库。
+- [x] 实现创作者申请表单、管理员通过 / 拒绝审核与事务审计记录。
+- [ ] 配置 GitHub OAuth 与数据库后端，完成真实登录和审核端到端测试；继续实现用户管理与封禁界面。
 - [ ] 增加 RBAC / 资源所有权自动化测试。
+- [ ] 修复 Next.js 首次构建的 Node.js 类型依赖问题后，确认 CI 重新通过。
 - [ ] 完成 Next.js 与现有 Vite / Blockbench 的整合、Docker 预览和回归验证。
 
 ## 技术路线
@@ -42,4 +45,4 @@ Next.js App Router + TypeScript、Auth.js、PostgreSQL + Prisma。部署仍需�
 4. 创作者只能编辑自己的项目；管理员操作有审计记录。
 5. 验证皮肤 PNG 导入导出、skinview3d 预览、Blockbench 深层路径、PWA 缓存和 Docker 镜像。
 
-> 当前 Next.js 页面是迁移骨架；登录和角色管理仍未启用。未完成认证、构建与回归测试前，不应切换生产入口。
+> 当前 Next.js 登录需要配置 OAuth 和数据库；创作者申请及审核逻辑已实现但尚未完成真实环境端到端验证。Next.js 首次构建曾因缺少 `@types/node` 失败，已补充依赖，等待新提交的 CI 验证。未完成认证、构建与回归测试前，不应切换生产入口。
