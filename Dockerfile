@@ -1,5 +1,5 @@
 # Build the GPL-licensed Blockbench web editor as a separate app served under /blockbench/.
-FROM node:20-bookworm-slim AS blockbench-build
+FROM node:24-bookworm-slim AS blockbench-build
 ARG BLOCKBENCH_REF=7894bfeec0d017e2ba5f08127e19cc01ea7950c0
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -16,7 +16,7 @@ RUN mkdir -p /runtime \
     && test -s /runtime/LICENSE.MD
 
 # Build the existing Pixcape skin and preset workspace.
-FROM node:22-alpine AS pixcape-build
+FROM node:24-alpine AS pixcape-build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -24,7 +24,7 @@ COPY . .
 RUN npm run build
 
 # Serve both apps from one deployment: Pixcape at /, Blockbench at /blockbench/.
-FROM nginx:1.27-alpine
+FROM nginx:stable-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=pixcape-build /app/dist /usr/share/nginx/html
 COPY --from=blockbench-build /runtime/ /usr/share/nginx/html/blockbench/
