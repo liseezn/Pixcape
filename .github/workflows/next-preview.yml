@@ -51,6 +51,23 @@ jobs:
           check-latest: true
       - name: Install dependencies
         run: npm install
+      - name: Report high and critical dependency advisories
+        run: |
+          npm audit --json > /tmp/npm-audit.json || true
+          node <<'NODE'
+          const audit = require('/tmp/npm-audit.json')
+          console.log('Dependency audit summary:', audit.metadata?.vulnerabilities)
+          for (const [name, issue] of Object.entries(audit.vulnerabilities || {})) {
+            if (['high', 'critical'].includes(issue.severity)) {
+              console.log(JSON.stringify({
+                name,
+                severity: issue.severity,
+                fixAvailable: issue.fixAvailable,
+                via: issue.via.map(item => typeof item === 'string' ? item : item.title),
+              }))
+            }
+          }
+          NODE
       - name: Generate Prisma Client
         run: npm run db:generate
       - name: Validate Prisma schema
