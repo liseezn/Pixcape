@@ -18,7 +18,7 @@ export default async function authHandler(req: NextApiRequest, res: NextApiRespo
     // Only trust this header behind a reverse proxy that overwrites it.
     const ipHeader = (process.env.LOGIN_RATE_LIMIT_IP_HEADER || 'x-real-ip').toLowerCase()
     const rawAddress = req.headers[ipHeader]
-    const clientAddress = Array.isArray(rawAddress) ? rawAddress[0] : rawAddress || 'unknown'
+    const clientAddress = (Array.isArray(rawAddress) ? rawAddress[0] : rawAddress) || 'unknown'
     try {
       const result = await consumeLoginRateLimit(clientAddress)
       if (!result.allowed) {
