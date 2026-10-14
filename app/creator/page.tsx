@@ -1,11 +1,12 @@
 import Link from 'next/link'
-import { auth } from '@/auth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import { applyForCreator } from './actions'
 
 export default async function CreatorPage() {
-  const session = await auth()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect('/login')
   const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true, name: true, email: true, role: true, status: true } })
   if (!user || user.status !== 'ACTIVE') redirect('/login?error=account_unavailable')
