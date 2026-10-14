@@ -15,10 +15,10 @@ export async function incrementRateLimitBucket(
         ELSE "LoginRateLimit"."count" + 1
       END,
       "windowStartedAt" = CASE
-        WHEN "LoginRateLimit"."windowStartedAt" <= NOW()::timestamp - (${windowSeconds}::double precision * INTERVAL '1 second') THEN NOW()
+        WHEN "LoginRateLimit"."windowStartedAt" <= NOW()::timestamp - (${windowSeconds}::double precision * INTERVAL '1 second') THEN NOW()::timestamp
         ELSE "LoginRateLimit"."windowStartedAt"
       END,
-      "updatedAt" = NOW()
+      "updatedAt" = NOW()::timestamp
     RETURNING
       "count",
       GREATEST(1, CEIL(EXTRACT(EPOCH FROM ("windowStartedAt" + (${windowSeconds}::double precision * INTERVAL '1 second') - NOW()::timestamp))))::int AS "retryAfterSeconds"
