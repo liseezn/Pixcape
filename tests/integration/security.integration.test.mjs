@@ -87,7 +87,7 @@ test('PostgreSQL migration, RBAC ownership constraints, and atomic rate limiting
     const reset = await incrementRateLimitBucket(prisma, rateKey, 900)
     assert.equal(reset.count, 1, 'expired rate-limit windows must reset atomically')
 
-    const applied = await prisma.$queryRaw`SELECT migration_name FROM "_prisma_migrations" WHERE migration_name IN ('20261014150000_init', '20261014180000_login_rate_limit') AND finished_at IS NOT NULL AND rolled_back_at IS NULL`
+    const applied = await prisma.$queryRaw`SELECT migration_name FROM "_prisma_migrations" WHERE migration_name IN ('20261014150000_init', '20261014153000_login_rate_limit') AND finished_at IS NOT NULL AND rolled_back_at IS NULL`
     assert.equal(applied.length, 2, 'both forward migrations must be recorded as applied')
   } finally {
     await prisma.loginRateLimit.deleteMany({ where: { key: rateKey } })
