@@ -89,6 +89,23 @@ function drawClothingTemplate(context: CanvasRenderingContext2D, image: HTMLImag
   context.restore()
 }
 
+async function composeSkinDataUrl(skinUrl: string, shawlId: string, coatId: string, modelType: ModelType): Promise<string> {
+  const baseImage = await loadImage(skinUrl)
+  const selected = [PRESETS.find(item => item.id === coatId), PRESETS.find(item => item.id === shawlId)]
+    .filter((item): item is Preset => Boolean(item))
+  const overlays = await Promise.all(selected.map(item => loadImage(ASSET_ROOT + (modelType === 'alex' ? item.slimFile : item.file))))
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('skin canvas unavailable')
+  context.imageSmoothingEnabled = false
+  context.clearRect(0, 0, 64, 64)
+  context.drawImage(baseImage, 0, 0, 64, 64)
+  overlays.forEach(image => drawClothingTemplate(context, image))
+  return canvas.toDataURL('image/png')
+}
+
 export type PresetEditorPayload = {
   skinDataUrl: string
   skinName: string
@@ -214,8 +231,8 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         capeDataUrl = capeCanvas.toDataURL('image/png')
       }
       onOpenEditor({
-        skinDataUrl: canvas.toDataURL('image/png'),
-        skinName: (skinName || 'pixcape-preset-skin').toLowerCase().endsWith('.png') ? (skinName || 'pixcape-preset-skin.png') : (skinName || 'pixcape-preset-skin') + '.png',
+        skinDataUrl: await composeSkinDataUrl(skinUrl, shawlId, coatId, modelType),
+        skinName: ((skinName || 'pixcape-skin').replace(/\.png$/i, '') || 'pixcape-skin') + '-pixcape.png',
         modelType,
         shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
         coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
