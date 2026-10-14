@@ -51,7 +51,7 @@ test('PostgreSQL migration, RBAC ownership constraints, and atomic rate limiting
       })
       await tx.session.deleteMany({ where: { userId: other.id } })
     })
-    assert.equal(await prisma.session.count({ where: { id: session.id } }), 0, 'suspension must revoke active sessions')
+    assert.equal(await prisma.session.count({ where: { sessionToken: session.sessionToken } }), 0, 'suspension must revoke active sessions')
     const adminProtection = await prisma.user.updateMany({
       where: { id: admin.id, role: { not: 'ADMIN' } },
       data: { status: 'SUSPENDED' },
