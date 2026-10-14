@@ -301,10 +301,8 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       <a className="preset-brand" href="#" onClick={event => event.preventDefault()}><span>✦</span> Pixcape <small>PRESET STUDIO</small></a>
       <div className="preset-top-actions"><span className="preset-workspace-label">{tr('Minecraft 皮肤与服装工作台', language)}</span><label className="preset-language-switch">{tr('选择语言', language)} <select aria-label="Language" value={language} onChange={event => { const next = event.target.value as StudioLanguage; setLanguage(next); localStorage.setItem('pixcape-language', next); document.documentElement.lang = next }}><option value="zh-CN">简体中文</option><option value="en-US">English</option></select></label></div>
     </header>
-    <aside role="note" aria-label="独立项目与素材署名声明" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px', alignItems: 'center', padding: '9px 16px', borderBottom: '1px solid #65552d', background: '#28251b', color: '#f2e4b7', fontSize: 12, lineHeight: 1.5 }}>
-      <strong>{language === 'en-US' ? 'Independent project:' : '独立项目声明：'}</strong>
-      <span>{language === 'en-US' ? 'Pixcape is not an official Minecraft product and is not approved by, affiliated with, or endorsed by Mojang Studios or Microsoft.' : 'Pixcape 并非官方 Minecraft 产品，未获 Mojang Studios 或 Microsoft 批准、授权或背书，且与其无关联。'}</span>
-      <span>{language === 'en-US' ? 'Coat & shawl asset credits: 邹陈云飞 · Th千' : '外套与披肩素材署名：邹陈云飞、Th千'}</span>
+    <aside role="note" aria-label="项目声明与素材署名" style={{ padding: '6px 16px', borderBottom: '1px solid #65552d', background: '#28251b', color: '#f2e4b7', fontSize: 11, lineHeight: 1.4 }}>
+      {language === 'en-US' ? 'Unofficial Minecraft project · Coat & shawl assets: 邹陈云飞, Th千' : '非官方 Minecraft 项目 · 外套与披肩素材：邹陈云飞、Th千'}
     </aside>
     <section className="preset-current-skin">
       <div className="preset-current-skin-title"><div><small>YOUR SKIN</small><h2>{tr('当前皮肤', language)}</h2></div><span className={ready ? 'preset-current-ready' : ''}><i/> {tr(ready ? '已就绪' : '正在加载', language)}</span></div>
@@ -367,6 +365,6 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       </section>
 
     </main>
-    <footer className="preset-footer"><span>Pixcape · 预制服装工作台</span><span>外套与披肩素材署名：邹陈云飞、Th千</span><span>非官方 Minecraft 产品，与 Mojang Studios / Microsoft 无关联</span></footer>
+    <footer className="preset-footer"><span>Pixcape · 预制服装工作台</span><span>外套与披肩素材：邹陈云飞、Th千</span></footer>
   </div>
 }
