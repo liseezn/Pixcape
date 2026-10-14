@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-v3-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-v4-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
