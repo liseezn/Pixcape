@@ -11,7 +11,8 @@
     "next:build": "next build",
     "next:start": "next start --hostname 0.0.0.0",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate deploy"
+    "db:migrate": "prisma migrate deploy",
+    "db:bootstrap-admin": "node scripts/bootstrap-admin.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
