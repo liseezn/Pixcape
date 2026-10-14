@@ -34,3 +34,32 @@ export async function reviewCreatorApplication(formData: FormData) {
   })
   redirect('/admin?reviewed=1')
 }
+
+export async function setUserStatus(formData: FormData) {
+  const actor = await requireActiveAdmin()
+  const targetId = String(formData.get('userId') ?? '')
+  const requestedStatus = String(formData.get('status') ?? '')
+  if (!targetId || !['ACTIVE', 'SUSPENDED'].includes(requestedStatus)) redirect('/admin?error=invalid_request')
+  if (targetId === actor.id) redirect('/admin?error=cannot_change_own_status')
+
+  const target = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true, status: true, role: true } })
+  if (!target) redirect('/admin?error=user_not_found')
+  if (target.role === 'ADMIN') redirect('/admin?error=admin_status_protected')
+  const nextStatus = requestedStatus as 'ACTIVE' | 'SUSPENDED'
+  if (target.status === nextStatus) redirect('/admin?notice=no_change')
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: target.id }, data: { status: nextStatus } })
+    await tx.auditLog.create({ data: {
+      actorId: actor.id,
+      action: nextStatus === 'SUSPENDED' ? 'USER_SUSPENDED' : 'USER_REACTIVATED',
+      targetType: 'User',
+      targetId: target.id,
+      details: { previousStatus: target.status, nextStatus },
+    } })
+    if (nextStatus === 'SUSPENDED') {
+      await tx.session.deleteMany({ where: { userId: target.id } })
+    }
+  })
+  redirect('/admin?userUpdated=1')
+}
