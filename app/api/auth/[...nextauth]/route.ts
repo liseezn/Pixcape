@@ -6,6 +6,12 @@ import { consumeLoginRateLimit } from '@/lib/login-rate-limit'
 const nextAuthHandler = NextAuth(authOptions) as unknown as (request: Request) => Promise<Response>
 
 async function handleAuthRequest(request: Request): Promise<Response> {
+  if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_SECRET && !process.env.AUTH_SECRET) {
+    return NextResponse.json(
+      { error: 'Authentication is not configured on this deployment.' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
+    )
+  }
   const path = new URL(request.url).pathname
   const isSensitiveAuthEndpoint = /^\/api\/auth\/(?:signin(?:\/|$)|callback\/)/.test(path)
 
