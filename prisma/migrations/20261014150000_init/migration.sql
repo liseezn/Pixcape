@@ -72,9 +72,9 @@ CREATE TABLE "Account" (
 CREATE TABLE "Session" (
   "sessionToken" TEXT NOT NULL,
   "userId" TEXT NOT NULL,
-  "expires" TIMESTAMP(3) NOT NULL,
-  CONSTRAINT "Session_pkey" PRIMARY KEY ("sessionToken")
+  "expires" TIMESTAMP(3) NOT NULL
 );
+CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
 CREATE TABLE "VerificationToken" (
   "identifier" TEXT NOT NULL,
