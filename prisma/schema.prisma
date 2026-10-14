@@ -77,6 +77,14 @@ model AuditLog {
   @@index([targetType, targetId, createdAt])
 }
 
+model LoginRateLimit {
+  key             String   @id
+  windowStartedAt DateTime
+  count           Int      @default(0)
+  updatedAt       DateTime @updatedAt
+  @@index([windowStartedAt])
+}
+
 // Auth.js Prisma Adapter models
 model Account {
   userId            String
