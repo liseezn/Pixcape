@@ -41,6 +41,8 @@ jobs:
             }
           }
           NODE
+      - name: Fail on high or critical dependency advisories
+        run: npm audit --audit-level=high
       - run: npm run build
       - name: Build complete Pixcape image including Blockbench
         run: docker build --tag pixcape-integration-test .
