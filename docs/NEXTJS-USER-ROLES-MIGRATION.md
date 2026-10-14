@@ -15,7 +15,11 @@
 - [ ] 创建并验证 PostgreSQL migration，配置预览环境数据库。
 - [ ] 配置 GitHub OAuth 与数据库后端，完成真实登录、会话撤销、审核和封禁端到端测试。
 - [ ] 增加 RBAC / 资源所有权自动化测试与安全回归测试。
-- [ ] 确认本轮安全改动后的 Next.js 构建、现有 Vite 构建和 Docker 镜像 CI 均通过。
+- [x] 将构建运行时切换为 Node.js 24 LTS，并更新 GitHub Actions checkout/setup-node 到稳定主版本。
+- [x] 将 Next.js、React、Vite、TypeScript、skinview3d、Three.js、Radix UI、Lucide、PWA 插件和 PostgreSQL 驱动升级到已发布稳定版本。
+- [x] 将 Prisma 升级到 7.10 稳定版，增加 prisma.config.ts 与 PostgreSQL driver adapter；需由 CI 验证生成、schema 与构建兼容性。
+- [x] 将 NextAuth 从 v5 beta API 迁移到稳定版 v4.24.15，并调整 App Router 会话与退出登录代码。
+- [ ] 确认本轮依赖升级后的 Next.js 构建、现有 Vite 构建、CodeQL 和 Docker 镜像 CI 均通过。
 - [ ] 完成 Next.js 与现有 Vite / Blockbench 的整合、Docker 预览和回归验证。
 
 ## 技术路线
@@ -51,4 +55,4 @@ Next.js App Router + TypeScript、Auth.js、PostgreSQL + Prisma。部署仍需�
 5. 创作者只能编辑自己的项目；管理员操作有审计记录。
 6. 验证皮肤 PNG 导入导出、skinview3d 预览、Blockbench 深层路径、PWA 缓存和 Docker 镜像。
 
-> 当前 Next.js 登录需要配置 OAuth 和数据库；创作者申请及审核逻辑已实现但尚未完成真实环境端到端验证。代码已增加基础会话与响应头加固，但限流、自动化安全测试、真实数据库迁移和端到端验证仍未完成。未完成认证、构建与回归测试前，不应切换生产入口。
+> 当前依赖已切换到发布的稳定版本线；版本更新已提交，但 CI 尚未全部完成，因此不能视为构建通过。登录仍需要配置 OAuth 和数据库；创作者申请及审核逻辑尚未完成真实环境端到端验证。限流、自动化安全测试、真实数据库迁移和端到端验证仍未完成。未完成认证、构建与回归测试前，不应切换生产入口。
