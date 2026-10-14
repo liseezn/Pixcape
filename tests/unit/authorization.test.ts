@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { hasMinimumRole, assertMinimumRole, assertOwnerOrAdmin, AuthorizationError } from '../../lib/authorization.ts'
-import { isActiveProjectActor, projectAccessWhere } from '../../lib/project-access.ts'
+import { canSetProjectVisibility, isActiveProjectActor, projectAccessWhere } from '../../lib/project-access.ts'
 
 test('role hierarchy grants only the requested minimum role', () => {
   assert.equal(hasMinimumRole('USER', 'USER'), true)
@@ -38,4 +38,11 @@ test('suspended and deleted accounts cannot act as project actors', () => {
   assert.equal(isActiveProjectActor({ id: 'u', role: 'USER', status: 'SUSPENDED' }), false)
   assert.equal(isActiveProjectActor({ id: 'u', role: 'ADMIN', status: 'DELETED' }), false)
   assert.equal(isActiveProjectActor(null), false)
+})
+
+test('only approved creators and admins may publish public projects', () => {
+  assert.equal(canSetProjectVisibility('USER', 'PRIVATE'), true)
+  assert.equal(canSetProjectVisibility('USER', 'PUBLIC'), false)
+  assert.equal(canSetProjectVisibility('CREATOR', 'PUBLIC'), true)
+  assert.equal(canSetProjectVisibility('ADMIN', 'PUBLIC'), true)
 })
