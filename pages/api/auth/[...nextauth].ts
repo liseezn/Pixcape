@@ -5,10 +5,11 @@ import { consumeLoginRateLimit } from '@/lib/login-rate-limit'
 
 const nextAuthHandler = NextAuth(authOptions)
 
-export default async function authHandler(req: NextApiRequest, res: NextApiResponse) {
+export default async function authHandler(req: NextApiRequest, res: NextApiResponse): Promise<void> {
   if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_SECRET && !process.env.AUTH_SECRET) {
     res.setHeader('Cache-Control', 'no-store')
-    return res.status(503).json({ error: 'Authentication is not configured on this deployment.' })
+    res.status(503).json({ error: 'Authentication is not configured on this deployment.' })
+    return
   }
 
   const path = (req.url || '').split('?')[0]
@@ -23,15 +24,17 @@ export default async function authHandler(req: NextApiRequest, res: NextApiRespo
       if (!result.allowed) {
         res.setHeader('Retry-After', String(result.retryAfterSeconds))
         res.setHeader('Cache-Control', 'no-store')
-        return res.status(429).json({ error: 'Too many login attempts. Please wait before trying again.' })
+        res.status(429).json({ error: 'Too many login attempts. Please wait before trying again.' })
+        return
       }
     } catch {
       // Fail closed if the persistent limiter cannot be consulted.
       res.setHeader('Retry-After', '30')
       res.setHeader('Cache-Control', 'no-store')
-      return res.status(503).json({ error: 'Authentication is temporarily unavailable. Please try again shortly.' })
+      res.status(503).json({ error: 'Authentication is temporarily unavailable. Please try again shortly.' })
+      return
     }
   }
 
-  return nextAuthHandler(req, res)
+  await nextAuthHandler(req, res)
 }
