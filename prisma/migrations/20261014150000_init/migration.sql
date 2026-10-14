@@ -1,4 +1,4 @@
--- Initial PostgreSQL schema for Pixcape accounts, creator review, and login rate limiting.
+-- Initial PostgreSQL schema for Pixcape accounts and creator review.
 CREATE TYPE "UserRole" AS ENUM ('USER', 'CREATOR', 'ADMIN');
 CREATE TYPE "UserStatus" AS ENUM ('ACTIVE', 'SUSPENDED', 'DELETED');
 CREATE TYPE "CreatorReviewStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
