@@ -13,7 +13,7 @@ type Preset = { id: string; label: string; file: string; slimFile: string; kind:
 
 const ASSET_ROOT = 'https://raw.githubusercontent.com/lonelyang/CapeSkinImage/master/examples/img/'
 const BASE_SKIN = ASSET_ROOT + 'stevea.png'
-const PREVIEW_BACKGROUNDS: Record<Exclude<StudioLanguage, never> | 'day' | 'night' | 'plains' | 'desert' | 'forest' | 'nether' | 'end', string> = {
+const PREVIEW_BACKGROUNDS: Record<'day' | 'night' | 'plains' | 'desert' | 'forest' | 'nether' | 'end', string> = {
   day: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg',
   plains: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/exploration-mindful.jpg',
   night: 'https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/forest-carousel1.jpg',
