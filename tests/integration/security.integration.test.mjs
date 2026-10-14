@@ -17,7 +17,7 @@ test('PostgreSQL migration, RBAC ownership constraints, and atomic rate limiting
   const rateKey = `integration-test:${suffix}`
 
   try {
-    const migration = await prisma.$queryRaw`SELECT to_regclass('"User"') AS users, to_regclass('"Project"') AS projects, to_regclass('"LoginRateLimit"') AS rate_limits`
+    const migration = await prisma.$queryRaw`SELECT to_regclass('"User"')::text AS users, to_regclass('"Project"')::text AS projects, to_regclass('"LoginRateLimit"')::text AS rate_limits`
     assert.ok(migration[0].users, 'User table must exist after applying migrations')
     assert.ok(migration[0].projects, 'Project table must exist after applying migrations')
     assert.ok(migration[0].rate_limits, 'LoginRateLimit table must exist after applying migrations')
