@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react'
-import { SkinViewer } from 'skinview3d'
+import { FlyingAnimation, IdleAnimation, SkinViewer, WalkingAnimation } from 'skinview3d'
 
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type ModelType = 'steve' | 'alex'
 type Pose = 'idle' | 'wave' | 'walk' | 'fly'
 type Props = {
+  backgroundImageUrl?: string
+  backgroundColor?: string
   layers: LayerData[]
   side: 'front' | 'back'
   rotation: number
@@ -58,6 +60,8 @@ function makeFallbackCape(skin: HTMLCanvasElement) {
 }
 
 export default function ThreeCapePreview({
+  backgroundImageUrl,
+  backgroundColor = '#76b9ee',
   layers,
   side,
   rotation,
@@ -74,6 +78,10 @@ export default function ThreeCapePreview({
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<SkinViewer | null>(null)
+  const poseRef = useRef(pose)
+  const backgroundRequestRef = useRef(0)
+  const backgroundImageRef = useRef(backgroundImageUrl)
+  const backgroundColorRef = useRef(backgroundColor)
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
   const tiltRef = useRef(tilt)
@@ -93,6 +101,9 @@ export default function ThreeCapePreview({
   useEffect(() => { onTiltChangeRef.current = onTiltChange }, [onTiltChange])
   useEffect(() => { onZoomChangeRef.current = onZoomChange }, [onZoomChange])
   useEffect(() => { capeVisibleRef.current = capeVisible }, [capeVisible])
+  useEffect(() => { poseRef.current = pose }, [pose])
+  useEffect(() => { backgroundImageRef.current = backgroundImageUrl }, [backgroundImageUrl])
+  useEffect(() => { backgroundColorRef.current = backgroundColor }, [backgroundColor])
   useEffect(() => { elytraVisibleRef.current = elytraVisible }, [elytraVisible])
 
   useEffect(() => {
@@ -115,6 +126,7 @@ export default function ThreeCapePreview({
       return
     }
 
+    viewer.renderer.setClearColor(0x000000, 0)
     viewer.controls.enabled = false
     viewerRef.current = viewer
 
@@ -128,7 +140,7 @@ export default function ThreeCapePreview({
 
     const applyRotation = () => {
       viewer.playerObject.rotation.y = (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      viewer.playerObject.rotation.x = tiltRef.current * Math.PI / 180
+      if (poseRef.current !== 'fly') viewer.playerObject.rotation.x = tiltRef.current * Math.PI / 180
       viewer.camera.zoom = zoomRef.current
       viewer.camera.updateProjectionMatrix()
     }
@@ -148,7 +160,7 @@ export default function ThreeCapePreview({
       rotationRef.current = next
       tiltRef.current = nextTilt
       viewer.playerObject.rotation.y = (next + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      viewer.playerObject.rotation.x = nextTilt * Math.PI / 180
+      if (poseRef.current !== 'fly') viewer.playerObject.rotation.x = nextTilt * Math.PI / 180
       onRotationChangeRef.current(next)
       onTiltChangeRef.current(nextTilt)
     }
@@ -224,8 +236,8 @@ export default function ThreeCapePreview({
     const viewer = viewerRef.current
     if (!viewer) return
     viewer.playerObject.rotation.y = (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
-    viewer.playerObject.rotation.x = tilt * Math.PI / 180
-  }, [rotation, side, tilt])
+    if (pose !== 'fly') viewer.playerObject.rotation.x = tilt * Math.PI / 180
+  }, [rotation, side, tilt, pose])
 
   useEffect(() => {
     const viewer = viewerRef.current
@@ -238,60 +250,62 @@ export default function ThreeCapePreview({
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer) return
-    let frame = 0
-    const startedAt = performance.now()
-    const animate = (now: number) => {
-      const skin = viewer.playerObject.skin
-      if (skin) {
-        const t = (now - startedAt) / 1000
-        const { leftArm, rightArm, leftLeg, rightLeg } = skin
-        leftArm.rotation.set(0, 0, 0)
-        rightArm.rotation.set(0, 0, 0)
-        leftLeg.rotation.set(0, 0, 0)
-        rightLeg.rotation.set(0, 0, 0)
-        skin.body.rotation.x = 0
-        skin.head.rotation.x = 0
-        if (pose === 'wave') {
-          rightArm.rotation.z = -2.35 + Math.sin(t * 5) * 0.22
-          rightArm.rotation.x = Math.sin(t * 3) * 0.12
-        } else if (pose === 'walk') {
-          leftArm.rotation.x = Math.sin(t * 5) * 0.65
-          rightArm.rotation.x = -Math.sin(t * 5) * 0.65
-          leftLeg.rotation.x = -Math.sin(t * 5) * 0.72
-          rightLeg.rotation.x = Math.sin(t * 5) * 0.72
-        } else if (pose === 'fly') {
-          // Elytra-like glide: arms forward, legs trailing behind.
-          leftArm.rotation.x = -1.18
-          rightArm.rotation.x = -1.18
-          leftArm.rotation.z = 0.08
-          rightArm.rotation.z = -0.08
-          leftLeg.rotation.x = 0.72
-          rightLeg.rotation.x = 0.82
-          skin.body.rotation.x = -0.58
-          skin.head.rotation.x = 0.32
-        } else {
-          skin.body.rotation.x = 0
-          skin.head.rotation.x = 0
-        }
-        // Animate attached back equipment too: otherwise limbs move while the
-        // cape/elytra look frozen. Reset to a neutral pose each frame first.
-        viewer.playerObject.traverse((object: any) => {
-          const name = String(object.name || '').toLowerCase()
-          if (name.includes('cape')) {
-            object.rotation.x = (pose === 'fly' ? -0.85 : pose === 'walk' ? 0.12 : 0.04) + Math.sin(t * (pose === 'walk' ? 5 : 2.2)) * (pose === 'idle' ? 0.025 : 0.09)
-            object.rotation.z = pose === 'wave' ? Math.sin(t * 2.5) * 0.05 : Math.sin(t * 2) * 0.035
-          } else if (name.includes('leftwing') || name.includes('left_wing')) {
-            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3) * 0.08 : Math.sin(t * 2) * 0.015
-          } else if (name.includes('rightwing') || name.includes('right_wing')) {
-            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3 + 0.2) * 0.08 : Math.sin(t * 2) * 0.015
-          }
-        })
-      }
-      frame = requestAnimationFrame(animate)
+    const animation = pose === 'fly'
+      ? new FlyingAnimation()
+      : pose === 'walk'
+        ? new WalkingAnimation()
+        : new IdleAnimation()
+    if (pose === 'wave') {
+      animation.addAnimation((player, progress) => {
+        player.skin.rightArm.rotation.z = -2.35 + Math.sin(progress * 5) * 0.22
+        player.skin.rightArm.rotation.x = Math.sin(progress * 3) * 0.12
+      })
     }
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
-  }, [pose, modelType])
+    if (pose === 'fly' && !elytraVisibleRef.current && capeVisibleRef.current) {
+      animation.addAnimation((player, progress) => {
+        player.cape.rotation.x = -0.85 + Math.sin(progress * 2.2) * 0.025
+        player.cape.rotation.z = Math.sin(progress * 1.8) * 0.025
+      })
+    }
+    animation.speed = pose === 'walk' ? 0.72 : 1
+    viewer.animation = animation
+    return () => {
+      if (viewer.animation === animation) viewer.animation = null
+    }
+  }, [pose])
+
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer) return
+    const requestId = ++backgroundRequestRef.current
+    const fallback = Number.parseInt(backgroundColor.replace('#', ''), 16)
+    if (!backgroundImageUrl) {
+      viewer.background = fallback
+      return
+    }
+    void viewer.loadBackground(backgroundImageUrl).then(() => {
+      if (requestId !== backgroundRequestRef.current) {
+        const latestUrl = backgroundImageRef.current
+        if (latestUrl) {
+          void viewer.loadBackground(latestUrl).catch(() => {
+            viewer.background = null
+          })
+        } else {
+          viewer.background = Number.parseInt(backgroundColorRef.current.replace('#', ''), 16)
+        }
+      }
+    }).catch(() => {
+      if (requestId === backgroundRequestRef.current) {
+        viewer.background = null
+        if (hostRef.current) hostRef.current.dataset.backgroundFallback = 'true'
+      }
+    })
+    return () => {
+      backgroundRequestRef.current += 1
+    }
+  }, [backgroundImageUrl, backgroundColor])
+
+
 
   return (
     <div
