@@ -6,6 +6,7 @@ on:
     paths:
       - 'app/**'
       - 'pages/**'
+      - 'scripts/**'
       - 'auth.ts'
       - 'lib/**'
       - 'prisma/**'
