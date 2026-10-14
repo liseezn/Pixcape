@@ -9,6 +9,7 @@ import './preview-options.css'
 import './minecraft-inventory.css'
 
 type GarmentKind = 'shawl' | 'coat'
+type ModelType = 'steve' | 'alex'
 type Preset = { id: string; label: string; file: string; slimFile: string; kind: GarmentKind }
 
 const ASSET_ROOT = 'https://raw.githubusercontent.com/lonelyang/CapeSkinImage/master/examples/img/'
