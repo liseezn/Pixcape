@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-v2-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -55,7 +55,7 @@ jobs:
           node-version: 24
           check-latest: true
       - name: Install dependencies
-        run: npm install --no-audit
+        run: npm install
       - name: Report high and critical dependency advisories
         run: |
           npm audit --json > /tmp/npm-audit.json || true
