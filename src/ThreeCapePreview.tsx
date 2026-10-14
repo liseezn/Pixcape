@@ -1,10 +1,98 @@
 import { useEffect, useRef } from 'react'
-import { SkinViewer } from 'skinview3d'
+import * as THREE from 'three'
+import { FlyingAnimation, IdleAnimation, SkinViewer, WalkingAnimation } from 'skinview3d'
 
 type LayerData = { pixels: string[]; visible: boolean; opacity: number }
 type ModelType = 'steve' | 'alex'
 type Pose = 'idle' | 'wave' | 'walk' | 'fly'
+type SceneTheme = 'day' | 'night' | 'plains' | 'desert' | 'forest' | 'nether' | 'end' | 'custom'
+
+type BiomePalette = { sky: string; top: string; dirt: string; stone: string; leaves: string; wood: string; accent: string }
+function biomePalette(theme: SceneTheme, customBackground: string): BiomePalette {
+  const palettes: Record<Exclude<SceneTheme, 'custom'>, BiomePalette> = {
+    day: { sky: '#87ceeb', top: '#5f9b3d', dirt: '#80512e', stone: '#777d83', leaves: '#2f7d32', wood: '#76502d', accent: '#fff0a3' },
+    plains: { sky: '#87ceeb', top: '#5f9b3d', dirt: '#80512e', stone: '#777d83', leaves: '#2f7d32', wood: '#76502d', accent: '#fff0a3' },
+    night: { sky: '#101a3a', top: '#294c36', dirt: '#47352f', stone: '#343b50', leaves: '#183d2b', wood: '#49352b', accent: '#dce7ff' },
+    desert: { sky: '#74c8ed', top: '#d8c27a', dirt: '#c2a15f', stone: '#a88d62', leaves: '#5e7541', wood: '#6d4a2e', accent: '#ffe4a1' },
+    forest: { sky: '#80c5e5', top: '#39763b', dirt: '#68472e', stone: '#686f70', leaves: '#245b2c', wood: '#68452a', accent: '#fff0a3' },
+    nether: { sky: '#321d35', top: '#713b32', dirt: '#4b2930', stone: '#513c49', leaves: '#4e292e', wood: '#4c2527', accent: '#ff7043' },
+    end: { sky: '#211b42', top: '#817391', dirt: '#5a506c', stone: '#77708a', leaves: '#62516f', wood: '#51455f', accent: '#d4c4ff' },
+  }
+  return theme === 'custom' ? { ...palettes.plains, sky: customBackground } : palettes[theme]
+}
+
+function createVoxelBackdrop(theme: SceneTheme, customBackground: string): THREE.Group {
+  const palette = biomePalette(theme, customBackground)
+  const group = new THREE.Group()
+  const geometry = new THREE.BoxGeometry(4, 4, 4)
+  const materials = {
+    top: new THREE.MeshStandardMaterial({ color: palette.top, roughness: 1, flatShading: true }),
+    dirt: new THREE.MeshStandardMaterial({ color: palette.dirt, roughness: 1, flatShading: true }),
+    stone: new THREE.MeshStandardMaterial({ color: palette.stone, roughness: 1, flatShading: true }),
+    leaves: new THREE.MeshStandardMaterial({ color: palette.leaves, roughness: 1, flatShading: true }),
+    wood: new THREE.MeshStandardMaterial({ color: palette.wood, roughness: 1, flatShading: true }),
+    accent: new THREE.MeshBasicMaterial({ color: palette.accent }),
+  }
+  const addBlock = (x: number, y: number, z: number, material: THREE.Material, sx = 1, sy = 1, sz = 1) => {
+    const block = new THREE.Mesh(geometry, material)
+    block.position.set(x, y, z)
+    block.scale.set(sx, sy, sz)
+    group.add(block)
+  }
+  for (let x = -40; x <= 40; x += 4) {
+    const column = Math.round((x + 40) / 4)
+    const rise = theme === 'desert' ? (column % 5 === 0 ? 4 : 0) : (column % 7 === 0 ? 4 : column % 11 === 0 ? 8 : 0)
+    for (let z = -40; z <= -20; z += 4) {
+      const topY = -8 + rise + (z < -32 && column % 4 === 0 ? 4 : 0)
+      addBlock(x, topY, z, materials.top)
+      addBlock(x, topY - 4, z, materials.dirt)
+      addBlock(x, topY - 8, z, materials.stone)
+    }
+  }
+  if (theme === 'forest' || theme === 'plains' || theme === 'day' || theme === 'custom') {
+    for (const [tx, tz, height] of [[-20, -28, 3], [20, -36, 4], [32, -24, 2]] as const) {
+      for (let h = 0; h < height; h++) addBlock(tx, -4 + h * 4, tz, materials.wood)
+      addBlock(tx, -4 + height * 4, tz, materials.leaves, 2, 1, 2)
+      addBlock(tx - 4, -4 + height * 4, tz, materials.leaves)
+      addBlock(tx + 4, -4 + height * 4, tz, materials.leaves)
+      addBlock(tx, -4 + height * 4, tz - 4, materials.leaves)
+      addBlock(tx, -4 + height * 4, tz + 4, materials.leaves)
+    }
+  }
+  if (theme === 'desert') {
+    addBlock(-24, -4, -32, materials.top, 2, 2, 2)
+    addBlock(-24, 4, -32, materials.top, 2, 1, 2)
+    addBlock(24, -4, -36, materials.top, 3, 2, 2)
+  }
+  if (theme === 'nether') {
+    for (let i = 0; i < 8; i++) addBlock(-32 + i * 8, -1 + (i % 3) * 4, -36, materials.accent, 0.12, 0.12, 0.12)
+  }
+  if (theme === 'end') {
+    addBlock(-24, -3, -32, materials.stone, 2, 2, 2)
+    addBlock(24, -5, -36, materials.stone, 3, 1, 2)
+  }
+  if (theme === 'night') {
+    const starGeometry = new THREE.BoxGeometry(0.45, 0.45, 0.45)
+    const starMaterial = new THREE.MeshBasicMaterial({ color: '#f5f4d6' })
+    for (let i = 0; i < 28; i++) {
+      const star = new THREE.Mesh(starGeometry, starMaterial)
+      star.position.set(-34 + ((i * 17) % 68), 5 + ((i * 11) % 18), -38 - (i % 4) * 2)
+      group.add(star)
+    }
+    ;(group.userData as any).extraResources = [starGeometry, starMaterial]
+  }
+  ;(group.userData as any).resources = [geometry, ...Object.values(materials)]
+  return group
+}
+function disposeVoxelBackdrop(group: THREE.Group) {
+  group.removeFromParent()
+  const resources = [...((group.userData as any).resources || []), ...((group.userData as any).extraResources || [])] as Array<{ dispose?: () => void }>
+  resources.forEach(resource => resource.dispose?.())
+}
+
 type Props = {
+  sceneTheme: SceneTheme
+  customBackground: string
   layers: LayerData[]
   side: 'front' | 'back'
   rotation: number
@@ -58,6 +146,8 @@ function makeFallbackCape(skin: HTMLCanvasElement) {
 }
 
 export default function ThreeCapePreview({
+  sceneTheme,
+  customBackground,
   layers,
   side,
   rotation,
@@ -74,6 +164,8 @@ export default function ThreeCapePreview({
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<SkinViewer | null>(null)
+  const backdropRef = useRef<THREE.Group | null>(null)
+  const poseRef = useRef(pose)
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
   const tiltRef = useRef(tilt)
@@ -93,6 +185,7 @@ export default function ThreeCapePreview({
   useEffect(() => { onTiltChangeRef.current = onTiltChange }, [onTiltChange])
   useEffect(() => { onZoomChangeRef.current = onZoomChange }, [onZoomChange])
   useEffect(() => { capeVisibleRef.current = capeVisible }, [capeVisible])
+  useEffect(() => { poseRef.current = pose }, [pose])
   useEffect(() => { elytraVisibleRef.current = elytraVisible }, [elytraVisible])
 
   useEffect(() => {
@@ -109,6 +202,7 @@ export default function ThreeCapePreview({
         height: Math.max(1, host.clientHeight),
         enableControls: false,
         pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        background: biomePalette(sceneTheme, customBackground).sky,
       })
     } catch {
       host.dataset.webglUnavailable = 'true'
@@ -128,7 +222,7 @@ export default function ThreeCapePreview({
 
     const applyRotation = () => {
       viewer.playerObject.rotation.y = (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      viewer.playerObject.rotation.x = tiltRef.current * Math.PI / 180
+      if (poseRef.current !== 'fly') viewer.playerObject.rotation.x = tiltRef.current * Math.PI / 180
       viewer.camera.zoom = zoomRef.current
       viewer.camera.updateProjectionMatrix()
     }
@@ -148,7 +242,7 @@ export default function ThreeCapePreview({
       rotationRef.current = next
       tiltRef.current = nextTilt
       viewer.playerObject.rotation.y = (next + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      viewer.playerObject.rotation.x = nextTilt * Math.PI / 180
+      if (poseRef.current !== 'fly') viewer.playerObject.rotation.x = nextTilt * Math.PI / 180
       onRotationChangeRef.current(next)
       onTiltChangeRef.current(nextTilt)
     }
@@ -174,6 +268,10 @@ export default function ThreeCapePreview({
       canvas.removeEventListener('pointermove', move)
       canvas.removeEventListener('pointerup', up)
       canvas.removeEventListener('pointercancel', up)
+      if (backdropRef.current) {
+        disposeVoxelBackdrop(backdropRef.current)
+        backdropRef.current = null
+      }
       viewer.dispose()
       canvas.remove()
       viewerRef.current = null
@@ -224,8 +322,8 @@ export default function ThreeCapePreview({
     const viewer = viewerRef.current
     if (!viewer) return
     viewer.playerObject.rotation.y = (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
-    viewer.playerObject.rotation.x = tilt * Math.PI / 180
-  }, [rotation, side, tilt])
+    if (pose !== 'fly') viewer.playerObject.rotation.x = tilt * Math.PI / 180
+  }, [rotation, side, tilt, pose])
 
   useEffect(() => {
     const viewer = viewerRef.current
@@ -238,60 +336,47 @@ export default function ThreeCapePreview({
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer) return
-    let frame = 0
-    const startedAt = performance.now()
-    const animate = (now: number) => {
-      const skin = viewer.playerObject.skin
-      if (skin) {
-        const t = (now - startedAt) / 1000
-        const { leftArm, rightArm, leftLeg, rightLeg } = skin
-        leftArm.rotation.set(0, 0, 0)
-        rightArm.rotation.set(0, 0, 0)
-        leftLeg.rotation.set(0, 0, 0)
-        rightLeg.rotation.set(0, 0, 0)
-        skin.body.rotation.x = 0
-        skin.head.rotation.x = 0
-        if (pose === 'wave') {
-          rightArm.rotation.z = -2.35 + Math.sin(t * 5) * 0.22
-          rightArm.rotation.x = Math.sin(t * 3) * 0.12
-        } else if (pose === 'walk') {
-          leftArm.rotation.x = Math.sin(t * 5) * 0.65
-          rightArm.rotation.x = -Math.sin(t * 5) * 0.65
-          leftLeg.rotation.x = -Math.sin(t * 5) * 0.72
-          rightLeg.rotation.x = Math.sin(t * 5) * 0.72
-        } else if (pose === 'fly') {
-          // Elytra-like glide: arms forward, legs trailing behind.
-          leftArm.rotation.x = -1.18
-          rightArm.rotation.x = -1.18
-          leftArm.rotation.z = 0.08
-          rightArm.rotation.z = -0.08
-          leftLeg.rotation.x = 0.72
-          rightLeg.rotation.x = 0.82
-          skin.body.rotation.x = -0.58
-          skin.head.rotation.x = 0.32
-        } else {
-          skin.body.rotation.x = 0
-          skin.head.rotation.x = 0
-        }
-        // Animate attached back equipment too: otherwise limbs move while the
-        // cape/elytra look frozen. Reset to a neutral pose each frame first.
-        viewer.playerObject.traverse((object: any) => {
-          const name = String(object.name || '').toLowerCase()
-          if (name.includes('cape')) {
-            object.rotation.x = (pose === 'fly' ? -0.85 : pose === 'walk' ? 0.12 : 0.04) + Math.sin(t * (pose === 'walk' ? 5 : 2.2)) * (pose === 'idle' ? 0.025 : 0.09)
-            object.rotation.z = pose === 'wave' ? Math.sin(t * 2.5) * 0.05 : Math.sin(t * 2) * 0.035
-          } else if (name.includes('leftwing') || name.includes('left_wing')) {
-            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3) * 0.08 : Math.sin(t * 2) * 0.015
-          } else if (name.includes('rightwing') || name.includes('right_wing')) {
-            object.rotation.x = pose === 'fly' ? -0.45 + Math.sin(t * 3 + 0.2) * 0.08 : Math.sin(t * 2) * 0.015
-          }
-        })
-      }
-      frame = requestAnimationFrame(animate)
+    const animation = pose === 'fly'
+      ? new FlyingAnimation()
+      : pose === 'walk'
+        ? new WalkingAnimation()
+        : new IdleAnimation()
+    if (pose === 'wave') {
+      animation.addAnimation((player, progress) => {
+        player.skin.rightArm.rotation.z = -2.35 + Math.sin(progress * 5) * 0.22
+        player.skin.rightArm.rotation.x = Math.sin(progress * 3) * 0.12
+      })
     }
-    frame = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frame)
-  }, [pose, modelType])
+    if (pose === 'fly' && !elytraVisibleRef.current && capeVisibleRef.current) {
+      animation.addAnimation((player, progress) => {
+        player.cape.rotation.x = -0.85 + Math.sin(progress * 2.2) * 0.025
+        player.cape.rotation.z = Math.sin(progress * 1.8) * 0.025
+      })
+    }
+    animation.speed = pose === 'walk' ? 0.72 : 1
+    viewer.animation = animation
+    return () => {
+      if (viewer.animation === animation) viewer.animation = null
+    }
+  }, [pose])
+
+  useEffect(() => {
+    const viewer = viewerRef.current
+    if (!viewer) return
+    viewer.scene.background = new THREE.Color(biomePalette(sceneTheme, customBackground).sky)
+    if (backdropRef.current) disposeVoxelBackdrop(backdropRef.current)
+    const backdrop = createVoxelBackdrop(sceneTheme, customBackground)
+    viewer.scene.add(backdrop)
+    backdropRef.current = backdrop
+    return () => {
+      if (backdropRef.current === backdrop) {
+        disposeVoxelBackdrop(backdrop)
+        backdropRef.current = null
+      }
+    }
+  }, [sceneTheme, customBackground])
+
+
 
   return (
     <div

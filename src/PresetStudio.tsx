@@ -42,6 +42,23 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
+async function composeSkinDataUrl(skinUrl: string, shawlId: string, coatId: string, modelType: ModelType): Promise<string> {
+  const baseImage = await loadImage(skinUrl)
+  const selected = [PRESETS.find(item => item.id === coatId), PRESETS.find(item => item.id === shawlId)]
+    .filter((item): item is Preset => Boolean(item))
+  const overlays = await Promise.all(selected.map(item => loadImage(ASSET_ROOT + (modelType === 'alex' ? item.slimFile : item.file))))
+  const canvas = document.createElement('canvas')
+  canvas.width = 64
+  canvas.height = 64
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('skin canvas unavailable')
+  context.imageSmoothingEnabled = false
+  context.clearRect(0, 0, 64, 64)
+  context.drawImage(baseImage, 0, 0, 64, 64)
+  overlays.forEach(image => context.drawImage(image, 0, 0, 64, 64))
+  return canvas.toDataURL('image/png')
+}
+
 function canvasPixels(canvas: HTMLCanvasElement): string[] {
   const context = canvas.getContext('2d')
   if (!context) return Array(4096).fill('')
@@ -177,9 +194,10 @@ export default function PresetStudio({ onOpenEditor }: Props) {
         capeContext.drawImage(capeImage, 0, 0)
         capeDataUrl = capeCanvas.toDataURL('image/png')
       }
+      const skinDataUrl = await composeSkinDataUrl(skinUrl, shawlId, coatId, modelType)
       onOpenEditor({
-        skinDataUrl: canvas.toDataURL('image/png'),
-        skinName: 'pixcape-preset-skin.png',
+        skinDataUrl,
+        skinName: (skinName.replace(/\.png$/i, '') || 'pixcape-skin') + '-pixcape.png',
         modelType,
         shawlName: PRESETS.find(item => item.id === shawlId)?.label || '不使用披肩',
         coatName: PRESETS.find(item => item.id === coatId)?.label || '不使用外套',
@@ -328,7 +346,7 @@ export default function PresetStudio({ onOpenEditor }: Props) {
       <section className="preset-preview-column">
         <div className="preset-preview-heading"><div><small>LIVE PREVIEW</small><h2>{tr('角色预览', language)}</h2></div><div className="preset-preview-controls"><div className="preset-model-switch"><button className={modelType === 'steve' ? 'active' : ''} onClick={() => setModelType('steve')}>{tr('Steve 粗臂', language)}</button><button className={modelType === 'alex' ? 'active' : ''} onClick={() => setModelType('alex')}>{tr('Alex 细臂', language)}</button></div><div className="preset-model-switch"><button className={viewSide === 'front' ? 'active' : ''} onClick={() => setViewSide('front')}>{tr('正面', language)}</button><button className={viewSide === 'back' ? 'active' : ''} onClick={() => setViewSide('back')}>{tr('背面', language)}</button></div><div className="preset-model-switch"><button className={elytraVisible ? 'active' : ''} onClick={() => setElytraVisible(value => !value)}>{tr(elytraVisible ? '切换为披风' : '切换为鞘翅', language)}</button></div><div className="preset-model-switch preset-scene-switch preset-biome-switch" aria-label="Minecraft 背景区域"><button className={backgroundTheme === 'day' ? 'active' : ''} onClick={() => setBackgroundTheme('day')}>{tr('白天', language)}</button><button className={backgroundTheme === 'night' ? 'active' : ''} onClick={() => setBackgroundTheme('night')}>{tr('夜晚', language)}</button><button className={backgroundTheme === 'plains' ? 'active' : ''} onClick={() => setBackgroundTheme('plains')}>{tr('平原', language)}</button><button className={backgroundTheme === 'desert' ? 'active' : ''} onClick={() => setBackgroundTheme('desert')}>{tr('沙漠', language)}</button><button className={backgroundTheme === 'forest' ? 'active' : ''} onClick={() => setBackgroundTheme('forest')}>{tr('森林', language)}</button><button className={backgroundTheme === 'nether' ? 'active' : ''} onClick={() => setBackgroundTheme('nether')}>{tr('下界', language)}</button><button className={backgroundTheme === 'end' ? 'active' : ''} onClick={() => setBackgroundTheme('end')}>{tr('末地', language)}</button><button className={backgroundTheme === 'custom' ? 'active' : ''} onClick={() => setBackgroundTheme('custom')}>{tr('自定义', language)}</button></div>
           {backgroundTheme === 'custom' && <label className="preset-color-picker"><span>{tr('背景调色', language)}</span><input type="color" value={customBackground} onChange={event => setCustomBackground(event.target.value)}/><code>{customBackground.toUpperCase()}</code><button type="button" onClick={() => setCustomBackground('#76b9ee')}>{tr('恢复天空蓝', language)}</button></label>}<div className="preset-model-switch preset-scene-switch" aria-label="角色动作"><button className={pose === 'idle' ? 'active' : ''} onClick={() => setPose('idle')}>{tr('站立', language)}</button><button className={pose === 'wave' ? 'active' : ''} onClick={() => setPose('wave')}>{tr('挥手', language)}</button><button className={pose === 'walk' ? 'active' : ''} onClick={() => setPose('walk')}>{tr('行走', language)}</button><button className={pose === 'fly' ? 'active' : ''} onClick={() => setPose('fly')}>{tr('飞行', language)}</button></div></div></div>
-        <div className={'preset-model-stage scene-' + backgroundTheme} style={backgroundTheme === 'custom' ? { background: 'linear-gradient(180deg, ' + customBackground + ' 0%, ' + customBackground + ' 55%, #263747 100%)' } : undefined}><ThreeCapePreview layers={layers} side={viewSide} rotation={rotation} tilt={tilt} zoom={zoom} modelType={modelType} onRotationChange={setRotation} onTiltChange={setTilt} onZoomChange={setZoom} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'} elytraVisible={elytraVisible} pose={pose}/><div className="preset-model-caption">拖动旋转 · 上下拖动俯仰 · 滚轮缩放 · 正面 / 背面</div></div>
+        <div className={'preset-model-stage scene-' + backgroundTheme} style={backgroundTheme === 'custom' ? { background: customBackground } : undefined}><ThreeCapePreview sceneTheme={backgroundTheme} customBackground={customBackground} layers={layers} side={viewSide} rotation={rotation} tilt={tilt} zoom={zoom} modelType={modelType} onRotationChange={setRotation} onTiltChange={setTilt} onZoomChange={setZoom} capeTextureUrl={capeId === 'none' ? undefined : ASSET_ROOT + capeId} capeVisible={capeId !== 'none'} elytraVisible={elytraVisible} pose={pose}/><div className="preset-model-caption">拖动旋转 · 上下拖动俯仰 · 滚轮缩放 · 正面 / 背面</div></div>
         <div className="preset-view-adjust"><label>{tr('缩放', language)} <input aria-label="预览缩放" type="range" min="0.65" max="1.8" step="0.05" value={zoom} onChange={event => setZoom(Number(event.target.value))}/><span>{Math.round(zoom * 100)}%</span></label><button type="button" onClick={() => { setRotation(-13); setTilt(0); setZoom(1) }}>{tr('重置视角', language)}</button></div>
         {error && <div className="preset-error">{error}</div>}
         <div className="preset-preview-footer"><span className={ready ? 'preset-status-ready' : ''}><i/> {tr(status, language)}</span><button onClick={reset}><RotateCcw size={14}/> {tr('重置', language)}</button></div>
