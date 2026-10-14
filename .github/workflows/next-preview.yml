@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - 'app/**'
+      - 'auth.ts'
       - 'lib/**'
       - 'prisma/**'
       - 'next.config.ts'
       - 'tsconfig.next.json'
       - 'package.json'
-      - 'package-lock.json'
       - 'docs/NEXTJS-USER-ROLES-MIGRATION.md'
       - '.github/workflows/next-preview.yml'
   workflow_dispatch:
@@ -22,10 +22,12 @@ jobs:
   next-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
+          check-latest: true
+          cache: npm
       - run: npm install
       - name: Generate Prisma client
         run: npm run db:generate
