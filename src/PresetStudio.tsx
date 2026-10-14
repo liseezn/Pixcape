@@ -42,7 +42,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-async function composeSkinDataUrl(skinUrl: string, shawlId: string, coatId: string, modelType: ModelType): Promise<string> {
+async function composeSkinDataUrl(skinUrl: string, shawlId: string, coatId: string, modelType: 'steve' | 'alex'): Promise<string> {
   const baseImage = await loadImage(skinUrl)
   const selected = [PRESETS.find(item => item.id === coatId), PRESETS.find(item => item.id === shawlId)]
     .filter((item): item is Preset => Boolean(item))
