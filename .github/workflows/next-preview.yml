@@ -16,6 +16,7 @@ on:
       - 'package.json'
       - '.env.example'
       - 'docs/NEXTJS-USER-ROLES-MIGRATION.md'
+      - 'docs/PRODUCTION-SECURITY-ROLLOUT.md'
       - '.github/workflows/next-preview.yml'
   workflow_dispatch:
 
