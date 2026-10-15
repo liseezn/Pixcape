@@ -1,6 +1,6 @@
 # Next.js 与用户 / 创作者 / 管理员系统迁移方案
 
-## 当前进度（2026-10-14）
+## 当前进度（更新于 2026-10-15）
 
 - [x] 创建隔离迁移分支，保留现有 Vite 生产入口。
 - [x] 增加 Next.js App Router 页面骨架：主页、登录、注册、账户、创作者、管理员入口。
@@ -16,15 +16,15 @@
 - [x] 增加 PostgreSQL 持久化限流，按可信反向代理提供的 IP 标识做原子固定窗口计数；默认每 IP 每 15 分钟 10 次，数据库不可用时认证入口失败关闭。
 - [x] 增加 Node.js 内置测试运行器的 RBAC / 资源所有权单元测试、PostgreSQL 集成测试和 HTTP 安全 E2E 测试。
 - [x] CI 使用真实 PostgreSQL 服务执行 migrate deploy、RBAC/所有权测试、并发限流测试、Vite/Next 构建与 E2E。
-- [x] GitHub Actions Run #92：PostgreSQL 迁移、RBAC / 资源所有权单元测试、PostgreSQL 集成测试、Vite / Next.js 构建和 HTTP 安全 E2E 全部通过。
+- [x] GitHub Actions Run #92（基线验证）与 Run #96（最新提交验证）：PostgreSQL 迁移、RBAC / 资源所有权单元测试、PostgreSQL 集成测试、Vite / Next.js 构建和 HTTP 安全 E2E 全部通过。Run #96 的所有步骤均成功。
 - [ ] 配置 GitHub OAuth 与数据库后端，完成真实登录、会话撤销、审核和封禁端到端测试。
 - [x] 增加 RBAC / 资源所有权自动化测试与安全回归测试。
 - [x] 将构建运行时切换为 Node.js 24 LTS，并更新 GitHub Actions checkout/setup-node 到稳定主版本。
 - [x] 将 Next.js、React、Vite、TypeScript、skinview3d、Three.js、Radix UI、Lucide、PWA 插件和 PostgreSQL 驱动升级到已发布稳定版本。
 - [x] 将 Prisma 升级到 7.10 稳定版，增加 prisma.config.ts 与 PostgreSQL driver adapter；需由 CI 验证生成、schema 与构建兼容性。
 - [x] 将 NextAuth 从 v5 beta API 迁移到稳定版 v4.24.15，并调整 App Router 会话与退出登录代码。
-- [x] 本轮依赖升级后的 Next.js 构建、现有 Vite 构建、npm 高危/严重漏洞门禁与 Docker 镜像构建已通过。
-- [ ] CodeQL 查询已完成，但 GitHub 因仓库未启用 Code Scanning 拒绝 SARIF 上传；工作流已改为保存 SARIF artifact，需等待新运行验证。私有仓库需启用 GitHub Code Security，或调整仓库可见性后，才能在 Security 页面查看告警。
+- [x] 本轮依赖升级后的 Next.js 构建、现有 Vite 构建、npm 高危/严重漏洞门禁与 Docker 镜像构建已通过；CI Run #244 全部步骤成功。
+- [x] CodeQL Run #69 成功完成扫描，并将 SARIF 结果保存为 14 天 artifact；此方式不向 GitHub Security 页面上传告警。若需要 Security 页面告警，仍需为私有仓库启用 GitHub Code Security。
 - [ ] 完成 Next.js 与现有 Vite / Blockbench 的整合、Docker 预览和回归验证。
 
 ## 技术路线
