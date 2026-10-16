@@ -2,6 +2,12 @@
 
 > 本文是生产执行清单，不代表已访问或修改生产数据库。当前 PR #16 仍为 Draft；现有生产容器仍以 Nginx 提供 Vite 静态应用和 `/blockbench/`，并未运行 Next.js 服务。不要把本分支直接切换为生产入口。
 
+## Next.js 独立预览服务
+
+- 新增 `Dockerfile.nextjs`，用于独立运行账户/创作者/管理员 Next.js 服务（容器端口 3000）；根目录 `Dockerfile` 保持原有 Vite + Nginx + Blockbench 生产入口不变。
+- 按照 [Next.js 独立容器部署指南](./NEXTJS-CONTAINER-DEPLOYMENT.md) 创建隔离的预览服务和预览 PostgreSQL，不要直接绑定生产域名或连接生产数据库。
+- 当前提交新增 Next.js 运行时镜像构建步骤；需等待新一轮 Preview Security workflow 验证该镜像能完整构建后，再宣称容器构建通过。
+
 ## 上线前必须满足
 
 - [ ] 选择并创建独立的 PostgreSQL 数据库/用户；应用用户只授予应用所需权限，不使用数据库超级用户。
