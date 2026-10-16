@@ -36,6 +36,9 @@ COPY --from=build --chown=node:node /app/next.config.ts ./next.config.ts
 COPY --from=build --chown=node:node /app/tsconfig.next.json ./tsconfig.next.json
 COPY --from=build --chown=node:node /app/next-env.d.ts ./next-env.d.ts
 
+# Persistent mount point for the optional single-instance SQLite database.
+RUN mkdir -p /data && chown node:node /data
+
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
