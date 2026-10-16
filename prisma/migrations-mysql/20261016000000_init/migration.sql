@@ -16,7 +16,7 @@ CREATE TABLE `CreatorProfile` (
   `id` VARCHAR(191) NOT NULL,
   `userId` VARCHAR(191) NOT NULL,
   `displayName` VARCHAR(191) NOT NULL,
-  `bio` TEXT NOT NULL,
+  `bio` VARCHAR(191) NOT NULL DEFAULT '',
   `reviewStatus` ENUM('PENDING','APPROVED','REJECTED') NOT NULL DEFAULT 'PENDING',
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE `Project` (
   `id` VARCHAR(191) NOT NULL,
   `ownerId` VARCHAR(191) NOT NULL,
   `title` VARCHAR(191) NOT NULL,
-  `description` TEXT NOT NULL,
+  `description` VARCHAR(191) NOT NULL DEFAULT '',
   `visibility` VARCHAR(191) NOT NULL DEFAULT 'PRIVATE',
   `assetKey` VARCHAR(191) NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -77,8 +77,7 @@ CREATE TABLE `Session` (
   `sessionToken` VARCHAR(191) NOT NULL,
   `userId` VARCHAR(191) NOT NULL,
   `expires` DATETIME(3) NOT NULL,
-  UNIQUE INDEX `Session_sessionToken_key` (`sessionToken`),
-  PRIMARY KEY (`sessionToken`)
+  UNIQUE INDEX `Session_sessionToken_key` (`sessionToken`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `VerificationToken` (
