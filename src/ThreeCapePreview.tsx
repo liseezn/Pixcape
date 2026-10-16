@@ -261,7 +261,7 @@ export default function ThreeCapePreview({
       animation.addAnimation((player, progress) => {
         const t = progress > 0 ? progress * 20 : 0
         const startProgress = Math.max(0, Math.min(1, (t * t) / 100))
-        player.rotation.x = (startProgress * Math.PI) / 2 + tiltRef.current * Math.PI / 180
+        player.rotation.x = startProgress * (Math.PI / 5) + tiltRef.current * Math.PI / 180
       })
     }
     if (pose === 'wave') {
@@ -272,7 +272,7 @@ export default function ThreeCapePreview({
     }
     if (pose === 'fly' && !elytraVisibleRef.current && capeVisibleRef.current) {
       animation.addAnimation((player, progress) => {
-        player.cape.rotation.x = -0.85 + Math.sin(progress * 2.2) * 0.025
+        player.cape.rotation.x = -0.35 + Math.sin(progress * 2.2) * 0.02
         player.cape.rotation.z = Math.sin(progress * 1.8) * 0.025
       })
     }
