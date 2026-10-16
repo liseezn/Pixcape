@@ -34,7 +34,9 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "skinview3d": "^3.4.2",
-    "three": "^0.186.0"
+    "three": "^0.186.0",
+    "@prisma/adapter-mariadb": "^7.10.0",
+    "mysql2": "^3.23.1"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
