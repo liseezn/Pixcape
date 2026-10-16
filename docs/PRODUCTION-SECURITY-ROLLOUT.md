@@ -37,6 +37,6 @@
 
 ## 当前已验证与未验证的边界
 
-已通过的 GitHub Actions Run #92 使用临时 PostgreSQL 18 服务执行迁移和测试；CI Run #240 通过 Vite 构建、依赖高危/严重漏洞门禁和包含 Blockbench 的 Docker 镜像构建。这些结果不代表生产数据库已迁移，也不代表真实 GitHub OAuth 凭据或生产代理配置已验证。
+截至 2026-10-16，最新 Next.js Preview Security Run #99 已使用临时 PostgreSQL 服务成功执行 Prisma 迁移、RBAC/资源所有权单测、PostgreSQL 集成测试、Vite 与 Next.js 构建及 HTTP 安全 E2E。最新 CI Run #247 通过 Vite 构建、依赖高危/严重漏洞门禁和包含 Blockbench 的 Docker 镜像构建；CodeQL Run #72 分析成功并保留 SARIF artifact。这些结果不代表生产数据库已迁移，也不代表真实 GitHub OAuth 凭据或生产代理配置已验证。
 
 生产数据库迁移、真实 OAuth、部署平台 Secret、可信代理头、生产域名及完整上线烟雾测试均需在真实环境执行并留存结果。没有这些证据前，保持当前生产入口不变。
