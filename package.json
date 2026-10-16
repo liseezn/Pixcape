@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "build": "npm run build:blockbench && npm run build:app",
+    "build:app": "tsc -b && vite build",
+    "build:blockbench": "node scripts/build-blockbench.mjs",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
