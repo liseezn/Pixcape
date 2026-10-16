@@ -16,7 +16,7 @@ function createPrismaClient() {
   if (provider === 'mysql') {
     const url = new URL(connectionString)
     if (url.protocol !== 'mysql:' && url.protocol !== 'mariadb:') throw new Error('DATABASE_URL must use mysql:// or mariadb:// when DATABASE_PROVIDER=mysql.')
-    const database = decodeURIComponent(url.pathname.replace(/^\\//, ''))
+    const database = decodeURIComponent(url.pathname.slice(1))
     if (!database) throw new Error('DATABASE_URL must include a database name.')
     const adapter = new PrismaMariaDb({ host: url.hostname, port: url.port ? Number(url.port) : 3306, user: decodeURIComponent(url.username), password: decodeURIComponent(url.password), database, connectionLimit: 5 })
     return new PrismaClient({ adapter })
