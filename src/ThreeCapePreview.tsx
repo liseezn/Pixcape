@@ -11,10 +11,12 @@ type Props = {
   side: 'front' | 'back'
   rotation: number
   tilt: number
+  roll: number
   zoom: number
   modelType: ModelType
   onRotationChange: (value: number) => void
   onTiltChange: (value: number) => void
+  onRollChange: (value: number) => void
   onZoomChange: (value: number) => void
   capeTextureUrl?: string
   capeVisible?: boolean
@@ -66,10 +68,12 @@ export default function ThreeCapePreview({
   side,
   rotation,
   tilt,
+  roll,
   zoom,
   modelType,
   onRotationChange,
   onTiltChange,
+  onRollChange,
   onZoomChange,
   capeTextureUrl,
   capeVisible = true,
@@ -85,9 +89,11 @@ export default function ThreeCapePreview({
   const rotationRef = useRef(rotation)
   const sideRef = useRef(side)
   const tiltRef = useRef(tilt)
+  const rollRef = useRef(roll)
   const zoomRef = useRef(zoom)
   const onRotationChangeRef = useRef(onRotationChange)
   const onTiltChangeRef = useRef(onTiltChange)
+  const onRollChangeRef = useRef(onRollChange)
   const onZoomChangeRef = useRef(onZoomChange)
   const capeVisibleRef = useRef(capeVisible)
   const elytraVisibleRef = useRef(elytraVisible)
@@ -97,9 +103,11 @@ export default function ThreeCapePreview({
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
   useEffect(() => { tiltRef.current = tilt }, [tilt])
+  useEffect(() => { rollRef.current = roll }, [roll])
   useEffect(() => { zoomRef.current = zoom }, [zoom])
   useEffect(() => { onRotationChangeRef.current = onRotationChange }, [onRotationChange])
   useEffect(() => { onTiltChangeRef.current = onTiltChange }, [onTiltChange])
+  useEffect(() => { onRollChangeRef.current = onRollChange }, [onRollChange])
   useEffect(() => { onZoomChangeRef.current = onZoomChange }, [onZoomChange])
   useEffect(() => { capeVisibleRef.current = capeVisible }, [capeVisible])
   useEffect(() => { poseRef.current = pose }, [pose])
@@ -152,6 +160,7 @@ export default function ThreeCapePreview({
     const applyRotation = () => {
       viewer.playerObject.rotation.y = (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
       viewer.playerObject.rotation.x = tiltRef.current * Math.PI / 180
+      viewer.playerObject.rotation.z = rollRef.current * Math.PI / 180
       viewer.camera.zoom = zoomRef.current
       viewer.camera.updateProjectionMatrix()
     }
@@ -240,7 +249,8 @@ export default function ThreeCapePreview({
     if (!viewer) return
     viewer.playerObject.rotation.y = (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
     viewer.playerObject.rotation.x = tilt * Math.PI / 180
-  }, [rotation, side, tilt, pose])
+    viewer.playerObject.rotation.z = roll * Math.PI / 180
+  }, [rotation, side, tilt, roll, pose])
 
   useEffect(() => {
     const viewer = viewerRef.current
