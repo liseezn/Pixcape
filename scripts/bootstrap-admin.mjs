@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaMariaDb } from '@prisma/adapter-mariadb'
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 
 const email = process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase()
 if (!email) {
@@ -11,7 +13,48 @@ if (!process.env.DATABASE_URL) {
   process.exit(1)
 }
 
-const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) })
+function createAdapter() {
+  const provider = process.env.DATABASE_PROVIDER ?? 'postgresql'
+  const connectionString = process.env.DATABASE_URL
+  if (provider === 'sqlite') {
+    if (!connectionString.startsWith('file:')) {
+      throw new Error('DATABASE_URL must use file: when DATABASE_PROVIDER=sqlite.')
+    }
+    return new PrismaBetterSqlite3({ url: connectionString })
+  }
+  if (provider === 'mysql') {
+    const url = new URL(connectionString)
+    if (url.protocol !== 'mysql:' && url.protocol !== 'mariadb:') {
+      throw new Error('DATABASE_URL must use mysql:// or mariadb:// when DATABASE_PROVIDER=mysql.')
+    }
+    const database = decodeURIComponent(url.pathname.slice(1))
+    if (!database) throw new Error('DATABASE_URL must include a database name.')
+    return new PrismaMariaDb({
+      host: url.hostname,
+      port: url.port ? Number(url.port) : 3306,
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database,
+      connectionLimit: 2,
+    })
+  }
+  if (provider === 'postgresql') {
+    if (!connectionString.startsWith('postgresql://') && !connectionString.startsWith('postgres://')) {
+      throw new Error('DATABASE_URL must use postgresql:// or postgres:// when DATABASE_PROVIDER=postgresql.')
+    }
+    return new PrismaPg({ connectionString })
+  }
+  throw new Error(`Unsupported DATABASE_PROVIDER: ${provider}`)
+}
+
+let prisma
+try {
+  prisma = new PrismaClient({ adapter: createAdapter() })
+} catch (error) {
+  console.error(error instanceof Error ? error.message : 'Unable to configure the database adapter.')
+  process.exit(1)
+}
+
 try {
   const target = await prisma.user.findUnique({ where: { email }, select: { id: true, email: true, role: true, status: true } })
   if (!target) {
