@@ -105,6 +105,8 @@ jobs:
           DATABASE_PROVIDER=mysql DATABASE_URL='mysql://ci:ci@127.0.0.1:3306/pixcape' npx prisma validate
       - name: Apply migrations to a real MySQL service
         run: DATABASE_PROVIDER=mysql DATABASE_URL='mysql://ci:ci@127.0.0.1:3306/pixcape' npm run db:migrate
+      - name: Test atomic MySQL login rate limiting
+        run: DATABASE_PROVIDER=mysql DATABASE_URL='mysql://ci:ci@127.0.0.1:3306/pixcape' npm run test:mysql-rate-limit
       - name: Restore PostgreSQL Prisma Client for the remaining test suite
         run: DATABASE_PROVIDER=postgresql npm run db:generate
       - name: Run RBAC and ownership unit tests
