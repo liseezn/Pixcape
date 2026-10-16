@@ -36,16 +36,16 @@ export async function incrementMysqlRateLimitBucket(
   windowSeconds: number,
 ): Promise<RateLimitBucketResult> {
   await database.$executeRaw`
-    INSERT INTO `LoginRateLimit` (`key`, `windowStartedAt`, `count`, `updatedAt`)
+    INSERT INTO \`LoginRateLimit\` (\`key\`, \`windowStartedAt\`, \`count\`, \`updatedAt\`)
     VALUES (${key}, UTC_TIMESTAMP(3), 1, UTC_TIMESTAMP(3))
     ON DUPLICATE KEY UPDATE
-      `count` = IF(`windowStartedAt` <= UTC_TIMESTAMP(3) - INTERVAL ${windowSeconds} SECOND, 1, `count` + 1),
-      `windowStartedAt` = IF(`windowStartedAt` <= UTC_TIMESTAMP(3) - INTERVAL ${windowSeconds} SECOND, UTC_TIMESTAMP(3), `windowStartedAt`),
-      `updatedAt` = UTC_TIMESTAMP(3)
+      \`count\` = IF(\`windowStartedAt\` <= UTC_TIMESTAMP(3) - INTERVAL ${windowSeconds} SECOND, 1, \`count\` + 1),
+      \`windowStartedAt\` = IF(\`windowStartedAt\` <= UTC_TIMESTAMP(3) - INTERVAL ${windowSeconds} SECOND, UTC_TIMESTAMP(3), \`windowStartedAt\`),
+      \`updatedAt\` = UTC_TIMESTAMP(3)
   `
   const rows = await database.$queryRaw<Array<{ count: number; retryAfterSeconds: number }>>`
-    SELECT `count`, GREATEST(1, LEAST(${windowSeconds}, CEIL(${windowSeconds} - TIMESTAMPDIFF(MICROSECOND, `windowStartedAt`, UTC_TIMESTAMP(3)) / 1000000))) AS `retryAfterSeconds`
-    FROM `LoginRateLimit` WHERE `key` = ${key} FOR UPDATE
+    SELECT \`count\`, GREATEST(1, LEAST(${windowSeconds}, CEIL(${windowSeconds} - TIMESTAMPDIFF(MICROSECOND, \`windowStartedAt\`, UTC_TIMESTAMP(3)) / 1000000))) AS \`retryAfterSeconds\`
+    FROM \`LoginRateLimit\` WHERE \`key\` = ${key} FOR UPDATE
   `
   if (!rows[0]) throw new Error('MySQL rate-limit bucket update returned no result.')
   return { count: Number(rows[0].count), retryAfterSeconds: Math.max(1, Number(rows[0].retryAfterSeconds)) }
