@@ -9,16 +9,18 @@
 
 不要把 `Dockerfile.nextjs` 改名覆盖根目录 `Dockerfile`，也不要在验证完成前将现有生产域名切换到新服务。
 
-## 数据库选择：PostgreSQL 或 MySQL
+## 数据库选择：PostgreSQL、MySQL 或 SQLite
 
-Next.js 用户系统支持通过 `DATABASE_PROVIDER` 选择数据库。每个环境只选择一种数据库，不要混用同一数据库的迁移目录。
+Next.js 用户系统支持通过 `DATABASE_PROVIDER` 选择数据库。每个环境只选择一种数据库，不要混用同一数据库的迁移目录。SQLite 适合本地开发和单机轻量部署；多副本或高并发生产环境优先选择 PostgreSQL 或 MySQL。
 
 | 变量 | PostgreSQL | MySQL |
 | --- | --- | --- |
-| `DATABASE_PROVIDER` | `postgresql`（默认） | `mysql` |
-| `DATABASE_URL` 示例 | `postgresql://USER:PASSWORD@HOST:5432/pixcape?schema=public` | `mysql://USER:PASSWORD@HOST:3306/pixcape` |
-| Prisma schema | `prisma/schema.prisma` | `prisma/schema.mysql.prisma` |
-| Migration 目录 | `prisma/migrations/` | `prisma/migrations-mysql/` |
+| 配置项 | PostgreSQL | MySQL | SQLite |
+| --- | --- | --- | --- |
+| `DATABASE_PROVIDER` | `postgresql`（默认） | `mysql` | `sqlite` |
+| `DATABASE_URL` 示例 | `postgresql://USER:PASSWORD@HOST:5432/pixcape?schema=public` | `mysql://USER:PASSWORD@HOST:3306/pixcape` | `file:/data/pixcape.db` |
+| Prisma schema | `prisma/schema.prisma` | `prisma/schema.mysql.prisma` | `prisma/schema.sqlite.prisma` |
+| Migration 目录 | `prisma/migrations/` | `prisma/migrations-mysql/` | `prisma/migrations-sqlite/` |
 
 构建与迁移命令会根据 `DATABASE_PROVIDER` 选择 schema 和迁移目录：
 
@@ -30,6 +32,10 @@ DATABASE_PROVIDER=postgresql npm run db:migrate
 # MySQL
 DATABASE_PROVIDER=mysql DATABASE_URL='mysql://USER:PASSWORD@HOST:3306/pixcape' npm run db:generate
 DATABASE_PROVIDER=mysql DATABASE_URL='mysql://USER:PASSWORD@HOST:3306/pixcape' npm run db:migrate
+
+# SQLite (single host; persist /data as a volume)
+DATABASE_PROVIDER=sqlite DATABASE_URL='file:/data/pixcape.db' npm run db:generate
+DATABASE_PROVIDER=sqlite DATABASE_URL='file:/data/pixcape.db' npm run db:migrate
 ```
 
 每种数据库都应使用独立数据库实例/数据库名、独立备份和对应迁移目录。切换 provider 后必须重新生成 Prisma Client 并重新构建应用；不要把 PostgreSQL 生成的构建产物直接用于 MySQL 环境，反之亦然。
@@ -44,6 +50,9 @@ docker build -f Dockerfile.nextjs -t pixcape-nextjs:preview .
 
 # MySQL preview image
 DOCKER_BUILDKIT=1 docker build --build-arg DATABASE_PROVIDER=mysql -f Dockerfile.nextjs -t pixcape-nextjs:mysql .
+
+# SQLite preview image (mount persistent volume at /data)
+DOCKER_BUILDKIT=1 docker build --build-arg DATABASE_PROVIDER=sqlite -f Dockerfile.nextjs -t pixcape-nextjs:sqlite .
 ```
 
 注意：Dockerfile 必须把 build arg 传给 Prisma generate/build；在对应 CI 验证完成前，将 MySQL 镜像命令视为预期用法，不应直接用于生产。
@@ -52,7 +61,7 @@ DOCKER_BUILDKIT=1 docker build --build-arg DATABASE_PROVIDER=mysql -f Dockerfile
 
 | 变量 | 要求 |
 | --- | --- |
-| `DATABASE_PROVIDER` | `postgresql` 或 `mysql`；默认 PostgreSQL |
+| `DATABASE_PROVIDER` | `postgresql`、`mysql` 或 `sqlite`；默认 PostgreSQL |
 | `DATABASE_URL` | 与 provider 匹配的专用数据库连接串；应用运行用户不要使用超级用户 |
 | `NEXTAUTH_SECRET` | 高熵随机密钥，使用密钥管理功能保存 |
 | `NEXTAUTH_URL` | 部署后的 HTTPS 根 URL |
@@ -81,6 +90,12 @@ https://<你的预览域名>/api/auth/callback/github
 7. 配置可信代理的客户端 IP 头后，验证登录限流；若无法确认平台会覆盖 `x-real-ip`，先不要对公网开放 OAuth 登录。
 8. 检查容器健康状态、`/login`、未登录访问 `/account` / `/creator` / `/admin` 的拒绝行为，再测试 OAuth 登录、退出、创作者申请、管理员审核、封禁与资源所有权。
 9. 只有所选数据库的迁移、集成测试和预览验收全部通过后，才制定生产迁移计划；生产数据库迁移必须先备份并由操作者明确批准。
+
+## SQLite 持久化与限制
+
+- 容器部署 SQLite 时设置 `DATABASE_URL=file:/data/pixcape.db`，并将 `/data` 挂载到持久化卷；不要将数据库放在容器临时文件系统中。
+- SQLite 适用于单机/单副本和较低写入量场景；多副本部署、共享写入或高并发生产环境请使用 PostgreSQL 或 MySQL。
+- SQLite 不支持 Prisma enum 类型，因此 `role`、`status`、`reviewStatus` 在 SQLite schema 中存为字符串；应用层仍必须校验允许的角色值。
 
 ## 当前边界
 
