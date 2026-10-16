@@ -1,7 +1,11 @@
 # Separate Node.js runtime for the Next.js account/workspace preview.
 # Intentionally separate from the root Dockerfile, which continues serving Vite + Blockbench.
+ARG DATABASE_PROVIDER=postgresql
+
 FROM node:24-bookworm-slim AS build
-ENV NEXT_TELEMETRY_DISABLED=1
+ARG DATABASE_PROVIDER
+ENV DATABASE_PROVIDER=${DATABASE_PROVIDER} \
+    NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 
 COPY package*.json ./
@@ -10,7 +14,9 @@ COPY . .
 RUN npm run db:generate && npm run next:build
 
 FROM node:24-bookworm-slim AS runtime
-ENV NODE_ENV=production \
+ARG DATABASE_PROVIDER
+ENV DATABASE_PROVIDER=${DATABASE_PROVIDER} \
+    NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000
