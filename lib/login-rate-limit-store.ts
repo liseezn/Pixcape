@@ -21,7 +21,7 @@ export async function incrementRateLimitBucket(
       "updatedAt" = clock_timestamp()::timestamp
     RETURNING
       "count",
-      GREATEST(1, CEIL(EXTRACT(EPOCH FROM ("windowStartedAt" + (${windowSeconds}::double precision * INTERVAL '1 second') - clock_timestamp()::timestamp))))::int AS "retryAfterSeconds"
+      LEAST(${windowSeconds}, GREATEST(1, CEIL(EXTRACT(EPOCH FROM ("windowStartedAt" + (${windowSeconds}::double precision * INTERVAL '1 second') - clock_timestamp()::timestamp)))))::int AS "retryAfterSeconds"
   `
   if (!rows[0]) throw new Error('Rate-limit bucket update returned no result.')
   return { count: Number(rows[0].count), retryAfterSeconds: Math.max(1, Number(rows[0].retryAfterSeconds)) }
