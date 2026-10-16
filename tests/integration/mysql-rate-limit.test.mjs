@@ -11,7 +11,7 @@ const prisma = new PrismaClient({
     port: Number(connection.port || 3306),
     user: decodeURIComponent(connection.username),
     password: decodeURIComponent(connection.password),
-    database: decodeURIComponent(connection.pathname.replace(/^\\//, '')),
+    database: decodeURIComponent(connection.pathname.slice(1)),
     connectionLimit: 16,
   }),
 })
