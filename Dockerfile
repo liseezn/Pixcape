@@ -1,6 +1,6 @@
 # Build the GPL-licensed Blockbench web editor as a separate app served under /blockbench/.
 FROM node:20-bookworm-slim AS blockbench-build
-ARG BLOCKBENCH_REF=c93eedfe0a86850642c47e9a6c1b102279d9eafa
+ARG BLOCKBENCH_REF=f76dfa6579afa9b9e2d302d990360af8bcf50ead
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /blockbench
