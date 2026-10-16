@@ -1,6 +1,6 @@
 # Next.js 与用户 / 创作者 / 管理员系统迁移方案
 
-## 当前进度（更新于 2026-10-15）
+## 当前进度（更新于 2026-10-16）
 
 - [x] 创建隔离迁移分支，保留现有 Vite 生产入口。
 - [x] 增加 Next.js App Router 页面骨架：主页、登录、注册、账户、创作者、管理员入口。
@@ -17,15 +17,15 @@
 - [x] 增加 Node.js 内置测试运行器的 RBAC / 资源所有权单元测试、PostgreSQL 集成测试和 HTTP 安全 E2E 测试。
 - [x] CI 使用真实 PostgreSQL 服务执行 migrate deploy、RBAC/所有权测试、并发限流测试、Vite/Next 构建与 E2E。
 - [x] GitHub Actions Run #92（基线验证）与 Run #96（当时验证）：PostgreSQL 迁移、RBAC / 资源所有权单元测试、PostgreSQL 集成测试、Vite / Next.js 构建和 HTTP 安全 E2E 全部通过。
-- [ ] 后续 PR Run #97 发现 PostgreSQL 集成测试边界问题：时间戳精度舍入可能使 Retry-After 偶尔大于窗口上限 900 秒。已在 `lib/login-rate-limit-store.ts` 中将返回值限制在 `1..windowSeconds`，等待新提交的 CI 重新验证；Run #97 本身失败，不能标记为全通过。
+- [x] PR Run #97 暴露 PostgreSQL 时间戳精度边界问题，可能使 Retry-After 超过 900 秒；已在 `lib/login-rate-limit-store.ts` 中将返回值限制在 `1..windowSeconds`。修复后 Preview Security Run #99 全部通过，包括 PostgreSQL 迁移、RBAC/所有权测试、PostgreSQL 集成测试、Vite/Next.js 构建和 HTTP 安全 E2E。
 - [ ] 配置 GitHub OAuth 与数据库后端，完成真实登录、会话撤销、审核和封禁端到端测试。
 - [x] 增加 RBAC / 资源所有权自动化测试与安全回归测试。
 - [x] 将构建运行时切换为 Node.js 24 LTS，并更新 GitHub Actions checkout/setup-node 到稳定主版本。
 - [x] 将 Next.js、React、Vite、TypeScript、skinview3d、Three.js、Radix UI、Lucide、PWA 插件和 PostgreSQL 驱动升级到已发布稳定版本。
 - [x] 将 Prisma 升级到 7.10 稳定版，增加 prisma.config.ts 与 PostgreSQL driver adapter；需由 CI 验证生成、schema 与构建兼容性。
 - [x] 将 NextAuth 从 v5 beta API 迁移到稳定版 v4.24.15，并调整 App Router 会话与退出登录代码。
-- [x] 本轮依赖升级后的 Next.js 构建、现有 Vite 构建、npm 高危/严重漏洞门禁与 Docker 镜像构建已通过；CI Run #244 全部步骤成功。
-- [x] CodeQL Run #69 成功完成扫描，并将 SARIF 结果保存为 14 天 artifact；此方式不向 GitHub Security 页面上传告警。若需要 Security 页面告警，仍需为私有仓库启用 GitHub Code Security。
+- [x] 最新 CI Run #247 全部通过：现有 Vite 构建、npm 高危/严重漏洞门禁与完整 Docker 镜像构建。
+- [x] 最新 CodeQL Run #72 成功完成静态分析；SARIF 作为 artifact 保存。该方式不向 GitHub Security 页面上传告警，若需要 Security 页面告警，仍需为私有仓库启用 GitHub Code Security。
 - [ ] 完成 Next.js 与现有 Vite / Blockbench 的整合、Docker 预览和回归验证。
 
 ## 技术路线
@@ -61,4 +61,4 @@ Next.js App Router + TypeScript、Auth.js、PostgreSQL + Prisma。部署仍需�
 5. 创作者只能编辑自己的项目；管理员操作有审计记录。
 6. 验证皮肤 PNG 导入导出、skinview3d 预览、Blockbench 深层路径、PWA 缓存和 Docker 镜像。
 
-> 登录限流和自动化测试已加入。CI 已在隔离的 PostgreSQL 服务中成功执行迁移、权限测试、并发限流测试、Vite/Next 构建和 HTTP 安全 E2E；Docker 镜像构建也已通过。该 PostgreSQL 是 CI 临时数据库，不是生产数据库。OAuth 真实提供商登录、生产数据库迁移、生产反向代理 IP 头配置，以及生产部署后的 Blockbench/PWA 回归仍需真实环境验证。CodeQL 已完成扫描但当前仓库未启用 GitHub Code Scanning，故结果暂存为 SARIF artifact，不能误称为已出现在 Security 告警页。未完成这些验证前，不应切换生产入口。
+> 登录限流和自动化测试已加入。最新 Preview Security Run #99 已在隔离的 PostgreSQL 服务中成功执行迁移、权限测试、并发限流测试、Vite/Next 构建和 HTTP 安全 E2E；最新 CI Run #247 的 Docker 镜像构建也已通过。该 PostgreSQL 是 CI 临时数据库，不是生产数据库。OAuth 真实提供商登录、生产数据库迁移、生产反向代理 IP 头配置，以及生产部署后的 Blockbench/PWA 回归仍需真实环境验证。CodeQL 已完成扫描但当前仓库未启用 GitHub Code Scanning，故结果暂存为 SARIF artifact，不能误称为已出现在 Security 告警页。未完成这些验证前，不应切换生产入口。
