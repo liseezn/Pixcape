@@ -9,6 +9,8 @@ export default function App() {
   const [pendingPayload, setPendingPayload] = useState<PresetEditorPayload | null>(null)
   const [importFeedback, setImportFeedback] = useState<string>('')
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const importTimerRef = useRef<number | null>(null)
+  const importAttemptRef = useRef(0)
 
   useEffect(() => {
     const handleImportResult = (event: MessageEvent) => {
@@ -26,19 +28,36 @@ export default function App() {
       }
     }
     window.addEventListener('message', handleImportResult)
-    return () => window.removeEventListener('message', handleImportResult)
+    return () => {
+      window.removeEventListener('message', handleImportResult)
+      if (importTimerRef.current !== null) window.clearTimeout(importTimerRef.current)
+    }
   }, [pendingPayload])
 
   const handleEditorLoad = () => {
     if (!pendingPayload) return
-    iframeRef.current?.contentWindow?.postMessage(
+    const target = iframeRef.current?.contentWindow
+    if (!target) return
+
+    // Blockbench's page load event can fire before all editor modules and
+    // the Undo API are initialized. Importing at that point can throw
+    // "Cannot read properties of undefined (reading 'initEdit')".
+    target.postMessage(
       { type: 'pixcape:set-language', language: pendingPayload.language || 'zh-CN' },
       window.location.origin,
     )
-    iframeRef.current?.contentWindow?.postMessage(
-      { type: 'pixcape:import-preset', payload: pendingPayload },
-      window.location.origin,
-    )
+    if (importTimerRef.current !== null) window.clearTimeout(importTimerRef.current)
+    importAttemptRef.current = 0
+    const sendImportWhenReady = () => {
+      if (!editorOpen || !pendingPayload || iframeRef.current?.contentWindow !== target) return
+      importAttemptRef.current += 1
+      target.postMessage(
+        { type: 'pixcape:import-preset', payload: pendingPayload },
+        window.location.origin,
+      )
+    }
+    // Give Blockbench time to finish initializing its editor modules.
+    importTimerRef.current = window.setTimeout(sendImportWhenReady, 1200)
   }
 
   return (
