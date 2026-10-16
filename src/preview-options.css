@@ -65,3 +65,12 @@
 .preset-model-stage.scene-end{background-image:url('https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/screenshots/highlands-carousel1.jpg')!important}
 .preset-model-stage:not(.scene-custom):before,.preset-model-stage:not(.scene-custom):after{content:none!important;display:none!important}
 .preset-model-stage .three-preview-canvas{background:transparent!important}
+
+
+/* Precision controls for independent XYZ rotation; compact enough for mobile. */
+.preset-axis-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;margin:8px 0}
+.preset-axis-controls label{display:flex;align-items:center;gap:6px;min-width:0;font-size:12px;font-weight:700}
+.preset-axis-controls input[type=range]{width:100%;min-width:0;accent-color:#5c913e}
+.preset-axis-controls span{min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.preset-view-adjust{flex-wrap:wrap}
+@media(max-width:560px){.preset-axis-controls{grid-template-columns:1fr;gap:4px}.preset-axis-controls label{display:grid;grid-template-columns:42px minmax(0,1fr) 40px}.preset-axis-controls input[type=range]{width:100%}}
