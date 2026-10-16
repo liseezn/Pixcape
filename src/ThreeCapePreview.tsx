@@ -255,6 +255,15 @@ export default function ThreeCapePreview({
       : pose === 'walk'
         ? new WalkingAnimation()
         : new IdleAnimation()
+    if (pose === 'fly') {
+      // FlyingAnimation writes player.rotation.x every frame. Reapply the user tilt
+      // after its built-in flight pitch so vertical dragging remains effective.
+      animation.addAnimation((player, progress) => {
+        const t = progress > 0 ? progress * 20 : 0
+        const startProgress = Math.max(0, Math.min(1, (t * t) / 100))
+        player.rotation.x = (startProgress * Math.PI) / 2 + tiltRef.current * Math.PI / 180
+      })
+    }
     if (pose === 'wave') {
       animation.addAnimation((player, progress) => {
         player.skin.rightArm.rotation.z = -2.35 + Math.sin(progress * 5) * 0.22
