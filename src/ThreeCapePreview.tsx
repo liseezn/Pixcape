@@ -92,6 +92,7 @@ export default function ThreeCapePreview({
   const capeVisibleRef = useRef(capeVisible)
   const elytraVisibleRef = useRef(elytraVisible)
   const capeLoadIdRef = useRef(0)
+  const skinLoadIdRef = useRef(0)
 
   useEffect(() => { rotationRef.current = rotation }, [rotation])
   useEffect(() => { sideRef.current = side }, [side])
@@ -118,7 +119,7 @@ export default function ThreeCapePreview({
         canvas,
         width: Math.max(1, host.clientWidth),
         height: Math.max(1, host.clientHeight),
-        enableControls: false,
+        enableControls: true,
         pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
       })
     } catch {
@@ -127,7 +128,17 @@ export default function ThreeCapePreview({
     }
 
     viewer.renderer.setClearColor(0x000000, 0)
-    viewer.controls.enabled = false
+    // Use damped orbit controls so the preview can be rotated smoothly through
+    // the full vertical and horizontal orbit, including looking from underneath.
+    viewer.controls.enabled = true
+    viewer.controls.enableRotate = true
+    viewer.controls.enableZoom = true
+    viewer.controls.enablePan = false
+    viewer.controls.enableDamping = true
+    viewer.controls.dampingFactor = 0.08
+    viewer.controls.rotateSpeed = 0.85
+    viewer.controls.minPolarAngle = 0
+    viewer.controls.maxPolarAngle = Math.PI
     viewerRef.current = viewer
 
     const resize = () => {
@@ -146,46 +157,10 @@ export default function ThreeCapePreview({
     }
     applyRotation()
 
-    let drag: { x: number; y: number; rotation: number; tilt: number } | null = null
-    const canvas = viewer.canvas
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0) return
-      drag = { x: event.clientX, y: event.clientY, rotation: rotationRef.current, tilt: tiltRef.current }
-      canvas.setPointerCapture(event.pointerId)
-    }
-    const move = (event: PointerEvent) => {
-      if (!drag) return
-      const next = drag.rotation + (event.clientX - drag.x) * 0.8
-      const nextTilt = Math.max(-35, Math.min(35, drag.tilt + (event.clientY - drag.y) * 0.45))
-      rotationRef.current = next
-      tiltRef.current = nextTilt
-      viewer.playerObject.rotation.y = (next + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      viewer.playerObject.rotation.x = nextTilt * Math.PI / 180
-      onRotationChangeRef.current(next)
-      onTiltChangeRef.current(nextTilt)
-    }
-    const up = () => { drag = null }
-    const wheel = (event: WheelEvent) => {
-      event.preventDefault()
-      const next = Math.max(0.65, Math.min(1.8, zoomRef.current - event.deltaY * 0.0015))
-      zoomRef.current = next
-      viewer.camera.zoom = next
-      viewer.camera.updateProjectionMatrix()
-      onZoomChangeRef.current(next)
-    }
-    canvas.addEventListener('wheel', wheel, { passive: false })
-    canvas.addEventListener('pointerdown', down)
-    canvas.addEventListener('pointermove', move)
-    canvas.addEventListener('pointerup', up)
-    canvas.addEventListener('pointercancel', up)
+
 
     return () => {
       observer.disconnect()
-      canvas.removeEventListener('wheel', wheel)
-      canvas.removeEventListener('pointerdown', down)
-      canvas.removeEventListener('pointermove', move)
-      canvas.removeEventListener('pointerup', up)
-      canvas.removeEventListener('pointercancel', up)
       viewer.dispose()
       canvas.remove()
       viewerRef.current = null
@@ -195,8 +170,36 @@ export default function ThreeCapePreview({
   useEffect(() => {
     const viewer = viewerRef.current
     if (!viewer) return
+    const loadId = ++skinLoadIdRef.current
     const skin = makeSkinCanvas(layers)
-    viewer.loadSkin(skin, { model: modelType === 'alex' ? 'slim' : 'default' })
+    const model = modelType === 'alex' ? 'slim' : 'default'
+
+    // Canvas texture uploads can fail transiently on mobile WebGL contexts.
+    // Ignore stale completions and retry once rather than leaving an empty avatar.
+    const load = async () => {
+      try {
+        await viewer.loadSkin(skin, { model })
+        if (loadId === skinLoadIdRef.current && hostRef.current) {
+          delete hostRef.current.dataset.skinLoadError
+        }
+      } catch {
+        if (loadId !== skinLoadIdRef.current) return
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+        if (loadId !== skinLoadIdRef.current || viewerRef.current !== viewer) return
+        try {
+          await viewer.loadSkin(skin, { model })
+          if (loadId === skinLoadIdRef.current && hostRef.current) {
+            delete hostRef.current.dataset.skinLoadError
+          }
+        } catch {
+          if (loadId === skinLoadIdRef.current && hostRef.current) {
+            hostRef.current.dataset.skinLoadError = 'true'
+          }
+        }
+      }
+    }
+    void load()
+    return () => { skinLoadIdRef.current += 1 }
   }, [layers, modelType])
 
   useEffect(() => {
@@ -272,7 +275,7 @@ export default function ThreeCapePreview({
     }
     if (pose === 'fly' && !elytraVisibleRef.current && capeVisibleRef.current) {
       animation.addAnimation((player, progress) => {
-        player.cape.rotation.x = -0.35 + Math.sin(progress * 2.2) * 0.02
+        player.cape.rotation.x = 0.35 + Math.sin(progress * 2.2) * 0.02
         player.cape.rotation.z = Math.sin(progress * 1.8) * 0.025
       })
     }
