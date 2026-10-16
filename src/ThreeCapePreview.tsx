@@ -140,7 +140,7 @@ export default function ThreeCapePreview({
 
     const applyRotation = () => {
       viewer.playerObject.rotation.y = (rotationRef.current + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      viewer.playerObject.rotation.x = poseRef.current === 'fly' ? Math.PI / 2 : tiltRef.current * Math.PI / 180
+      viewer.playerObject.rotation.x = tiltRef.current * Math.PI / 180
       viewer.camera.zoom = zoomRef.current
       viewer.camera.updateProjectionMatrix()
     }
@@ -160,7 +160,7 @@ export default function ThreeCapePreview({
       rotationRef.current = next
       tiltRef.current = nextTilt
       viewer.playerObject.rotation.y = (next + (sideRef.current === 'back' ? 180 : 0)) * Math.PI / 180
-      viewer.playerObject.rotation.x = poseRef.current === 'fly' ? Math.PI / 2 : nextTilt * Math.PI / 180
+      viewer.playerObject.rotation.x = nextTilt * Math.PI / 180
       onRotationChangeRef.current(next)
       onTiltChangeRef.current(nextTilt)
     }
@@ -236,7 +236,7 @@ export default function ThreeCapePreview({
     const viewer = viewerRef.current
     if (!viewer) return
     viewer.playerObject.rotation.y = (rotation + (side === 'back' ? 180 : 0)) * Math.PI / 180
-    viewer.playerObject.rotation.x = pose === 'fly' ? Math.PI / 2 : tilt * Math.PI / 180
+    viewer.playerObject.rotation.x = tilt * Math.PI / 180
   }, [rotation, side, tilt, pose])
 
   useEffect(() => {
