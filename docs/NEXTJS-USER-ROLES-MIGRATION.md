@@ -16,7 +16,8 @@
 - [x] 增加 PostgreSQL 持久化限流，按可信反向代理提供的 IP 标识做原子固定窗口计数；默认每 IP 每 15 分钟 10 次，数据库不可用时认证入口失败关闭。
 - [x] 增加 Node.js 内置测试运行器的 RBAC / 资源所有权单元测试、PostgreSQL 集成测试和 HTTP 安全 E2E 测试。
 - [x] CI 使用真实 PostgreSQL 服务执行 migrate deploy、RBAC/所有权测试、并发限流测试、Vite/Next 构建与 E2E。
-- [x] GitHub Actions Run #92（基线验证）与 Run #96（最新提交验证）：PostgreSQL 迁移、RBAC / 资源所有权单元测试、PostgreSQL 集成测试、Vite / Next.js 构建和 HTTP 安全 E2E 全部通过。Run #96 的所有步骤均成功。
+- [x] GitHub Actions Run #92（基线验证）与 Run #96（当时验证）：PostgreSQL 迁移、RBAC / 资源所有权单元测试、PostgreSQL 集成测试、Vite / Next.js 构建和 HTTP 安全 E2E 全部通过。
+- [ ] 后续 PR Run #97 发现 PostgreSQL 集成测试边界问题：时间戳精度舍入可能使 Retry-After 偶尔大于窗口上限 900 秒。已在 `lib/login-rate-limit-store.ts` 中将返回值限制在 `1..windowSeconds`，等待新提交的 CI 重新验证；Run #97 本身失败，不能标记为全通过。
 - [ ] 配置 GitHub OAuth 与数据库后端，完成真实登录、会话撤销、审核和封禁端到端测试。
 - [x] 增加 RBAC / 资源所有权自动化测试与安全回归测试。
 - [x] 将构建运行时切换为 Node.js 24 LTS，并更新 GitHub Actions checkout/setup-node 到稳定主版本。
