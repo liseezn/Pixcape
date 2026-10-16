@@ -171,7 +171,7 @@ export default function ThreeCapePreview({
     return () => {
       observer.disconnect()
       viewer.dispose()
-      canvas.remove()
+      viewer.canvas.remove()
       viewerRef.current = null
     }
   }, [])
