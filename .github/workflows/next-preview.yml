@@ -10,6 +10,8 @@ on:
       - 'auth.ts'
       - 'lib/**'
       - 'prisma/**'
+      - 'prisma.config.ts'
+      - 'Dockerfile.nextjs'
       - 'tests/**'
       - 'next.config.ts'
       - 'tsconfig.next.json'
