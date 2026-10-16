@@ -9,6 +9,8 @@
 - [x] 增加独立 Next.js 构建工作流。
 - [x] 接入 Auth.js 数据库会话与条件启用的 GitHub OAuth provider（仍需部署端密钥和数据库）。
 - [x] 为 Auth.js 数据库会话设置 8 小时最长有效期、1 小时更新间隔，并在生产环境使用安全 Cookie。
+- [x] 增加 PostgreSQL / MySQL provider 选择、独立 Prisma schema 与独立迁移目录，并适配两种数据库的 Prisma driver adapter。
+- [x] 为 MySQL 增加初始迁移及并发登录限流集成测试；实际 CI 结果仍需等待本次双数据库工作流完成。
 - [x] 添加基础 HTTP 安全响应头，生产环境启用当前主机的 HSTS（不默认覆盖其他子域名）。
 - [x] 管理员审核和封禁操作加入条件更新，降低并发重复审核和状态竞争风险。
 - [x] 封禁用户时删除其数据库会话并记录审计日志。
@@ -30,7 +32,7 @@
 
 ## 技术路线
 
-Next.js App Router + TypeScript、Auth.js、PostgreSQL + Prisma。部署仍需保证现有 `/blockbench/` 静态编辑器路径可访问。新 Next.js 入口在完成测试之前不替换当前 Vite 生产入口。
+Next.js App Router + TypeScript、Auth.js、Prisma；数据库可通过 `DATABASE_PROVIDER=postgresql`（默认）或 `DATABASE_PROVIDER=mysql` 选择。两种数据库分别使用 `prisma/schema.prisma` / `prisma/schema.mysql.prisma` 及各自迁移目录，不能交叉应用迁移。部署仍需保证现有 `/blockbench/` 静态编辑器路径可访问。新 Next.js 入口在完成测试之前不替换当前 Vite 生产入口。
 
 ## 角色与权限
 
@@ -61,4 +63,4 @@ Next.js App Router + TypeScript、Auth.js、PostgreSQL + Prisma。部署仍需�
 5. 创作者只能编辑自己的项目；管理员操作有审计记录。
 6. 验证皮肤 PNG 导入导出、skinview3d 预览、Blockbench 深层路径、PWA 缓存和 Docker 镜像。
 
-> 登录限流和自动化测试已加入。最新 Preview Security Run #99 已在隔离的 PostgreSQL 服务中成功执行迁移、权限测试、并发限流测试、Vite/Next 构建和 HTTP 安全 E2E；最新 CI Run #247 的 Docker 镜像构建也已通过。该 PostgreSQL 是 CI 临时数据库，不是生产数据库。OAuth 真实提供商登录、生产数据库迁移、生产反向代理 IP 头配置，以及生产部署后的 Blockbench/PWA 回归仍需真实环境验证。CodeQL 已完成扫描但当前仓库未启用 GitHub Code Scanning，故结果暂存为 SARIF artifact，不能误称为已出现在 Security 告警页。未完成这些验证前，不应切换生产入口。
+> PostgreSQL 的登录限流和安全测试已有通过的 CI 记录。MySQL provider、独立迁移和并发限流测试现已加入工作流，但必须等待新的 MySQL 服务迁移、集成测试和双镜像构建全部通过后，才能称为已验证兼容。CI 使用的是临时数据库，不是生产数据库。OAuth 真实提供商登录、生产数据库迁移、生产反向代理 IP 头配置，以及生产部署后的 Blockbench/PWA 回归仍需真实环境验证。未完成这些验证前，不应切换生产入口。
