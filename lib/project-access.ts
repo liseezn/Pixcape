@@ -9,8 +9,15 @@ export function projectAccessWhere(actor: ProjectActor, projectId?: string) {
   }
 }
 
-export function isActiveProjectActor(actor: ProjectActor | null | undefined): actor is ProjectActor {
-  return Boolean(actor && actor.status === 'ACTIVE')
+/** Validate database values before narrowing them to application-level role/status unions. */
+export function isActiveProjectActor(
+  actor: { id: string; role: string; status: string } | null | undefined,
+): actor is ProjectActor {
+  return Boolean(
+    actor &&
+    actor.status === 'ACTIVE' &&
+    (actor.role === 'USER' || actor.role === 'CREATOR' || actor.role === 'ADMIN'),
+  )
 }
 
 /** Ordinary users may save private drafts; publishing requires creator approval or admin role. */
