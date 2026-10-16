@@ -91,6 +91,8 @@ jobs:
         run: npm run build
       - name: Build Next.js app
         run: npm run next:build
+      - name: Build isolated Next.js runtime image
+        run: docker build --file Dockerfile.nextjs --tag pixcape-nextjs-preview .
       - name: Start Next.js for security E2E
         run: |
           nohup npm run next:start -- --port 3000 > /tmp/pixcape-next.log 2>&1 &
