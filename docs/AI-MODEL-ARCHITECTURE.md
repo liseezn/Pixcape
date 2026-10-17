@@ -20,7 +20,7 @@
 |---|---|---|
 | Google Gemini 图像 API | 文字生成、参考图理解与转换 | 需要服务端 GEMINI_API_KEY；模型 ID 应可配置，避免写死过期型号 |
 | OpenAI Images API | 文字生成、图像编辑/重绘 | 需要服务端 OPENAI_API_KEY；模型与图像编辑能力按实际 API 支持配置 |
-| OpenRouter 图像 API | 提供多供应商/多模型的统一选择入口 | 需要 OPENROUTER_API_KEY；模型清单应从服务端动态获取并过滤能力 |
+| OpenRouter 图像 API | 提供多供应商/多模型的统一选择入口 | 需要 OPENROUTER_API_KEY；模型清单首期由服务端环境变量配置并按能力过滤；后续再接入服务商目录发现 |
 | Hugging Face Inference Providers（后续可选） | FLUX 等开放模型试验 | 各模型对图像输入、输出尺寸、许可与可用供应商的支持不同，逐模型验证 |
 
 不应把某个模型名或供应商写死为整个系统的唯一选择。OpenRouter、Hugging Face 等聚合服务也不能保证其目录内每个模型都支持图像输入或图像编辑。
