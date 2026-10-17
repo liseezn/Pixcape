@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../../generated/prisma-sqlite/index.js'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { incrementSqliteRateLimitBucket } from '../../lib/login-rate-limit-store.ts'
 
