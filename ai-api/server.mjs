@@ -63,6 +63,7 @@ function modelList(pluralName, singularName, fallback = '') {
   const raw = process.env[pluralName] || process.env[singularName] || fallback
   return [...new Set(raw.split(/[;,]/).map(value => value.trim()).filter(Boolean))]
 }
+const openRouterImageToImageModels = modelList('OPENROUTER_IMAGE_TO_IMAGE_MODELS', 'OPENROUTER_IMAGE_TO_IMAGE_MODEL')
 const configuredModels = {
   gemini: modelList('GEMINI_IMAGE_MODELS', 'GEMINI_IMAGE_MODEL', 'gemini-2.5-flash-image'),
   openai: modelList('OPENAI_IMAGE_MODELS', 'OPENAI_IMAGE_MODEL', 'gpt-image-1'),
@@ -73,7 +74,7 @@ function getModels() {
   const models = []
   if (configured.gemini) for (const model of configuredModels.gemini) models.push({ id: `gemini:${model}`, provider: 'gemini', model, label: 'Google Gemini', textToImage: true, imageToImage: true })
   if (configured.openai) for (const model of configuredModels.openai) models.push({ id: `openai:${model}`, provider: 'openai', model, label: 'OpenAI Images', textToImage: true, imageToImage: true })
-  if (configured.openrouter) for (const model of configuredModels.openrouter) models.push({ id: `openrouter:${model}`, provider: 'openrouter', model, label: 'OpenRouter', textToImage: true, imageToImage: true })
+  if (configured.openrouter) for (const model of configuredModels.openrouter) models.push({ id: `openrouter:${model}`, provider: 'openrouter', model, label: 'OpenRouter', textToImage: true, imageToImage: openRouterImageToImageModels.includes(model) })
   return models
 }
 
@@ -204,6 +205,7 @@ app.post('/api/ai/generate', upload.single('reference'), async (req, res) => {
     if (task === 'image-to-image' && !req.file) return res.status(400).json({ error: '参考图转换模式需要上传一张图片' })
     if (task === 'text-to-image' && req.file) return res.status(400).json({ error: '文字生成模式不接受参考图，请切换到参考图转换模式' })
     const model = parseModel(String(req.body?.model || 'auto'))
+    if (task === 'image-to-image' && !model.imageToImage) return res.status(400).json({ error: '所选模型未配置或不支持参考图输入，请选择支持参考图的模型。' })
     const started = Date.now()
     const result = await runProvider(model, prompt, req.file || null)
     console.info('[ai-generation]', { requestId, provider: model.provider, model: model.model, task, elapsedMs: Date.now() - started })
