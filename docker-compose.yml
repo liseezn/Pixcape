@@ -4,10 +4,38 @@ services:
     image: pixcape:latest
     container_name: pixcape
     restart: unless-stopped
+    depends_on:
+      ai-api:
+        condition: service_healthy
     ports:
       - "${PIXELCAPE_PORT:-8080}:80"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  ai-api:
+    build:
+      context: .
+      dockerfile: ai-api/Dockerfile
+    container_name: pixcape-ai-api
+    restart: unless-stopped
+    environment:
+      PORT: 8787
+      AI_ALLOWED_ORIGINS: ${AI_ALLOWED_ORIGINS:-http://localhost:8080}
+      AI_MAX_UPLOAD_MB: ${AI_MAX_UPLOAD_MB:-8}
+      AI_RATE_LIMIT_PER_MINUTE: ${AI_RATE_LIMIT_PER_MINUTE:-5}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_IMAGE_MODEL: ${GEMINI_IMAGE_MODEL:-gemini-2.5-flash-image}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-1}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_IMAGE_MODEL: ${OPENROUTER_IMAGE_MODEL:-}
+    expose:
+      - "8787"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 3s
       retries: 3
