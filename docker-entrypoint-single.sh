@@ -1,7 +1,7 @@
 #!/bin/sh
-set -eu
+set -u
 
-# Run the AI API inside this same container; Nginx remains PID 1.
+# Run the AI API inside this same container.
 cd /opt/pixcape-ai-api
 node server.mjs &
 AI_PID=$!
@@ -14,6 +14,7 @@ trap shutdown TERM INT
 nginx -g 'daemon off;' &
 NGINX_PID=$!
 
+set +e
 wait -n "$AI_PID" "$NGINX_PID"
 STATUS=$?
 shutdown
