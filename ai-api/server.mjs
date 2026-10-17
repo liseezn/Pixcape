@@ -59,17 +59,21 @@ const configured = {
   openai: Boolean(process.env.OPENAI_API_KEY),
   openrouter: Boolean(process.env.OPENROUTER_API_KEY),
 }
+function modelList(pluralName, singularName, fallback = '') {
+  const raw = process.env[pluralName] || process.env[singularName] || fallback
+  return [...new Set(raw.split(/[;,]/).map(value => value.trim()).filter(Boolean))]
+}
 const configuredModels = {
-  gemini: process.env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image',
-  openai: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
-  openrouter: process.env.OPENROUTER_IMAGE_MODEL || '',
+  gemini: modelList('GEMINI_IMAGE_MODELS', 'GEMINI_IMAGE_MODEL', 'gemini-2.5-flash-image'),
+  openai: modelList('OPENAI_IMAGE_MODELS', 'OPENAI_IMAGE_MODEL', 'gpt-image-1'),
+  openrouter: modelList('OPENROUTER_IMAGE_MODELS', 'OPENROUTER_IMAGE_MODEL'),
 }
 
 function getModels() {
   const models = []
-  if (configured.gemini) models.push({ id: `gemini:${configuredModels.gemini}`, provider: 'gemini', model: configuredModels.gemini, label: 'Google Gemini', textToImage: true, imageToImage: true })
-  if (configured.openai) models.push({ id: `openai:${configuredModels.openai}`, provider: 'openai', model: configuredModels.openai, label: 'OpenAI Images', textToImage: true, imageToImage: true })
-  if (configured.openrouter && configuredModels.openrouter) models.push({ id: `openrouter:${configuredModels.openrouter}`, provider: 'openrouter', model: configuredModels.openrouter, label: 'OpenRouter', textToImage: true, imageToImage: true })
+  if (configured.gemini) for (const model of configuredModels.gemini) models.push({ id: `gemini:${model}`, provider: 'gemini', model, label: 'Google Gemini', textToImage: true, imageToImage: true })
+  if (configured.openai) for (const model of configuredModels.openai) models.push({ id: `openai:${model}`, provider: 'openai', model, label: 'OpenAI Images', textToImage: true, imageToImage: true })
+  if (configured.openrouter) for (const model of configuredModels.openrouter) models.push({ id: `openrouter:${model}`, provider: 'openrouter', model, label: 'OpenRouter', textToImage: true, imageToImage: true })
   return models
 }
 
@@ -145,7 +149,7 @@ async function generateOpenAI(model, prompt, image) {
 }
 
 async function generateOpenRouter(model, prompt, image) {
-  if (!configuredModels.openrouter) throw new Error('请在服务端设置 OPENROUTER_IMAGE_MODEL')
+  if (!configuredModels.openrouter.includes(model.model)) throw new Error('请在服务端设置 OPENROUTER_IMAGE_MODELS 中的有效模型 ID')
   const userContent = [{ type: 'text', text: prompt }]
   if (image) userContent.push({ type: 'image_url', image_url: { url: `data:${image.mimetype};base64,${image.buffer.toString('base64')}` } })
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -185,7 +189,7 @@ app.get('/api/ai/models', (_req, res) => {
     providers: [
       { id: 'gemini', label: 'Google Gemini', configured: configured.gemini },
       { id: 'openai', label: 'OpenAI Images', configured: configured.openai },
-      { id: 'openrouter', label: 'OpenRouter', configured: configured.openrouter && Boolean(configuredModels.openrouter) },
+      { id: 'openrouter', label: 'OpenRouter', configured: configured.openrouter && configuredModels.openrouter.length > 0 },
     ],
   })
 })
