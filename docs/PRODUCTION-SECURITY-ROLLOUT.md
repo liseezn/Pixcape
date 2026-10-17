@@ -15,7 +15,7 @@
 - [ ] 配置 GitHub OAuth 回调地址为部署域名的 `/api/auth/callback/github`，并验证 HTTPS。
 - [ ] 确认部署平台有独立的 Next.js Node 服务/容器。当前根目录 `Dockerfile` 只构建 Vite + Blockbench 静态内容，不提供 Next.js 运行时。
 - [ ] 在代理/CDN 层覆盖应用配置的 IP 头。应用默认读取 `x-real-ip`；必须确认该值由可信代理重写，不能让外部客户端自行指定。若平台不提供可信头，需修改配置并验证后再开放登录。
-- [ ] 确认 GitHub Actions 的安全测试与 Docker 构建通过；CodeQL SARIF artifact 需人工检查。当前仓库未启用 GitHub Code Scanning，因此不会出现 Security 页面告警。
+- [ ] 确认 GitHub Actions 的安全测试与 Docker 构建通过；下载并人工检查 CodeQL SARIF artifact。当前仓库未启用 GitHub Code Scanning，因此不会出现 Security 页面告警。
 
 ## 生产数据库迁移（手动批准后执行）
 
@@ -43,6 +43,6 @@
 
 ## 当前已验证与未验证的边界
 
-截至 2026-10-16，最新 Next.js Preview Security Run #99 已使用临时 PostgreSQL 服务成功执行 Prisma 迁移、RBAC/资源所有权单测、PostgreSQL 集成测试、Vite 与 Next.js 构建及 HTTP 安全 E2E。最新 CI Run #247 通过 Vite 构建、依赖高危/严重漏洞门禁和包含 Blockbench 的 Docker 镜像构建；CodeQL Run #72 分析成功并保留 SARIF artifact。这些结果不代表生产数据库已迁移，也不代表真实 GitHub OAuth 凭据或生产代理配置已验证。
+截至 2026-10-17，PR #16 最新提交 `be30fa95a8c0d3b9f2f8c1501280b4b33b381fa7` 的 Next.js Preview Security Run #142 已成功执行 PostgreSQL、MySQL 和 SQLite schema/migration 检查，MySQL/SQLite 原子登录限流并发测试，RBAC/资源所有权单测、PostgreSQL 集成测试、Vite 与 Next.js 构建、三个数据库适配器的独立 Next.js 镜像构建，以及 HTTP 安全 E2E。CI Run #306 通过 Vite 构建、依赖高危/严重漏洞门禁和包含 Blockbench 的 Docker 镜像构建；CodeQL Run #115 分析成功并保留 SARIF artifact。这些结果不代表生产数据库已迁移，也不代表真实 GitHub OAuth 凭据或生产代理配置已验证。
 
 生产数据库迁移、真实 OAuth、部署平台 Secret、可信代理头、生产域名及完整上线烟雾测试均需在真实环境执行并留存结果。没有这些证据前，保持当前生产入口不变。
