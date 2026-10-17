@@ -20,8 +20,7 @@ RUN npm run build:app
 
 # Build Next.js and a provider-matched Prisma client.
 FROM node:22-alpine AS next-build
-ARG DATABASE_PROVIDER=postgresql
-ENV DATABASE_PROVIDER=$DATABASE_PROVIDER NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package*.json ./
