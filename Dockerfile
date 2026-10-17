@@ -44,6 +44,7 @@ COPY --from=pixcape-build /app/dist /usr/share/nginx/html
 COPY --from=blockbench-build /runtime/ /usr/share/nginx/html/blockbench/
 COPY --from=next-build /app/package.json /app/package.json
 COPY --from=next-build /app/node_modules /app/node_modules
+COPY --from=next-build /app/generated /app/generated
 COPY --from=next-build /app/.next /app/.next
 COPY --from=next-build /app/app /app/app
 COPY --from=next-build /app/pages /app/pages
