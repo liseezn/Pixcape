@@ -4,7 +4,7 @@ import './ai-skin-studio.css'
 
 type ModelOption = { id: string; provider: string; model: string; label: string; textToImage: boolean; imageToImage: boolean }
 type ModelResponse = { models: ModelOption[]; providers: { id: string; label: string; configured: boolean }[] }
-type GenerationResponse = { imageDataUrl: string; provider: string; model: string; elapsedMs: number; notice: string; error?: string }
+type GenerationResponse = { imageDataUrl: string; provider: string; model: string; elapsedMs: number; notice: string; outputKind: 'minecraft-skin' | 'concept-image'; validation?: { dimensions: string; baseLayerOpaque: boolean; unusedPixelsTransparent: boolean; uvMapped: boolean }; error?: string }
 
 const API_BASE = ((import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_AI_API_BASE_URL ?? '/api/ai').replace(/\/$/, '')
 
@@ -12,6 +12,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
   const [task, setTask] = useState<'text-to-image' | 'image-to-image'>('text-to-image')
   const [prompt, setPrompt] = useState('Minecraft 皮肤角色概念设计，像素艺术，正面全身，方块人比例，清晰的像素边缘，独立角色，纯色背景，不要文字，不要水印')
   const [model, setModel] = useState('auto')
+  const [variant, setVariant] = useState<'classic' | 'slim'>('classic')
   const [models, setModels] = useState<ModelOption[]>([])
   const [providers, setProviders] = useState<ModelResponse['providers']>([])
   const [reference, setReference] = useState<File | null>(null)
@@ -70,6 +71,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
       body.set('prompt', prompt.trim())
       body.set('model', model)
       body.set('task', task)
+      body.set('variant', variant)
       if (task === 'image-to-image' && reference) body.set('reference', reference)
       const response = await fetch(`${API_BASE}/generate`, { method: 'POST', body })
       const data = await response.json() as GenerationResponse
@@ -92,7 +94,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
 
       <div className="ai-studio__layout">
         <section className="ai-studio__controls">
-          <div className="ai-studio__heading"><span>AI CREATOR / 01</span><h1>设计你的角色</h1><p>先生成角色概念图，再进入皮肤纹理转换流程。</p></div>
+          <div className="ai-studio__heading"><span>AI CREATOR / 01</span><h1>设计你的角色</h1><p>生成角色正背面图，自动转换为 64×64 Minecraft UV 皮肤纹理。</p></div>
 
           <div className="ai-studio__field">
             <label>生成方式</label>
@@ -126,7 +128,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
 
           {error && <div className="ai-studio__error" role="alert">{error}</div>}
           <button className="ai-studio__generate" onClick={generate} disabled={busy || !models.length}>
-            {busy ? <><LoaderCircle className="ai-studio__spinner" size={18} /> 正在生成，请稍候…</> : <><Sparkles size={18} /> 生成概念图</>}
+            {busy ? <><LoaderCircle className="ai-studio__spinner" size={18} /> 正在生成，请稍候…</> : <><Sparkles size={18} /> 生成皮肤 PNG</>}
           </button>
           {!models.length && <p className="ai-studio__hint">配置状态：{providers.length ? providers.filter(item => item.configured).map(item => item.label).join('、') || '尚无已启用的模型' : '正在连接 AI 服务'}。需要在服务端配置 API Key。</p>}
         </section>
@@ -135,11 +137,11 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
           <div className="ai-studio__preview-head"><div><span>OUTPUT / 02</span><h2>生成结果</h2></div>{result && <span className="ai-studio__time">{(result.elapsedMs / 1000).toFixed(1)} 秒</span>}</div>
           <div className={result ? 'ai-studio__canvas has-result' : 'ai-studio__canvas'}>
             {busy ? <div className="ai-studio__loading"><LoaderCircle className="ai-studio__spinner" size={30} /><strong>正在创作</strong><span>模型正在处理你的描述，通常需要一些时间。</span></div> :
-              result ? <img src={result.imageDataUrl} alt="AI 生成的角色概念图" /> :
+              result ? <img src={result.imageDataUrl} alt="AI 生成并映射的 Minecraft 64×64 皮肤纹理" /> :
               <div className="ai-studio__empty"><div className="ai-studio__empty-art"><Sparkles size={34} /></div><strong>你的角色会出现在这里</strong><span>选择模型、写下想法，然后开始生成。</span></div>}
           </div>
-          {result && <div className="ai-studio__result-info"><div><strong>{result.provider} / {result.model}</strong><small>已生成概念图</small></div><a href={result.imageDataUrl} download="pixcape-ai-concept.png">保存概念图</a><p>{result.notice}</p></div>}
-          <div className="ai-studio__disclaimer"><strong>注意：概念图不等于皮肤纹理</strong><p>当前阶段输出的是 AI 图像概念稿。Minecraft 可用皮肤还需要转换成标准 64×64 UV 纹理、检查透明像素与 Classic / Slim 模型，并经过 3D 预览验证。本页不会把概念图伪装成可直接导入的皮肤 PNG。</p></div>
+          {result && <div className="ai-studio__result-info"><div><strong>{result.provider} / {result.model}</strong><small>{result.outputKind === 'minecraft-skin' ? `Minecraft 64×64 UV 纹理 · ${variant === 'slim' ? 'Slim' : 'Classic'}` : '概念图'}</small></div><a href={result.imageDataUrl} download="pixcape-ai-skin.png">下载皮肤 PNG</a><p>{result.notice}</p></div>}
+          <div className="ai-studio__disclaimer"><strong>生成后请检查 3D 预览</strong><p>服务端会将左右双视图投影到标准 64×64 UV 纹理，并强制基础层不透明、未使用区域透明。图像模型的正背面一致性仍可能有误差；导入游戏前请先检查脸部、服装和 Classic / Slim 手臂效果。</p></div>
         </section>
       </div>
     </main>
