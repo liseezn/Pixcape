@@ -27,7 +27,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --no-audit --no-fund
 COPY . .
-RUN npm run db:generate && npm run next:build && printf '%s' "$DATABASE_PROVIDER" > /app/.database-provider-build
+RUN npm run db:generate && npm run next:build
 
 # AI API native dependencies (including sharp) use the same Node/Alpine ABI.
 FROM node:22-alpine AS ai-api-build
