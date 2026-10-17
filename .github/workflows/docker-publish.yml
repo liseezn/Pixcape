@@ -24,6 +24,43 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # Smoke-test the exact Dockerfile before publishing a public tag.
+      - name: Build image for smoke test
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: pixcape:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start container and verify bundled services
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name pixcape-smoke -p 127.0.0.1:18787:80 pixcape:smoke
+          cleanup() {
+            docker logs pixcape-smoke || true
+            docker rm -f pixcape-smoke >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:18787/health >/tmp/pixcape-health.json; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              echo "Container health endpoint did not become ready"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync('/tmp/pixcape-health.json','utf8')); if(h.status!=='ok') process.exit(1)"
+          curl --fail --silent http://127.0.0.1:18787/ | grep -qi '<html'
+          curl --fail --silent http://127.0.0.1:18787/blockbench/ | grep -qi '<html'
+          curl --fail --silent http://127.0.0.1:18787/api/ai/models | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const v=JSON.parse(s);if(!Array.isArray(v.models)||!Array.isArray(v.providers))process.exit(1)})"
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
         with:
