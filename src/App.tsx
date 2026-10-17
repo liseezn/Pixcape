@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
-import PresetStudio, { type PresetEditorPayload } from './PresetStudio'\nimport AiSkinStudio from './AiSkinStudio'
+import PresetStudio, { type PresetEditorPayload } from './PresetStudio'
+import AiSkinStudio from './AiSkinStudio'
 
 const BLOCKBENCH_PATH = '/blockbench/'
 
 export default function App() {
-  const [editorOpen, setEditorOpen] = useState(false)\n  const [aiOpen, setAiOpen] = useState(false)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const [pendingPayload, setPendingPayload] = useState<PresetEditorPayload | null>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -23,7 +25,12 @@ export default function App() {
 
   return (
     <>
+      {!editorOpen && aiOpen ? <AiSkinStudio onBack={() => setAiOpen(false)} /> : (
+      <>
       <div style={{ display: editorOpen ? 'none' : 'block' }}>
+        {!editorOpen && <div style={{ position: 'fixed', right: 16, top: 16, zIndex: 1000 }}>
+          <button onClick={() => setAiOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 12px', border: '1px solid #78965d', borderRadius: 8, color: '#f3ffe8', background: '#34532a', boxShadow: '0 4px 14px #0004', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>✦ AI 皮肤工坊</button>
+        </div>}
         <PresetStudio onOpenEditor={(payload) => {
           setPendingPayload(payload)
           setEditorOpen(true)
@@ -52,6 +59,8 @@ export default function App() {
             style={{ border: 0, width: '100%', flex: 1, minHeight: 0, background: '#111318' }}
           />
         </div>
+      )}
+      </>
       )}
     </>
   )
