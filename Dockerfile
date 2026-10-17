@@ -1,51 +1,65 @@
-# Build Blockbench as a static sub-app served under /blockbench/.
+# Build Blockbench static assets.
 FROM node:24-bookworm-slim AS blockbench-build
 ARG BLOCKBENCH_REF=5b0c99cd5a0e0ef3d15f52e91e945672076022ac
-RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /blockbench
-RUN git init \
-    && git remote add origin https://github.com/liseezn/blockbench.git \
-    && git fetch --depth=1 origin "$BLOCKBENCH_REF" \
-    && git checkout --detach FETCH_HEAD
+RUN git init && git remote add origin https://github.com/liseezn/blockbench.git && git fetch --depth=1 origin "$BLOCKBENCH_REF" && git checkout --detach FETCH_HEAD
 RUN npm ci && npm run build-web && test -s dist/bundle.js
-RUN mkdir -p /runtime \
-    && cp index.html favicon.png icon_full.png manifest.webmanifest LICENSE.MD /runtime/ \
-    && cp -a assets css content dist font icons js keymaps lang lib themes /runtime/ \
-    && test -s /runtime/dist/bundle.js \
-    && test -s /runtime/LICENSE.MD
+RUN mkdir -p /runtime && cp index.html favicon.png icon_full.png manifest.webmanifest LICENSE.MD /runtime/ && cp -a assets css content dist font icons js keymaps lang lib themes /runtime/
 
-# Build Pixcape frontend.
+# Build the Vite frontend.
 FROM node:24-alpine AS pixcape-build
 ARG VITE_AI_API_BASE_URL=/api/ai
 ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL
-# better-sqlite3 may need a native build when no prebuilt binary is available.
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package*.json ./
-# The repository currently does not track a root package-lock.json, so npm ci cannot run here.
 RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build:app
 
-# Install AI API production dependencies on the same Alpine/Node ABI as runtime.
+# Build Next.js and a provider-matched Prisma client.
+FROM node:22-alpine AS next-build
+ARG DATABASE_PROVIDER=postgresql
+ENV DATABASE_PROVIDER=$DATABASE_PROVIDER NEXT_TELEMETRY_DISABLED=1
+RUN apk add --no-cache python3 make g++
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --no-audit --no-fund
+COPY . .
+RUN npm run db:generate && npm run next:build && printf '%s' "$DATABASE_PROVIDER" > /app/.database-provider-build
+
+# AI API native dependencies (including sharp) use the same Node/Alpine ABI.
 FROM node:22-alpine AS ai-api-build
 WORKDIR /ai-api
 COPY ai-api/package*.json ./
-RUN npm install --omit=dev
+RUN npm install --omit=dev --no-audit --no-fund
 COPY ai-api/ ./
 
-# One deployable image: Nginx + Pixcape + Blockbench + AI API.
-FROM nginx:1.29-alpine
-RUN apk add --no-cache nodejs
+# Single image: Nginx, Vite, Blockbench, Next.js account system and AI API.
+FROM nginx:1.29-alpine AS runtime
+RUN apk add --no-cache nodejs npm
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=pixcape-build /app/dist /usr/share/nginx/html
 COPY --from=blockbench-build /runtime/ /usr/share/nginx/html/blockbench/
+COPY --from=next-build /app/package.json /app/package.json
+COPY --from=next-build /app/node_modules /app/node_modules
+COPY --from=next-build /app/.next /app/.next
+COPY --from=next-build /app/app /app/app
+COPY --from=next-build /app/pages /app/pages
+COPY --from=next-build /app/lib /app/lib
+COPY --from=next-build /app/prisma /app/prisma
+COPY --from=next-build /app/prisma.config.ts /app/prisma.config.ts
+COPY --from=next-build /app/auth.ts /app/auth.ts
+COPY --from=next-build /app/next.config.ts /app/next.config.ts
+COPY --from=next-build /app/tsconfig.next.json /app/tsconfig.next.json
+COPY --from=next-build /app/next-env.d.ts /app/next-env.d.ts
+COPY --from=next-build /app/.database-provider-build /app/.database-provider-build
 COPY --from=ai-api-build /ai-api /opt/pixcape-ai-api
 COPY docker-entrypoint-single.sh /usr/local/bin/docker-entrypoint-single.sh
 COPY THIRD_PARTY_NOTICES.md /usr/share/nginx/html/THIRD_PARTY_NOTICES.md
-RUN chmod +x /usr/local/bin/docker-entrypoint-single.sh
-ENV PORT=8787
+RUN chmod +x /usr/local/bin/docker-entrypoint-single.sh && mkdir -p /data
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=127.0.0.1 PORT=3000 AI_PORT=8787
 EXPOSE 80
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD node -e "Promise.all([fetch('http://127.0.0.1:3000/login'),fetch('http://127.0.0.1:8787/health')]).then(r=>process.exit(r.every(x=>x.status<500)?0:1)).catch(()=>process.exit(1))"
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint-single.sh"]
