@@ -16,10 +16,10 @@ echo "Applying Prisma migrations for $DATABASE_PROVIDER"
 cd /app
 npm run db:migrate
 cd /opt/pixcape-ai-api
-node server.mjs &
+PORT=8787 node server.mjs &
 AI_PID=$!
 cd /app
-npm run next:start &
+PORT=3000 npm run next:start &
 NEXT_PID=$!
 nginx -g 'daemon off;' &
 NGINX_PID=$!
