@@ -29,9 +29,14 @@ Create a separate service from the repository's `ai-api/Dockerfile`, set its roo
 - Keys are read only by the API service; never use `VITE_*` for secrets.
 - Basic per-IP rate limiting, upload limits, content-type allow-list, request timeouts, security headers, and origin checks are enabled. Put a platform-level rate limit/WAF in front for production and configure trusted proxy behavior correctly before relying on IP-based limits.
 - Provider model IDs and image API capabilities change. Validate the exact selected model against the provider's current docs/account before production use.
-- Generated output is a concept image. This service does **not** yet convert a generated image to Minecraft's 64×64 UV texture, validate Classic/Slim skin geometry, or create an export-ready skin. Do not present its output as a valid skin PNG.
+- Generated output is mapped from a generated front/back panel into a 64×64 UV PNG. The converter fills base faces, synthesizes side/top/bottom faces, and makes unused UV regions transparent. This is structural validation only: image-model panel alignment and visual fidelity still require review in a 3D preview before treating a result as production-ready.
 - The API does not silently switch a user's explicitly selected model to another provider.
 
 ## Docker Compose quick start
 
 The root `docker-compose.yml` includes the isolated API service. Set the provider secrets and `AI_ALLOWED_ORIGINS=http://localhost:8080` in the shell or an untracked deployment env file, then run `docker compose up --build`. The Nginx reverse-proxy configuration for same-origin routing is a separate deployment choice; if exposing the API on its own public domain, build the frontend with `VITE_AI_API_BASE_URL=https://your-ai-api.example/api/ai` and set `AI_ALLOWED_ORIGINS` to the exact frontend origin.
+
+
+## Skin conversion status
+
+The API now converts generated side-by-side front/back character panels to a 64×64 PNG and exposes Classic (4px arms) / Slim (3px arms) selection. The UV converter is a first-pass implementation, not a guarantee that every provider follows the requested panel layout. Inspect the exported PNG in Pixcape's 3D viewer before using it in-game; provider credentials and real-provider end-to-end checks are still required.
