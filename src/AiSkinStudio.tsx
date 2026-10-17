@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ImagePlus, LoaderCircle, Sparkles, WandSparkles } from 'lucide-react'
+import { SkinViewer } from 'skinview3d'
 import './ai-skin-studio.css'
 
 type ModelOption = { id: string; provider: string; model: string; label: string; textToImage: boolean; imageToImage: boolean }
@@ -21,6 +22,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     let active = true
@@ -39,6 +41,21 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
       })
     return () => { active = false }
   }, [])
+
+  useEffect(() => {
+    if (!result || result.outputKind !== 'minecraft-skin' || !previewCanvasRef.current) return
+    let viewer: SkinViewer | null = null
+    try {
+      viewer = new SkinViewer({ canvas: previewCanvasRef.current, width: 360, height: 440, skin: result.imageDataUrl })
+      viewer.controls.enableRotate = true
+      viewer.controls.enableZoom = true
+      viewer.controls.enablePan = true
+      viewer.animation = null
+    } catch (cause) {
+      setError(cause instanceof Error ? `3D 预览初始化失败：${cause.message}` : '3D 预览初始化失败')
+    }
+    return () => { viewer?.dispose() }
+  }, [result])
 
   useEffect(() => {
     if (!reference) {
@@ -149,6 +166,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
               result ? <img src={result.imageDataUrl} alt="AI 生成并映射的 Minecraft 64×64 皮肤纹理" /> :
               <div className="ai-studio__empty"><div className="ai-studio__empty-art"><Sparkles size={34} /></div><strong>你的角色会出现在这里</strong><span>选择模型、写下想法，然后开始生成。</span></div>}
           </div>
+          {result?.outputKind === 'minecraft-skin' && <div className="ai-studio__3d-preview"><div><strong>可交互 3D 预览</strong><small>拖动旋转 · 滚轮缩放 · 右键平移</small></div><canvas ref={previewCanvasRef} aria-label="Minecraft 皮肤 3D 预览" /></div>}
           {result && <div className="ai-studio__result-info"><div><strong>{result.provider} / {result.model}</strong><small>{result.outputKind === 'minecraft-skin' ? `Minecraft 64×64 UV 纹理 · ${variant === 'slim' ? 'Slim' : 'Classic'}` : '概念图'}</small></div><a href={result.imageDataUrl} download="pixcape-ai-skin.png">下载皮肤 PNG</a><p>{result.notice}</p></div>}
           <div className="ai-studio__disclaimer"><strong>生成后请检查 3D 预览</strong><p>服务端会将左右双视图投影到标准 64×64 UV 纹理，并强制基础层不透明、未使用区域透明。图像模型的正背面一致性仍可能有误差；导入游戏前请先检查脸部、服装和 Classic / Slim 手臂效果。</p></div>
         </section>
