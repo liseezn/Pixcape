@@ -26,6 +26,8 @@ WORKDIR /app
 # Keeping the dependency tree avoids accidentally omitting runtime adapter modules.
 COPY --from=build --chown=node:node /app/package.json ./package.json
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/generated ./generated
+COPY --from=build --chown=node:node /app/scripts ./scripts
 COPY --from=build --chown=node:node /app/.next ./.next
 COPY --from=build --chown=node:node /app/app ./app
 COPY --from=build --chown=node:node /app/pages ./pages
