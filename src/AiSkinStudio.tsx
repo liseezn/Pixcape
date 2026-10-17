@@ -1,0 +1,147 @@
+import { useEffect, useRef, useState } from 'react'
+import { ArrowLeft, ImagePlus, LoaderCircle, Sparkles, WandSparkles } from 'lucide-react'
+import './ai-skin-studio.css'
+
+type ModelOption = { id: string; provider: string; model: string; label: string; textToImage: boolean; imageToImage: boolean }
+type ModelResponse = { models: ModelOption[]; providers: { id: string; label: string; configured: boolean }[] }
+type GenerationResponse = { imageDataUrl: string; provider: string; model: string; elapsedMs: number; notice: string; error?: string }
+
+const API_BASE = ((import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_AI_API_BASE_URL ?? '/api').replace(/\/$/, '')
+
+export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
+  const [task, setTask] = useState<'text-to-image' | 'image-to-image'>('text-to-image')
+  const [prompt, setPrompt] = useState('Minecraft 皮肤角色概念设计，像素艺术，正面全身，方块人比例，清晰的像素边缘，独立角色，纯色背景，不要文字，不要水印')
+  const [model, setModel] = useState('auto')
+  const [models, setModels] = useState<ModelOption[]>([])
+  const [providers, setProviders] = useState<ModelResponse['providers']>([])
+  const [reference, setReference] = useState<File | null>(null)
+  const [referenceUrl, setReferenceUrl] = useState('')
+  const [result, setResult] = useState<GenerationResponse | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    let active = true
+    fetch(`${API_BASE}/ai/models`)
+      .then(async response => {
+        if (!response.ok) throw new Error('AI 服务暂时不可用')
+        return response.json() as Promise<ModelResponse>
+      })
+      .then(data => {
+        if (!active) return
+        setModels(data.models || [])
+        setProviders(data.providers || [])
+      })
+      .catch(() => {
+        if (active) setError('无法连接 AI 服务。请确认 AI API 已部署，并设置 VITE_AI_API_BASE_URL 或同源 /api 代理。')
+      })
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    if (!reference) {
+      setReferenceUrl('')
+      return
+    }
+    const url = URL.createObjectURL(reference)
+    setReferenceUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [reference])
+
+  async function generate() {
+    setError('')
+    setResult(null)
+    if (prompt.trim().length < 3) {
+      setError('请至少输入 3 个字符的描述。')
+      return
+    }
+    if (task === 'image-to-image' && !reference) {
+      setError('请先上传要转换或重新设计的参考图。')
+      return
+    }
+    if (!models.length) {
+      setError('当前没有可用模型。请在 AI API 服务端配置至少一个供应商的密钥和图像模型。')
+      return
+    }
+    setBusy(true)
+    try {
+      const body = new FormData()
+      body.set('prompt', prompt.trim())
+      body.set('model', model)
+      body.set('task', task)
+      if (task === 'image-to-image' && reference) body.set('reference', reference)
+      const response = await fetch(`${API_BASE}/ai/generate`, { method: 'POST', body })
+      const data = await response.json() as GenerationResponse
+      if (!response.ok) throw new Error(data.error || '生成失败，请稍后重试')
+      setResult(data)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '生成失败，请检查网络或模型配置')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <main className="ai-studio">
+      <header className="ai-studio__topbar">
+        <button className="ai-studio__back" onClick={onBack}><ArrowLeft size={17} /> 返回皮肤工作台</button>
+        <div className="ai-studio__brand"><span className="ai-studio__brand-icon"><Sparkles size={18} /></span><div><strong>Pixcape AI 工坊</strong><small>多模型图像生成 · 实验功能</small></div></div>
+        <span className="ai-studio__pill">预览版</span>
+      </header>
+
+      <div className="ai-studio__layout">
+        <section className="ai-studio__controls">
+          <div className="ai-studio__heading"><span>AI CREATOR / 01</span><h1>设计你的角色</h1><p>先生成角色概念图，再进入皮肤纹理转换流程。</p></div>
+
+          <div className="ai-studio__field">
+            <label>生成方式</label>
+            <div className="ai-studio__segmented">
+              <button className={task === 'text-to-image' ? 'active' : ''} onClick={() => setTask('text-to-image')}><WandSparkles size={16} /> 文字生成</button>
+              <button className={task === 'image-to-image' ? 'active' : ''} onClick={() => setTask('image-to-image')}><ImagePlus size={16} /> 参考图转换</button>
+            </div>
+          </div>
+
+          <div className="ai-studio__field">
+            <label htmlFor="ai-model">图像模型</label>
+            <select id="ai-model" value={model} onChange={event => setModel(event.target.value)} disabled={!models.length}>
+              <option value="auto">自动选择可用模型</option>
+              {models.map(item => <option key={item.id} value={item.id}>{item.label} · {item.model}</option>)}
+            </select>
+            <small>仅显示服务端已配置的模型。不同模型的费用、速度和图像能力可能不同。</small>
+          </div>
+
+          {task === 'image-to-image' && <div className="ai-studio__field">
+            <label>参考图</label>
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={event => setReference(event.target.files?.[0] || null)} />
+            <button className="ai-studio__upload" onClick={() => fileRef.current?.click()}><ImagePlus size={18} /> {reference ? '更换参考图片' : '选择 PNG / JPG / WebP'}</button>
+            {referenceUrl && <img className="ai-studio__reference" src={referenceUrl} alt="参考图片预览" />}
+          </div>}
+
+          <div className="ai-studio__field">
+            <label htmlFor="ai-prompt">角色描述</label>
+            <textarea id="ai-prompt" rows={7} maxLength={2000} value={prompt} onChange={event => setPrompt(event.target.value)} placeholder="描述服装、配色、风格、披肩或披风细节……" />
+            <small>{prompt.length}/2000 · 建议明确描述正面视角、像素风格和服装细节。</small>
+          </div>
+
+          {error && <div className="ai-studio__error" role="alert">{error}</div>}
+          <button className="ai-studio__generate" onClick={generate} disabled={busy || !models.length}>
+            {busy ? <><LoaderCircle className="ai-studio__spinner" size={18} /> 正在生成，请稍候…</> : <><Sparkles size={18} /> 生成概念图</>}
+          </button>
+          {!models.length && <p className="ai-studio__hint">配置状态：{providers.length ? providers.filter(item => item.configured).map(item => item.label).join('、') || '尚无已启用的模型' : '正在连接 AI 服务'}。需要在服务端配置 API Key。</p>}
+        </section>
+
+        <section className="ai-studio__preview">
+          <div className="ai-studio__preview-head"><div><span>OUTPUT / 02</span><h2>生成结果</h2></div>{result && <span className="ai-studio__time">{(result.elapsedMs / 1000).toFixed(1)} 秒</span>}</div>
+          <div className={result ? 'ai-studio__canvas has-result' : 'ai-studio__canvas'}>
+            {busy ? <div className="ai-studio__loading"><LoaderCircle className="ai-studio__spinner" size={30} /><strong>正在创作</strong><span>模型正在处理你的描述，通常需要一些时间。</span></div> :
+              result ? <img src={result.imageDataUrl} alt="AI 生成的角色概念图" /> :
+              <div className="ai-studio__empty"><div className="ai-studio__empty-art"><Sparkles size={34} /></div><strong>你的角色会出现在这里</strong><span>选择模型、写下想法，然后开始生成。</span></div>}
+          </div>
+          {result && <div className="ai-studio__result-info"><div><strong>{result.provider} / {result.model}</strong><small>已生成概念图</small></div><a href={result.imageDataUrl} download="pixcape-ai-concept.png">保存概念图</a><p>{result.notice}</p></div>}
+          <div className="ai-studio__disclaimer"><strong>注意：概念图不等于皮肤纹理</strong><p>当前阶段输出的是 AI 图像概念稿。Minecraft 可用皮肤还需要转换成标准 64×64 UV 纹理、检查透明像素与 Classic / Slim 模型，并经过 3D 预览验证。本页不会把概念图伪装成可直接导入的皮肤 PNG。</p></div>
+        </section>
+      </div>
+    </main>
+  )
+}
