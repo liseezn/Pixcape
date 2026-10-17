@@ -54,7 +54,8 @@ AI API variables (optional unless the corresponding provider is used):
 - `AI_TIMEOUT_MS` (default `90000`)
 - `GEMINI_API_KEY`, `GEMINI_IMAGE_MODELS` (default `gemini-2.5-flash-image`)
 - `OPENAI_API_KEY`, `OPENAI_IMAGE_MODELS` (default `gpt-image-1,gpt-image-1.5`)
-- `OPENROUTER_API_KEY`, `OPENROUTER_IMAGE_MODELS`, `OPENROUTER_IMAGE_TO_IMAGE_MODELS`
+- `OPENROUTER_API_KEY`, `OPENROUTER_IMAGE_MODELS`, `OPENROUTER_IMAGE_TO_IMAGE_MODELS`, `OPENROUTER_SITE_URL` (optional attribution URL sent to OpenRouter; defaults to `https://pixcape.app`)
+- Legacy single-model aliases accepted by the AI API: `GEMINI_IMAGE_MODEL`, `OPENAI_IMAGE_MODEL`, `OPENROUTER_IMAGE_MODEL`, `OPENROUTER_IMAGE_TO_IMAGE_MODEL`, and `SEEDREAM_IMAGE_MODEL`; prefer the plural `*_MODELS` variables for multi-model configuration.
 - `ARK_API_KEY`, `VOLCENGINE_ARK_API_KEY`, `ARK_BASE_URL` (default `https://ark.cn-beijing.volces.com/api/v3`)
 - `SEEDREAM_IMAGE_MODELS` (default `doubao-seedream-4-0-250828`)
 - `SEEDREAM_IMAGE_SIZE` (default `2K`)
