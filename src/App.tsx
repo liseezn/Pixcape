@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
-import PresetStudio, { type PresetEditorPayload } from './PresetStudio'
+import PresetStudio, { type PresetEditorPayload } from './PresetStudio'\nimport AiSkinStudio from './AiSkinStudio'
 
 const BLOCKBENCH_PATH = '/blockbench/'
 
 export default function App() {
-  const [editorOpen, setEditorOpen] = useState(false)
+  const [editorOpen, setEditorOpen] = useState(false)\n  const [aiOpen, setAiOpen] = useState(false)
   const [pendingPayload, setPendingPayload] = useState<PresetEditorPayload | null>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
