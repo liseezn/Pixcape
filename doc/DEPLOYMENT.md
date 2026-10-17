@@ -70,7 +70,7 @@ LOGIN_RATE_LIMIT_IP_HEADER=x-real-ip
 ### MySQL 示例
 
 ```dotenv
-PIXSCAPE_IMAGE_TAG=mysql
+PIXSCAPE_IMAGE_TAG=latest
 DATABASE_PROVIDER=mysql
 DATABASE_URL=mysql://USER:PASSWORD@HOST:3306/pixcape
 ```
@@ -78,7 +78,7 @@ DATABASE_URL=mysql://USER:PASSWORD@HOST:3306/pixcape
 ### SQLite 示例
 
 ```dotenv
-PIXSCAPE_IMAGE_TAG=sqlite
+PIXSCAPE_IMAGE_TAG=latest
 DATABASE_PROVIDER=sqlite
 DATABASE_URL=file:/data/pixcape.db
 ```
@@ -139,4 +139,4 @@ docker compose logs -f pixcape
 - `nginx.conf`：Next.js 反向代理、Vite/Blockbench 静态服务和缓存策略。
 - `docker-entrypoint-single.sh`：执行数据库迁移并启动三个服务。
 - `docker-compose.yml`：传入数据库、认证和 AI 环境变量。
-- `.github/workflows/docker-publish.yml`：按 PostgreSQL、MySQL、SQLite 构建、冒烟测试并发布镜像。
+- `.github/workflows/docker-publish.yml`：构建一个包含三种 Prisma Client 的镜像，依次使用 PostgreSQL、MySQL、SQLite 配置进行冒烟测试，通过后发布同一镜像。
