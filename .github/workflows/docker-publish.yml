@@ -6,6 +6,8 @@ on:
       - 'Dockerfile'
       - 'docker-entrypoint-single.sh'
       - 'docker-compose.yml'
+      - '.env.example'
+      - 'doc/**'
       - 'nginx.conf'
       - 'vite.config.ts'
       - 'package.json'
