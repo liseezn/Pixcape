@@ -28,6 +28,8 @@ RUN npm run build:app && test -s dist/index.html
 FROM node:24-bookworm-slim AS next-build
 ARG DATABASE_PROVIDER=postgresql
 ENV DATABASE_PROVIDER=$DATABASE_PROVIDER NEXT_TELEMETRY_DISABLED=1
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --no-audit --no-fund
