@@ -1,5 +1,5 @@
 # Build the GPL-licensed Blockbench web editor as a separate app served under /blockbench/.
-FROM node:20-bookworm-slim AS blockbench-build
+FROM node:25-bookworm-slim AS blockbench-build
 ARG BLOCKBENCH_REF=5b0c99cd5a0e0ef3d15f52e91e945672076022ac
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -16,7 +16,7 @@ RUN mkdir -p /runtime \
     && test -s /runtime/LICENSE.MD
 
 # Build the existing Pixcape skin and preset workspace without rebuilding Blockbench.
-FROM node:22-alpine AS pixcape-build
+FROM node:25-alpine AS pixcape-build
 ARG VITE_AI_API_BASE_URL=/api/ai
 ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL
 WORKDIR /app
