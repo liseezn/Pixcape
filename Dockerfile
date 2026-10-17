@@ -48,6 +48,7 @@ COPY --from=next-build /app/.next /app/.next
 COPY --from=next-build /app/app /app/app
 COPY --from=next-build /app/pages /app/pages
 COPY --from=next-build /app/lib /app/lib
+COPY --from=next-build /app/scripts /app/scripts
 COPY --from=next-build /app/prisma /app/prisma
 COPY --from=next-build /app/prisma.config.ts /app/prisma.config.ts
 COPY --from=next-build /app/auth.ts /app/auth.ts
