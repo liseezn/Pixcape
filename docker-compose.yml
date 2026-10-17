@@ -2,8 +2,6 @@ services:
   pixcape:
     build:
       context: .
-      args:
-        DATABASE_PROVIDER: ${DATABASE_PROVIDER:-postgresql}
     image: ghcr.io/liseezn/pixcape:${PIXSCAPE_IMAGE_TAG:-latest}
     container_name: pixcape
     restart: unless-stopped

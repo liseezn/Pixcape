@@ -16,20 +16,20 @@ Nginx 统一接入请求。Vite 不再单独充当生产主服务器；它负责
 
 ## 镜像与数据库类型
 
-Prisma Client 在镜像构建时按数据库类型生成，因此数据库类型必须与镜像标签匹配：
+同一个镜像会同时包含 PostgreSQL、MySQL、SQLite 三个 Prisma Client 和对应驱动，运行时由 `DATABASE_PROVIDER` 选择，不需要按数据库重新构建镜像：
 
 | 数据库 | GHCR 镜像 | `DATABASE_PROVIDER` |
 |---|---|---|
 | PostgreSQL（默认推荐） | `ghcr.io/liseezn/pixcape:latest` | `postgresql` |
-| MySQL / MariaDB | `ghcr.io/liseezn/pixcape:mysql` | `mysql` |
-| SQLite（单实例） | `ghcr.io/liseezn/pixcape:sqlite` | `sqlite` |
+| MySQL / MariaDB | `ghcr.io/liseezn/pixcape:latest` | `mysql` |
+| SQLite（单实例） | `ghcr.io/liseezn/pixcape:latest` | `sqlite` |
 
-GitHub Actions 会先为三种数据库分别构建并进行容器冒烟测试，再发布对应镜像。不要将 MySQL 或 SQLite 的环境变量配给 PostgreSQL 标签镜像。
+GitHub Actions 会用同一个镜像分别启动三种数据库配置，并检查启动迁移、路由和 SQLite 文件持久化；所有测试通过后只发布一个镜像。
 
 ## Zeabur 部署
 
 1. 创建一个 Docker Image 服务。
-2. PostgreSQL 选择 `ghcr.io/liseezn/pixcape:latest`；MySQL 选择 `ghcr.io/liseezn/pixcape:mysql`；SQLite 选择 `ghcr.io/liseezn/pixcape:sqlite`。
+2. 三种数据库均使用 `ghcr.io/liseezn/pixcape:latest`。
 3. 服务容器端口设置为 `80`。
 4. 按下方配置数据库与认证环境变量。
 5. 首次启动时，如果配置了 `DATABASE_URL`，容器会执行 `prisma migrate deploy`。迁移失败会导致容器启动失败，需先检查数据库连通性和迁移日志。
@@ -41,7 +41,7 @@ SQLite 只适合单实例持久化部署，必须把容器的 `/data` 挂载到�
 
 | 变量 | 示例 | 说明 |
 |---|---|---|
-| `DATABASE_PROVIDER` | `postgresql` | 必须与镜像数据库标签一致 |
+| `DATABASE_PROVIDER` | `postgresql` | 选择 `postgresql`、`mysql` 或 `sqlite`，不需要更换镜像 |
 | `DATABASE_URL` | `postgresql://USER:PASSWORD@HOST:5432/pixcape?schema=public` | 生产数据库连接串，使用服务商提供的内网连接地址优先 |
 | `NEXTAUTH_SECRET` | 随机高强度密钥 | 会话签名密钥，不要公开或提交到 Git |
 | `NEXTAUTH_URL` | `https://你的域名` | 对外访问的规范站点 URL |
@@ -122,7 +122,7 @@ docker compose up -d
 docker compose logs -f pixcape
 ```
 
-如需本地构建特定数据库镜像，`DATABASE_PROVIDER` 构建参数会从 Compose 环境传入；拉取 GHCR 镜像时，仍需确保 `PIXSCAPE_IMAGE_TAG` 与数据库类型匹配。
+本地构建只构建一次并包含三种客户端。切换数据库时修改 `DATABASE_PROVIDER` 和 `DATABASE_URL` 后重启容器即可；切换到 SQLite 时确保 `/data` 已挂载持久化卷。
 
 ## 安全与故障排查
 

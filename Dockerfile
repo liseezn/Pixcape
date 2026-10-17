@@ -26,17 +26,19 @@ COPY . .
 RUN npm run build:app && test -s dist/index.html
 
 FROM node:24-bookworm-slim AS next-build
-ARG DATABASE_PROVIDER=postgresql
-ENV DATABASE_PROVIDER=$DATABASE_PROVIDER NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+# Finish the Vite dependency/build stage before installing and compiling Next.js.
+# This reduces peak disk usage on constrained CI runners.
+COPY --from=vite-build /app/dist /tmp/pixcape-vite-dist
 COPY package*.json ./
-RUN npm install --no-audit --no-fund
+RUN npm install --no-audit --no-fund && npm cache clean --force
 COPY . .
-RUN npm run db:generate && npm run next:build
+RUN rm -rf /tmp/pixcape-vite-dist && npm run next:build
 
-FROM node:22-alpine AS ai-api-build
+FROM node:24-bookworm-slim AS ai-api-build
 WORKDIR /ai-api
 COPY ai-api/package*.json ./
 RUN npm install --omit=dev --include=optional --no-audit --no-fund \
@@ -56,6 +58,7 @@ COPY --from=blockbench-build /runtime/ /usr/share/nginx/html/blockbench/
 COPY --from=ai-api-build /ai-api /opt/pixcape-ai-api
 COPY --from=next-build /app/package.json ./package.json
 COPY --from=next-build /app/node_modules ./node_modules
+COPY --from=next-build /app/generated ./generated
 COPY --from=next-build /app/.next ./.next
 COPY --from=next-build /app/public ./public
 COPY --from=next-build /app/app ./app

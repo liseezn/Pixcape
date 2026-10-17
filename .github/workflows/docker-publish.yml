@@ -11,6 +11,8 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'prisma/**'
+      - 'generated/**'
+      - 'lib/**'
       - 'app/**'
       - 'ai-api/**'
       - '.github/workflows/docker-publish.yml'
@@ -30,16 +32,32 @@ env:
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - provider: postgresql
-            suffix: pg
-          - provider: mysql
-            suffix: mysql
-          - provider: sqlite
-            suffix: sqlite
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: pixcape
+          POSTGRES_PASSWORD: pixcape
+          POSTGRES_DB: pixcape
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pixcape -d pixcape"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: pixcape
+          MYSQL_DATABASE: pixcape
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ppixcape"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 15
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -47,67 +65,83 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build provider-specific image for smoke test
+      - name: Build the single runtime-switchable image
         uses: docker/build-push-action@v7
         with:
           context: .
           load: true
-          build-args: |
-            DATABASE_PROVIDER=${{ matrix.provider }}
-          tags: pixcape:smoke-${{ matrix.suffix }}
-          cache-from: |
-            type=gha,scope=smoke-${{ matrix.suffix }}
-            type=gha,scope=smoke-pg
-            type=gha,scope=smoke-mysql
-            type=gha,scope=smoke-sqlite
-          cache-to: type=gha,mode=max,scope=smoke-${{ matrix.suffix }}
+          tags: pixcape:runtime-multidb-test
+          cache-from: type=gha,scope=runtime-multidb
+          cache-to: type=gha,mode=max,scope=runtime-multidb
 
-      - name: Start container and verify bundled services
+      - name: Start the same image with PostgreSQL, MySQL and SQLite
         shell: bash
         run: |
           set -euo pipefail
-          docker run -d --name pixcape-smoke -p 127.0.0.1:18787:80 pixcape:smoke-${{ matrix.suffix }}
+          docker rm -f pixcape-smoke >/dev/null 2>&1 || true
+          mkdir -p /tmp/pixcape-smoke-data
           cleanup() {
             docker logs pixcape-smoke || true
             docker rm -f pixcape-smoke >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
 
-          for attempt in $(seq 1 45); do
-            if curl --fail --silent http://127.0.0.1:18787/health >/tmp/pixcape-health.json; then
-              break
-            fi
-            if [ "$attempt" -eq 45 ]; then
-              echo "Container health endpoint did not become ready"
-              exit 1
-            fi
-            sleep 2
-          done
+          for PROVIDER in postgresql mysql sqlite; do
+            echo "Smoke-testing runtime provider: $PROVIDER"
+            case "$PROVIDER" in
+              postgresql)
+                DATABASE_URL='postgresql://pixcape:pixcape@host.docker.internal:5432/pixcape?schema=public'
+                ;;
+              mysql)
+                DATABASE_URL='mysql://root:pixcape@host.docker.internal:3306/pixcape'
+                ;;
+              sqlite)
+                DATABASE_URL='file:/data/pixcape.db'
+                ;;
+            esac
 
-          node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync('/tmp/pixcape-health.json','utf8')); if(h.status!=='ok') process.exit(1)"
-          curl --fail --silent http://127.0.0.1:18787/ | grep -qi '<html'
-          curl --fail --silent http://127.0.0.1:18787/login | grep -qi '<html'
-          curl --fail --silent http://127.0.0.1:18787/studio/ | grep -qi '<html'
-          curl --fail --silent http://127.0.0.1:18787/blockbench/ | grep -qi '<html'
-          curl --fail --silent http://127.0.0.1:18787/api/ai/models | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const v=JSON.parse(s);if(!Array.isArray(v.models)||!Array.isArray(v.providers))process.exit(1)})"
+            docker rm -f pixcape-smoke >/dev/null 2>&1 || true
+            docker run -d --name pixcape-smoke \
+              --add-host=host.docker.internal:host-gateway \
+              -p 127.0.0.1:18787:80 \
+              -e DATABASE_PROVIDER="$PROVIDER" \
+              -e DATABASE_URL="$DATABASE_URL" \
+              -e NEXTAUTH_SECRET='ci-only-secret-not-for-production-0123456789' \
+              -e NEXTAUTH_URL='http://localhost:18787' \
+              -v /tmp/pixcape-smoke-data:/data \
+              pixcape:runtime-multidb-test >/dev/null
+
+            ready=0
+            for attempt in $(seq 1 60); do
+              if curl --fail --silent http://127.0.0.1:18787/health >/tmp/pixcape-health.json; then
+                ready=1
+                break
+              fi
+              if [ "$attempt" -eq 60 ]; then
+                echo "Container did not become healthy for $PROVIDER" >&2
+                exit 1
+              fi
+              sleep 2
+            done
+            test "$ready" -eq 1
+            node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync('/tmp/pixcape-health.json','utf8')); if(h.status!=='ok') process.exit(1)"
+            curl --fail --silent http://127.0.0.1:18787/ | grep -qi '<html'
+            curl --fail --silent http://127.0.0.1:18787/login | grep -qi '<html'
+            curl --fail --silent http://127.0.0.1:18787/studio/ | grep -qi '<html'
+            curl --fail --silent http://127.0.0.1:18787/blockbench/ | grep -qi '<html'
+            curl --fail --silent http://127.0.0.1:18787/api/ai/models | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const v=JSON.parse(s);if(!Array.isArray(v.models)||!Array.isArray(v.providers))process.exit(1)})"
+            docker exec pixcape-smoke sh -c 'test -s /opt/pixcape-next/generated/prisma-postgresql/index.js && test -s /opt/pixcape-next/generated/prisma-mysql/index.js && test -s /opt/pixcape-next/generated/prisma-sqlite/index.js'
+            if [ "$PROVIDER" = sqlite ]; then
+              test -s /tmp/pixcape-smoke-data/pixcape.db
+            fi
+            cleanup
+          done
+          echo "Single image passed runtime startup checks for PostgreSQL, MySQL and SQLite."
 
   publish:
     if: github.event_name != 'pull_request'
     needs: smoke-test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - provider: postgresql
-            suffix: pg
-            primary_tag: latest
-          - provider: mysql
-            suffix: mysql
-            primary_tag: mysql
-          - provider: sqlite
-            suffix: sqlite
-            primary_tag: sqlite
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -128,23 +162,17 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ matrix.primary_tag }},enable={{is_default_branch}}
-            type=ref,event=branch,suffix=-${{ matrix.suffix }}
-            type=ref,event=tag,suffix=-${{ matrix.suffix }}
-            type=sha,prefix=sha-,suffix=-${{ matrix.suffix }}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
 
-      - name: Build and push provider-specific image
+      - name: Build and publish one multi-database image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
-          build-args: |
-            DATABASE_PROVIDER=${{ matrix.provider }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
-            type=gha,scope=publish-${{ matrix.suffix }}
-            type=gha,scope=publish-pg
-            type=gha,scope=publish-mysql
-            type=gha,scope=publish-sqlite
-          cache-to: type=gha,mode=max,scope=publish-${{ matrix.suffix }}
+          cache-from: type=gha,scope=runtime-multidb
+          cache-to: type=gha,mode=max,scope=runtime-multidb
