@@ -19,8 +19,13 @@ export async function convertPanelToSkin(input, variant='classic') {
  if(info.width<2||info.height<2) throw new Error('生成图像尺寸无效')
  const atlas=Buffer.alloc(SIZE*SIZE*4), P=layout(slim), half=Math.floor(info.width/2)
  const panel=(x0,x1)=>{
+  let sr=0,sg=0,sb=0,samples=0
+  const sxStep=Math.max(1,Math.floor((x1-x0)/48)),syStep=Math.max(1,Math.floor(info.height/48))
+  for(let x=x0;x<x1;x+=sxStep)for(const y of [0,info.height-1]){const p=(y*info.width+x)*4;if(data[p+3]>127){sr+=data[p];sg+=data[p+1];sb+=data[p+2];samples++}}
+  for(let y=0;y<info.height;y+=syStep)for(const x of [x0,x1-1]){const p=(y*info.width+x)*4;if(data[p+3]>127){sr+=data[p];sg+=data[p+1];sb+=data[p+2];samples++}}
+  const bg=samples?[sr/samples,sg/samples,sb/samples]:[255,255,255]
   let minX=x1,minY=info.height,maxX=x0,maxY=0
-  for(let y=0;y<info.height;y++)for(let x=x0;x<x1;x++){const p=(y*info.width+x)*4;if(data[p+3]>127&&(data[p]<245||data[p+1]<245||data[p+2]<245)){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}}
+  for(let y=0;y<info.height;y++)for(let x=x0;x<x1;x++){const p=(y*info.width+x)*4;const dist=Math.hypot(data[p]-bg[0],data[p+1]-bg[1],data[p+2]-bg[2]);if(data[p+3]>127&&dist>42){minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y)}}
   if(maxX<minX) throw new Error('未检测到角色，请使用纯色背景的正面与背面双视图')
   const grid=Buffer.alloc(cw*32*4), bw=maxX-minX+1,bh=maxY-minY+1
   for(let y=0;y<32;y++)for(let x=0;x<cw;x++){const sx=Math.min(info.width-1,minX+Math.floor((x+.5)*bw/cw)),sy=Math.min(info.height-1,minY+Math.floor((y+.5)*bh/32)),a=(sy*info.width+sx)*4,b=(y*cw+x)*4;grid[b]=data[a];grid[b+1]=data[a+1];grid[b+2]=data[a+2];grid[b+3]=data[a+3]}
