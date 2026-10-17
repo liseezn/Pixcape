@@ -17,6 +17,8 @@ RUN mkdir -p /runtime \
 
 # Build the existing Pixcape skin and preset workspace without rebuilding Blockbench.
 FROM node:22-alpine AS pixcape-build
+ARG VITE_AI_API_BASE_URL=/api/ai
+ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
