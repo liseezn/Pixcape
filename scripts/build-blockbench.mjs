@@ -5,7 +5,7 @@ import path from 'node:path'
 const root = process.cwd()
 const sourceDir = path.join(root, '.cache', 'blockbench')
 const outputDir = path.join(root, 'public', 'blockbench')
-const blockbenchRef = process.env.BLOCKBENCH_REF || 'f76dfa6579afa9b9e2d302d990360af8bcf50ead'
+const blockbenchRef = process.env.BLOCKBENCH_REF || '5b0c99cd5a0e0ef3d15f52e91e945672076022ac'
 
 function run(command, args, cwd = root) {
   const result = spawnSync(command, args, { cwd, stdio: 'inherit', env: process.env })
