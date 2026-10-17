@@ -70,7 +70,7 @@ Never place database passwords, OAuth secrets, or `NEXTAUTH_SECRET` in `VITE_*` 
 Set the variables in the deployment platform or a private `.env` file. Compose passes the database, auth and rate-limit variables to the same container that runs Next.js.
 
 ```bash
-docker compose build --build-arg DATABASE_PROVIDER=postgresql
+docker compose build
 docker compose up -d
 docker compose logs -f pixcape
 ```
