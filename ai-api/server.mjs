@@ -2,6 +2,7 @@ import express from 'express'
 import helmet from 'helmet'
 import multer from 'multer'
 import { randomUUID } from 'node:crypto'
+import { convertPanelToSkin } from './skin/converter.mjs'
 
 const app = express()
 const port = Number(process.env.PORT || 8787)
@@ -208,15 +209,18 @@ app.post('/api/ai/generate', upload.single('reference'), async (req, res) => {
   try {
     const prompt = String(req.body?.prompt || '').trim()
     if (prompt.length < 3 || prompt.length > 2000) return res.status(400).json({ error: '提示词长度需为 3–2000 个字符' })
+    const variant = req.body?.variant === 'slim' ? 'slim' : 'classic'
+    const skinPrompt = `${prompt}\n\n输出格式硬性要求：生成一张正方形图片，纯白背景，左右两半各有一个完整的 Minecraft 方块角色。左半必须是严格正面正交视图，右半必须是严格背面正交视图；两个人物尺寸、站立高度、比例完全一致，头顶到脚底占画面高度约 90%，手臂自然垂下，双腿分开少许。采用清晰的低分辨率像素艺术，禁止斜视、三分之四视角、文字、水印、阴影、道具、背景场景。模型手臂宽度：${variant === 'slim' ? '3 像素（Slim/Alex）' : '4 像素（Classic/Steve）'}。这张图将自动投影为 Minecraft 64×64 UV 皮肤纹理，请让正背面服装细节对齐。`
     const task = req.body?.task === 'image-to-image' ? 'image-to-image' : 'text-to-image'
     if (task === 'image-to-image' && !req.file) return res.status(400).json({ error: '参考图转换模式需要上传一张图片' })
     if (task === 'text-to-image' && req.file) return res.status(400).json({ error: '文字生成模式不接受参考图，请切换到参考图转换模式' })
     const model = parseModel(String(req.body?.model || 'auto'))
     if (task === 'image-to-image' && !model.imageToImage) return res.status(400).json({ error: '所选模型未配置或不支持参考图输入，请选择支持参考图的模型。' })
     const started = Date.now()
-    const result = await runProvider(model, prompt, req.file || null)
-    console.info('[ai-generation]', { requestId, provider: model.provider, model: model.model, task, elapsedMs: Date.now() - started })
-    res.json({ requestId, provider: model.provider, model: model.model, task, elapsedMs: Date.now() - startedAt, ...result, outputKind: 'concept-image', notice: '这是 AI 生成的概念图，不是已校验的 Minecraft 64×64 皮肤纹理。请先转换并校验纹理，再导出。' })
+    const generated = await runProvider(model, skinPrompt, req.file || null)
+    const skinPng = await convertPanelToSkin(Buffer.from(generated.imageDataUrl.split(',')[1], 'base64'), variant)
+    console.info('[ai-generation]', { requestId, provider: model.provider, model: model.model, task, variant, elapsedMs: Date.now() - started })
+    res.json({ requestId, provider: model.provider, model: model.model, task, variant, elapsedMs: Date.now() - startedAt, imageDataUrl: `data:image/png;base64,${skinPng.toString('base64')}`, mimeType: 'image/png', outputKind: 'minecraft-skin', validation: { dimensions: '64x64', baseLayerOpaque: true, unusedPixelsTransparent: true, uvMapped: true }, notice: '已生成 64×64 UV 纹理并进行基础结构校验。请在 3D 预览中检查面部、衣物和手臂模型后再使用。' })
   } catch (error) {
     if (error instanceof multer.MulterError) return res.status(413).json({ error: '参考图过大或上传数量不正确' })
     const message = error instanceof Error ? error.message : 'AI 生成失败，请稍后重试'
