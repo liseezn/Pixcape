@@ -121,6 +121,15 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
           </div>}
 
           <div className="ai-studio__field">
+            <label htmlFor="ai-variant">皮肤模型</label>
+            <select id="ai-variant" value={variant} onChange={event => setVariant(event.target.value as 'classic' | 'slim')}>
+              <option value="classic">Classic / Steve（4 像素手臂）</option>
+              <option value="slim">Slim / Alex（3 像素手臂）</option>
+            </select>
+            <small>输出为 64×64 UV 纹理；正背面映射仍需在 3D 预览中检查。</small>
+          </div>
+
+          <div className="ai-studio__field">
             <label htmlFor="ai-prompt">角色描述</label>
             <textarea id="ai-prompt" rows={7} maxLength={2000} value={prompt} onChange={event => setPrompt(event.target.value)} placeholder="描述服装、配色、风格、披肩或披风细节……" />
             <small>{prompt.length}/2000 · 建议明确描述正面视角、像素风格和服装细节。</small>
