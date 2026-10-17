@@ -65,12 +65,14 @@ const configured = {
   gemini: Boolean(process.env.GEMINI_API_KEY),
   openai: Boolean(process.env.OPENAI_API_KEY),
   openrouter: Boolean(process.env.OPENROUTER_API_KEY),
+  seedream: Boolean(process.env.ARK_API_KEY || process.env.VOLCENGINE_ARK_API_KEY),
 }
 function modelList(pluralName, singularName, fallback = '') {
   const raw = process.env[pluralName] || process.env[singularName] || fallback
   return [...new Set(raw.split(/[;,]/).map(value => value.trim()).filter(Boolean))]
 }
 const openRouterImageToImageModels = modelList('OPENROUTER_IMAGE_TO_IMAGE_MODELS', 'OPENROUTER_IMAGE_TO_IMAGE_MODEL')
+const seedreamModels = modelList('SEEDREAM_IMAGE_MODELS', 'SEEDREAM_IMAGE_MODEL', 'doubao-seedream-4-0-250828')
 const configuredModels = {
   gemini: modelList('GEMINI_IMAGE_MODELS', 'GEMINI_IMAGE_MODEL', 'gemini-2.5-flash-image'),
   openai: modelList('OPENAI_IMAGE_MODELS', 'OPENAI_IMAGE_MODEL', 'gpt-image-1'),
@@ -82,6 +84,7 @@ function getModels() {
   if (configured.gemini) for (const model of configuredModels.gemini) models.push({ id: `gemini:${model}`, provider: 'gemini', model, label: 'Google Gemini', textToImage: true, imageToImage: true })
   if (configured.openai) for (const model of configuredModels.openai) models.push({ id: `openai:${model}`, provider: 'openai', model, label: 'OpenAI Images', textToImage: true, imageToImage: true })
   if (configured.openrouter) for (const model of configuredModels.openrouter) models.push({ id: `openrouter:${model}`, provider: 'openrouter', model, label: 'OpenRouter', textToImage: true, imageToImage: openRouterImageToImageModels.includes(model) })
+  if (configured.seedream) for (const model of seedreamModels) models.push({ id: `seedream:${model}`, provider: 'seedream', model, label: 'Doubao Seedream', textToImage: true, imageToImage: true })
   return models
 }
 
@@ -184,10 +187,50 @@ async function generateOpenRouter(model, prompt, image) {
   throw new Error('此 OpenRouter 模型没有返回图像。请在服务端选择支持图像输出的模型 ID。')
 }
 
+async function generateSeedream(model, prompt, image) {
+  const apiKey = process.env.ARK_API_KEY || process.env.VOLCENGINE_ARK_API_KEY
+  const baseUrl = (process.env.ARK_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3').replace(/\/$/, '')
+  const payload = {
+    model: model.model,
+    prompt,
+    size: process.env.SEEDREAM_IMAGE_SIZE || '2K',
+    output_format: 'png',
+    response_format: 'url',
+    watermark: false,
+  }
+  if (image) payload.image = `data:${image.mimetype};base64,${image.buffer.toString('base64')}`
+  const response = await fetch(`${baseUrl}/images/generations`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: timeoutSignal(),
+  })
+  if (!response.ok) await responseError(response, 'Doubao Seedream')
+  const result = await response.json()
+  const item = result.data?.[0]
+  if (item?.b64_json) return { mimeType: 'image/png', imageDataUrl: `data:image/png;base64,${item.b64_json}` }
+  if (!item?.url) throw new Error('Doubao Seedream 没有返回图像。请检查模型 ID、模型权限与账户额度。')
+  let imageUrl
+  try { imageUrl = new URL(item.url) } catch { throw new Error('Doubao Seedream 返回了无效的图像地址') }
+  if (imageUrl.protocol !== 'https:' || !/(^|\.)volces\.com$|(^|\.)volcengine\.com$/.test(imageUrl.hostname)) {
+    throw new Error('Doubao Seedream 返回的图像地址域名不在允许范围内')
+  }
+  const imageResponse = await fetch(imageUrl, { signal: timeoutSignal(), redirect: 'error' })
+  if (!imageResponse.ok) throw new Error('无法读取 Doubao Seedream 生成的图像')
+  const bytes = Buffer.from(await imageResponse.arrayBuffer())
+  if (!bytes.length || bytes.length > 20 * 1024 * 1024) throw new Error('Doubao Seedream 图像为空或超过 20 MB')
+  const metadata = await sharp(bytes, { limitInputPixels: 16_777_216 }).metadata()
+  if (!['png', 'jpeg', 'webp'].includes(metadata.format || '') || !metadata.width || !metadata.height || metadata.width > 4096 || metadata.height > 4096) {
+    throw new Error('Doubao Seedream 返回的图像格式或尺寸无效')
+  }
+  return { mimeType: 'image/png', imageDataUrl: `data:image/png;base64,${(await sharp(bytes).png().toBuffer()).toString('base64')}` }
+}
+
 async function runProvider(model, prompt, image) {
   if (model.provider === 'gemini') return generateGemini(model, prompt, image)
   if (model.provider === 'openai') return generateOpenAI(model, prompt, image)
   if (model.provider === 'openrouter') return generateOpenRouter(model, prompt, image)
+  if (model.provider === 'seedream') return generateSeedream(model, prompt, image)
   throw new Error('不支持的模型供应商')
 }
 
@@ -200,6 +243,7 @@ app.get('/api/ai/models', (_req, res) => {
       { id: 'gemini', label: 'Google Gemini', configured: configured.gemini },
       { id: 'openai', label: 'OpenAI Images', configured: configured.openai },
       { id: 'openrouter', label: 'OpenRouter', configured: configured.openrouter && configuredModels.openrouter.length > 0 },
+      { id: 'seedream', label: 'Doubao Seedream', configured: configured.seedream && seedreamModels.length > 0 },
     ],
   })
 })
