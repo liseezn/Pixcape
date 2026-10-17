@@ -3,6 +3,7 @@ import helmet from 'helmet'
 import multer from 'multer'
 import { randomUUID } from 'node:crypto'
 import { convertPanelToSkin } from './skin/converter.mjs'
+import sharp from 'sharp'
 
 const app = express()
 const port = Number(process.env.PORT || 8787)
@@ -213,6 +214,10 @@ app.post('/api/ai/generate', upload.single('reference'), async (req, res) => {
     const skinPrompt = `${prompt}\n\n输出格式硬性要求：生成一张正方形图片，纯白背景，左右两半各有一个完整的 Minecraft 方块角色。左半必须是严格正面正交视图，右半必须是严格背面正交视图；两个人物尺寸、站立高度、比例完全一致，头顶到脚底占画面高度约 90%，手臂自然垂下，双腿分开少许。采用清晰的低分辨率像素艺术，禁止斜视、三分之四视角、文字、水印、阴影、道具、背景场景。模型手臂宽度：${variant === 'slim' ? '3 像素（Slim/Alex）' : '4 像素（Classic/Steve）'}。这张图将自动投影为 Minecraft 64×64 UV 皮肤纹理，请让正背面服装细节对齐。`
     const task = req.body?.task === 'image-to-image' ? 'image-to-image' : 'text-to-image'
     if (task === 'image-to-image' && !req.file) return res.status(400).json({ error: '参考图转换模式需要上传一张图片' })
+    if (req.file) {
+      const metadata = await sharp(req.file.buffer, { limitInputPixels: 16_777_216 }).metadata()
+      if (!['png', 'jpeg', 'webp'].includes(metadata.format || '') || !metadata.width || !metadata.height || metadata.width > 4096 || metadata.height > 4096 || metadata.width * metadata.height > 16_777_216) return res.status(400).json({ error: '参考图必须是有效的 PNG/JPEG/WebP，且宽高不超过 4096 像素' })
+    }
     if (task === 'text-to-image' && req.file) return res.status(400).json({ error: '文字生成模式不接受参考图，请切换到参考图转换模式' })
     const model = parseModel(String(req.body?.model || 'auto'))
     if (task === 'image-to-image' && !model.imageToImage) return res.status(400).json({ error: '所选模型未配置或不支持参考图输入，请选择支持参考图的模型。' })
