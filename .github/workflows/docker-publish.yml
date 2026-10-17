@@ -55,7 +55,11 @@ jobs:
           build-args: |
             DATABASE_PROVIDER=${{ matrix.provider }}
           tags: pixcape:smoke-${{ matrix.suffix }}
-          cache-from: type=gha,scope=smoke-${{ matrix.suffix }}
+          cache-from: |
+            type=gha,scope=smoke-${{ matrix.suffix }}
+            type=gha,scope=smoke-pg
+            type=gha,scope=smoke-mysql
+            type=gha,scope=smoke-sqlite
           cache-to: type=gha,mode=max,scope=smoke-${{ matrix.suffix }}
 
       - name: Start container and verify bundled services
@@ -138,5 +142,9 @@ jobs:
             DATABASE_PROVIDER=${{ matrix.provider }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=publish-${{ matrix.suffix }}
+          cache-from: |
+            type=gha,scope=publish-${{ matrix.suffix }}
+            type=gha,scope=publish-pg
+            type=gha,scope=publish-mysql
+            type=gha,scope=publish-sqlite
           cache-to: type=gha,mode=max,scope=publish-${{ matrix.suffix }}
