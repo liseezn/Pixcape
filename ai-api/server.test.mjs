@@ -31,11 +31,13 @@ test('AI API health and provider inventory work without provider secrets', async
     assert.equal(ready, true, 'health endpoint should become available')
     const health = await fetch(`${base}/health`)
     assert.deepEqual(await health.json(), { status: 'ok' })
-    const response = await fetch(`${base}/api/ai/models`)
+    const response = await fetch(`${base}/api/ai/models`, { headers: { Origin: 'http://localhost:5173' } })
     assert.equal(response.status, 200)
     const inventory = await response.json()
     assert.deepEqual(inventory.models, [])
     assert.equal(inventory.providers.length, 3)
+    const denied = await fetch(`${base}/api/ai/models`, { headers: { Origin: 'https://untrusted.example' } })
+    assert.equal(denied.status, 403)
   } finally {
     child.kill('SIGTERM')
   }
