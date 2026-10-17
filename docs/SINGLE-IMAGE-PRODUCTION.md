@@ -13,16 +13,16 @@ The root `Dockerfile` builds one deployable image containing:
 
 The container entry point is `/usr/local/bin/docker-entrypoint-single.sh`. It checks the selected database provider, runs `npm run db:migrate`, then starts the AI API, Next.js on port 3000 and Nginx on port 80. Migration failure prevents the app from starting. Container health checks both Next.js and the AI API.
 
-## Provider-matched image requirement
+## Runtime-selectable database providers
 
-Prisma Client is generated during image build. Build the image with the same `DATABASE_PROVIDER` that will be supplied at runtime. The image stores its build provider and refuses to start if the runtime value differs.
+The same image contains three provider-specific Prisma Clients and their matching migration directories. Choose the database at runtime with `DATABASE_PROVIDER`; changing providers does not require rebuilding the image. The entrypoint applies the selected provider's migrations before starting services.
 
 Supported values:
 - `postgresql`: `DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/pixcape?schema=public`
 - `mysql`: `DATABASE_URL=mysql://USER:PASSWORD@HOST:3306/pixcape`
 - `sqlite`: `DATABASE_URL=file:/data/pixcape.db`
 
-For PostgreSQL build with `--build-arg DATABASE_PROVIDER=postgresql`; for MySQL use `mysql`; for SQLite use `sqlite`. Changing provider requires rebuilding the image and setting the matching runtime variable. SQLite is for a single instance only and requires the persistent `/data` volume. Do not use a shared SQLite file across replicas.
+PostgreSQL and MySQL need a provisioned database and least-privilege user. SQLite is intended for a single instance and requires the persistent `/data` volume; do not share a SQLite file between replicas.
 
 ## Environment variables
 
