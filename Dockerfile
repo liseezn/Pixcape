@@ -44,7 +44,7 @@ COPY ai-api/ ./
 
 # Debian runtime matches the native Prisma SQLite addon built in next-build.
 FROM node:24-bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends nginx ca-certificates wget \
+RUN apt-get update && apt-get install -y --no-install-recommends bash nginx ca-certificates wget \
     && rm -f /etc/nginx/sites-enabled/default \
     && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=127.0.0.1
