@@ -1,135 +1,102 @@
-# Pixcape 部署与运维文档
+# Pixcape 单镜像部署与环境变量
 
-本文记录 Pixcape 当前的构建、容器镜像和 Zeabur 部署流程。项目技术栈为 React、TypeScript、Vite，使用 Docker + Nginx 运行生产构建，并通过 GitHub Actions 自动检查和发布镜像。
+## 部署目标
 
-## 1. 当前部署信息
+Pixcape、Blockbench Web 编辑器和 AI API 由同一个 Docker 镜像运行，Zeabur 只需创建一个 Docker Image 服务。
 
-- GitHub 仓库：[`liseezn/Pixcape`](https://github.com/liseezn/Pixcape)
-- 默认分支：`main`
-- 容器镜像：`ghcr.io/liseezn/pixcape`
-- 推荐镜像标签：`latest`
-- 生产容器端口：`80`
-- Web 服务：Nginx，提供 Vite 构建生成的静态文件
-- 部署平台：Zeabur
-- 计划使用的自定义域名：`pixcape.liseezn.top`（需以 Zeabur 与 Cloudflare 的实际配置为准）
+- 仓库：`liseezn/Pixcape`
+- 镜像：`ghcr.io/liseezn/pixcape:latest`
+- 容器端口：`80`
+- 健康检查：`/health`
+- Pixcape 工作台：`/`
+- Blockbench：`/blockbench/`
+- AI API：`/api/ai/`
 
-## 2. 自动构建与镜像发布
+推送到 `main` 后，`.github/workflows/docker-publish.yml` 会自动构建并推送 GHCR 镜像。部署前确认 GitHub Actions 构建成功，且 GHCR 的 `pixcape` Container package 允许 Zeabur 拉取。
 
-仓库中的 GitHub Actions 工作流：
+## Zeabur 部署
 
-- `.github/workflows/ci.yml`：安装依赖并执行项目检查/构建。
-- `.github/workflows/docker-publish.yml`：构建 Docker 镜像并发布到 GitHub Container Registry（GHCR）。
+1. 创建一个 Docker Image 服务。
+2. 镜像填写 `ghcr.io/liseezn/pixcape:latest`。
+3. 服务端口填写 `80`，使用镜像默认启动命令。
+4. 按需配置下面的 AI 环境变量。API Key 必须配置在服务端环境变量中，不要写入前端代码或提交到 Git。
+5. 部署后检查服务日志，并访问 `/health`；确认工作台、`/blockbench/` 和 AI 模型列表可访问。
 
-推送代码到默认分支后，检查 GitHub 仓库的 **Actions** 页面，确认对应工作流完成且状态为成功。工作流成功只表示构建/发布任务成功；镜像是否允许匿名拉取，还取决于 GHCR 包的可见性和访问权限。
+## 环境变量
 
-镜像地址：
+### AI 服务基础配置
 
-```text
-ghcr.io/liseezn/pixcape:latest
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `PORT` | `8787` | 容器内部 AI API 端口，通常无需修改 |
+| `AI_ALLOWED_ORIGINS` | 空 | 额外允许的跨域来源，多个来源用逗号分隔；同源请求无需配置 |
+| `AI_DEFAULT_PROVIDER` | `auto` | 默认供应商：`auto`、`gemini`、`openai`、`openrouter` 或 `seedream` |
+| `AI_DEFAULT_MODEL` | 空 | 可选的默认模型 ID 或模型名 |
+| `AI_MAX_UPLOAD_MB` | `8` | 参考图上传大小限制，服务端最大限制为 10 MB |
+| `AI_RATE_LIMIT_PER_MINUTE` | `5` | 每个客户端每分钟请求限制，服务端最大限制为 30 |
+| `AI_TIMEOUT_MS` | `90000` | 模型请求超时，允许范围 10–180 秒 |
+
+### Google Gemini
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `GEMINI_API_KEY` | 空 | Gemini API 密钥 |
+| `GEMINI_IMAGE_MODELS` | `gemini-2.5-flash-image` | 逗号分隔的图像模型 ID |
+
+### OpenAI
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `OPENAI_API_KEY` | 空 | OpenAI API 密钥 |
+| `OPENAI_IMAGE_MODELS` | `gpt-image-1,gpt-image-1.5` | 逗号分隔的图像模型 ID |
+
+### OpenRouter
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `OPENROUTER_API_KEY` | 空 | OpenRouter API 密钥 |
+| `OPENROUTER_IMAGE_MODELS` | 空 | 可用的图像生成模型 ID，逗号分隔 |
+| `OPENROUTER_IMAGE_TO_IMAGE_MODELS` | 空 | 明确支持参考图输入的模型 ID，逗号分隔 |
+| `OPENROUTER_SITE_URL` | `https://pixcape.app` | 发送给 OpenRouter 的站点标识 |
+
+### 豆包 Seedream（火山引擎 Ark）
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `ARK_API_KEY` | 空 | Ark API 密钥，优先使用此变量 |
+| `VOLCENGINE_ARK_API_KEY` | 空 | Ark API 密钥的兼容变量 |
+| `ARK_BASE_URL` | `https://ark.cn-beijing.volces.com/api/v3` | Ark API 基础地址 |
+| `SEEDREAM_IMAGE_MODELS` | `doubao-seedream-4-0-250828` | Seedream 模型 ID，逗号分隔 |
+| `SEEDREAM_IMAGE_SIZE` | `2K` | 图像生成尺寸参数 |
+
+AI 图像生成功能至少需要配置一个供应商的有效 API Key，并确保账户有对应模型的调用权限。未配置 Key 时，网站和编辑器仍可运行，但 AI 生成接口会返回未配置提示。
+
+## 本地 Docker
+
+构建并启动单镜像：
+
+```bash
+docker build -t ghcr.io/liseezn/pixcape:latest .
+docker run -d --name pixcape --restart unless-stopped -p 8080:80 \
+  -e GEMINI_API_KEY=your_key_here \
+  ghcr.io/liseezn/pixcape:latest
 ```
 
-如需指定某次提交对应的标签，请以 GHCR 包页面中实际存在的标签为准，不要自行猜测标签。
+上例仅展示环境变量传递方式；将 `your_key_here` 替换为自己的密钥，不要将真实密钥提交到仓库。也可以使用更新后的 `docker-compose.yml` 和本地未提交的 `.env` 文件。
 
-## 3. GHCR 镜像访问权限
+## 故障排查
 
-Zeabur 使用自定义 Docker 镜像部署时，需要能够拉取镜像。
+- 镜像拉取失败：确认 GHCR Container package 可见性、标签是否存在以及 Zeabur 是否有拉取权限。
+- 容器无法启动：查看启动日志，检查 Docker 构建是否成功；容器监听外部 HTTP 端口 80。
+- `/health` 失败：检查内部 AI API 是否正常启动及 Nginx 日志。
+- AI 模型列表为空或生成提示未配置：设置至少一个供应商 API Key，并检查模型 ID、账户权限和额度。
+- Blockbench 页面资源 404：确认访问路径为 `/blockbench/`，并检查 Docker 构建日志。
 
-1. 打开 [GitHub Packages](https://github.com/liseezn?tab=packages)。
-2. 进入名为 `pixcape` 的 Container 包，而不是只查看代码仓库的可见性。
-3. 在 **Package settings** 中确认该包的 **Visibility** 为 **Public**。
-4. 在包的版本/标签列表中确认存在需要部署的标签，例如 `latest`。
-5. 可在支持 Docker 的终端中测试匿名拉取：
+## 重要文件
 
-   ```bash
-   docker pull ghcr.io/liseezn/pixcape:latest
-   ```
-
-注意：将 GHCR 包设为 Public 会让任何人都可以匿名拉取镜像。公开镜像包不等于必须公开源代码仓库。
-
-### 常见错误：401 Unauthorized
-
-若 Zeabur 日志包含以下信息：
-
-```text
-failed to authorize
-failed to fetch anonymous token
-401 Unauthorized
-ErrImagePull
-ImagePullBackOff
-```
-
-按顺序检查：
-
-- GHCR 的 **Container 包本身**是否为 Public；
-- Zeabur 配置的镜像名和标签是否与 GHCR 页面完全一致；
-- 对应标签是否确实存在；
-- 如包是公开的但匿名拉取仍失败，检查包的关联仓库与访问设置，然后重新部署。
-
-`ImagePullBackOff` 通常表示容器平台多次拉取镜像失败后进入退避重试状态，它是结果状态，不是根因本身。
-
-## 4. 在 Zeabur 创建服务
-
-1. 在 Zeabur 项目中添加基于 Docker 镜像的服务。
-2. 镜像填写：
-
-   ```text
-   ghcr.io/liseezn/pixcape:latest
-   ```
-
-3. 容器端口配置为 `80`，协议/服务类型按 Zeabur 界面选择 HTTP。
-4. 使用镜像默认启动命令，不需要额外覆盖启动命令。
-5. 部署并查看服务日志，确认镜像拉取成功且容器启动正常。
-6. 打开 Zeabur 分配的默认域名，确认编辑器页面能正常显示。
-
-## 5. 容器端口与 Nginx
-
-- `Dockerfile` 使用 Node.js 镜像安装依赖并执行 `npm run build`。
-- 生产阶段使用 Nginx 镜像提供 `dist/` 中的静态文件。
-- `Dockerfile` 声明 `EXPOSE 80`。
-- `nginx.conf` 监听容器内的 `80` 端口。
-- SPA 路由通过 `try_files $uri $uri/ /index.html` 回退到入口页面。
-- 健康检查访问本机 HTTP 服务；Nginx 配置提供 `/health` 路径。
-
-因此，Zeabur 的容器服务端口应设置为 **80**，不应误设为 Vite 开发服务器端口（如 5173）。
-
-## 6. 绑定 Cloudflare 自定义域名
-
-计划域名：`pixcape.liseezn.top`。
-
-1. 在 Zeabur 的 Pixcape 服务中打开 **Networking / Domains**，添加 `pixcape.liseezn.top`。
-2. 读取 Zeabur 界面给出的 DNS 记录类型、主机名和目标值。
-3. 登录 Cloudflare，选择 `liseezn.top` 区域，进入 **DNS → Records**。
-4. 按 Zeabur 给出的实际值创建或修改记录；不要猜测目标地址，也不要覆盖无关记录。
-5. DNS 生效后，回到 Zeabur 检查域名验证与 HTTPS 证书状态。
-6. 通过 `https://pixcape.liseezn.top` 测试页面是否可以访问。
-
-自定义域名是否已完成配置，应以 Zeabur 的域名状态、Cloudflare DNS 记录和实际 HTTPS 访问结果为准。
-
-## 7. 更新与故障排查清单
-
-每次发布后：
-
-- [ ] GitHub Actions 的 CI 工作流成功。
-- [ ] Docker 镜像发布工作流成功。
-- [ ] GHCR 包中出现预期的新标签。
-- [ ] Zeabur 成功拉取镜像并启动容器。
-- [ ] Zeabur 默认域名可正常打开。
-- [ ] 自定义域名 DNS 与 HTTPS 正常（配置完成后）。
-
-排错顺序建议：
-
-1. 查看 GitHub Actions 是否失败。
-2. 检查 GHCR 包、可见性和镜像标签。
-3. 检查 Zeabur 镜像配置及拉取日志。
-4. 容器启动后检查端口是否为 80、Nginx 日志和页面资源加载情况。
-5. 默认域名正常但自定义域名异常时，再检查 DNS、域名验证和 HTTPS 证书状态。
-
-## 8. 相关文件
-
-- `Dockerfile`：构建和运行生产镜像。
-- `nginx.conf`：Nginx 静态站点、SPA 回退与健康检查配置。
-- `docker-compose.yml`：本地容器运行配置。
-- `.github/workflows/ci.yml`：持续集成工作流。
-- `.github/workflows/docker-publish.yml`：镜像发布工作流。
-- `package.json`：项目依赖与脚本。
-
+- `Dockerfile`：将前端、Blockbench 和 AI API 打包进同一镜像。
+- `docker-entrypoint-single.sh`：在单容器中启动 AI API 与 Nginx。
+- `nginx.conf`：静态文件、SPA 路由和内部 AI API 代理。
+- `ai-api/`：AI 图像生成 API。
+- `docker-compose.yml`：本地单服务运行配置。
+- `.github/workflows/docker-publish.yml`：自动构建并发布镜像。
