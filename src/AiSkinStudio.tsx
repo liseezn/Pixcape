@@ -106,7 +106,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
             <label htmlFor="ai-model">图像模型</label>
             <select id="ai-model" value={model} onChange={event => setModel(event.target.value)} disabled={!models.length}>
               <option value="auto">自动选择可用模型</option>
-              {models.map(item => <option key={item.id} value={item.id}>{item.label} · {item.model}</option>)}
+              {models.map(item => <option key={item.id} value={item.id}>{item.label} · {item.model} · {item.imageToImage ? '支持参考图' : '文字生成'}</option>)}
             </select>
             <small>仅显示服务端已配置的模型。不同模型的费用、速度和图像能力可能不同。</small>
           </div>
