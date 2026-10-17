@@ -21,7 +21,8 @@ ARG VITE_AI_API_BASE_URL=/api/ai
 ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+# The repository currently does not track a root package-lock.json, so npm ci cannot run here.
+RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build:app
 
