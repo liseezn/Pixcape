@@ -34,6 +34,8 @@ export async function convertPanelToSkin(input, variant='classic') {
  const front=panel(0,half),back=panel(half,info.width)
  const place=(grid,side)=>{const specs=[['head',arm,0],['body',arm,8],['rightArm',0,8],['leftArm',arm+8,8],['rightLeg',arm,20],['leftLeg',arm+4,20]];for(const [name,dx,dy] of specs){const r=P[name][side];for(let y=0;y<r.h;y++)for(let x=0;x<r.w;x++){const a=((dy+y)*cw+dx+x)*4,b=offset(r.x+x,r.y+y);atlas[b]=grid[a];atlas[b+1]=grid[a+1];atlas[b+2]=grid[a+2];atlas[b+3]=255}}}
  place(front,'front');place(back,'back')
+ const shade=(dest,src,edge,vertical,factor)=>{for(let y=0;y<dest.h;y++)for(let x=0;x<dest.w;x++){const sx=vertical?Math.min(x,src.w-1):edge,sy=vertical?edge:Math.min(y,src.h-1),a=offset(src.x+sx,src.y+sy),b=offset(dest.x+x,dest.y+y);atlas[b]=Math.round(atlas[a]*factor);atlas[b+1]=Math.round(atlas[a+1]*factor);atlas[b+2]=Math.round(atlas[a+2]*factor);atlas[b+3]=255}}
+ for(const [name,p] of Object.entries(P)){const f=p.front;shade(p.right,f,0,false,.84);shade(p.left,f,f.w-1,false,.84);shade(p.top,f,0,true,name==='head'?.95:.8);shade(p.bottom,f,f.h-1,true,.7)}
  const used=new Set(),base=new Set()
  for(const p of Object.values(P))for(const layer of [p,layout(slim).head]){for(const r of Object.values(layer))for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++)used.add(x+','+y)}
  for(const p of Object.values(P))for(const r of Object.values(p))for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++)base.add(x+','+y)
