@@ -79,4 +79,4 @@ For SQLite, retain the named `pixcape-data` volume. For PostgreSQL/MySQL, create
 
 ## Verification status
 
-A successful image build alone does not prove database connectivity or persistence. For each provider, verify a provider-matched build against a disposable database, migration status, OAuth sign-in, user creation/read-back, rate-limit persistence and data survival after container restart. Check `/`, `/blockbench/`, `/login`, `/api/auth/providers`, `/api/ai/models` and `/health`. Do not claim production verification until those checks have been executed against the actual deployment.
+A successful image build alone does not prove database connectivity or persistence. For each provider, verify the same image against a disposable database, migration status, OAuth sign-in, user creation/read-back, rate-limit persistence and data survival after container restart. Check `/`, `/blockbench/`, `/login`, `/api/auth/providers`, `/api/ai/models` and `/health`. Do not claim production verification until those checks have been executed against the actual deployment.
