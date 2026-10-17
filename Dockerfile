@@ -15,7 +15,6 @@ RUN mkdir -p /runtime \
     && test -s /runtime/dist/bundle.js \
     && test -s /runtime/LICENSE.MD
 
-# Build Vite editor as a static application mounted at /studio/.
 FROM node:24-alpine AS vite-build
 ARG VITE_AI_API_BASE_URL=/api/ai
 ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL VITE_BASE_PATH=/studio/
@@ -26,7 +25,6 @@ RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build:app && test -s dist/index.html
 
-# Build Next.js primary application and Prisma client.
 FROM node:24-bookworm-slim AS next-build
 ARG DATABASE_PROVIDER=postgresql
 ENV DATABASE_PROVIDER=$DATABASE_PROVIDER NEXT_TELEMETRY_DISABLED=1
@@ -36,17 +34,17 @@ RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run db:generate && npm run next:build
 
-# Build AI API production dependencies.
 FROM node:22-alpine AS ai-api-build
 WORKDIR /ai-api
 COPY ai-api/package*.json ./
 RUN npm install --omit=dev --no-audit --no-fund
 COPY ai-api/ ./
 
-# Single deployable image: Nginx + Next.js + Vite + Blockbench + AI API.
-FROM nginx:1.29-alpine
-RUN apk add --no-cache nodejs
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=127.0.0.1 PORT=3000 AI_PORT=8787
+# Debian runtime matches the native Prisma SQLite addon built in next-build.
+FROM node:24-bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends nginx ca-certificates wget \
+    && rm -rf /var/lib/apt/lists/*
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=127.0.0.1
 WORKDIR /opt/pixcape-next
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=vite-build /app/dist /usr/share/nginx/html/studio/
