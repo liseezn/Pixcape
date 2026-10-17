@@ -1,6 +1,19 @@
 name: Build and publish Docker image
 
 on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+      - 'docker-entrypoint-single.sh'
+      - 'docker-compose.yml'
+      - 'nginx.conf'
+      - 'vite.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'prisma/**'
+      - 'app/**'
+      - 'ai-api/**'
+      - '.github/workflows/docker-publish.yml'
   push:
     branches: [main]
     tags: ['v*']
@@ -15,8 +28,18 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  smoke-test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: postgresql
+            suffix: pg
+          - provider: mysql
+            suffix: mysql
+          - provider: sqlite
+            suffix: sqlite
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -24,32 +47,33 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # Smoke-test the exact Dockerfile before publishing a public tag.
-      - name: Build image for smoke test
+      - name: Build provider-specific image for smoke test
         uses: docker/build-push-action@v7
         with:
           context: .
           load: true
-          tags: pixcape:smoke
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          build-args: |
+            DATABASE_PROVIDER=${{ matrix.provider }}
+          tags: pixcape:smoke-${{ matrix.suffix }}
+          cache-from: type=gha,scope=smoke-${{ matrix.suffix }}
+          cache-to: type=gha,mode=max,scope=smoke-${{ matrix.suffix }}
 
       - name: Start container and verify bundled services
         shell: bash
         run: |
           set -euo pipefail
-          docker run -d --name pixcape-smoke -p 127.0.0.1:18787:80 pixcape:smoke
+          docker run -d --name pixcape-smoke -p 127.0.0.1:18787:80 pixcape:smoke-${{ matrix.suffix }}
           cleanup() {
             docker logs pixcape-smoke || true
             docker rm -f pixcape-smoke >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
 
-          for attempt in $(seq 1 30); do
+          for attempt in $(seq 1 45); do
             if curl --fail --silent http://127.0.0.1:18787/health >/tmp/pixcape-health.json; then
               break
             fi
-            if [ "$attempt" -eq 30 ]; then
+            if [ "$attempt" -eq 45 ]; then
               echo "Container health endpoint did not become ready"
               exit 1
             fi
@@ -58,8 +82,34 @@ jobs:
 
           node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync('/tmp/pixcape-health.json','utf8')); if(h.status!=='ok') process.exit(1)"
           curl --fail --silent http://127.0.0.1:18787/ | grep -qi '<html'
+          curl --fail --silent http://127.0.0.1:18787/login | grep -qi '<html'
+          curl --fail --silent http://127.0.0.1:18787/studio/ | grep -qi '<html'
           curl --fail --silent http://127.0.0.1:18787/blockbench/ | grep -qi '<html'
           curl --fail --silent http://127.0.0.1:18787/api/ai/models | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const v=JSON.parse(s);if(!Array.isArray(v.models)||!Array.isArray(v.providers))process.exit(1)})"
+
+  publish:
+    if: github.event_name != 'pull_request'
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: postgresql
+            suffix: pg
+            primary_tag: latest
+          - provider: mysql
+            suffix: mysql
+            primary_tag: mysql
+          - provider: sqlite
+            suffix: sqlite
+            primary_tag: sqlite
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
@@ -74,17 +124,19 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha
+            type=raw,value=${{ matrix.primary_tag }},enable={{is_default_branch}}
+            type=ref,event=branch,suffix=-${{ matrix.suffix }}
+            type=ref,event=tag,suffix=-${{ matrix.suffix }}
+            type=sha,prefix=sha-,suffix=-${{ matrix.suffix }}
 
-      - name: Build and push
+      - name: Build and push provider-specific image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
+          build-args: |
+            DATABASE_PROVIDER=${{ matrix.provider }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=publish-${{ matrix.suffix }}
+          cache-to: type=gha,mode=max,scope=publish-${{ matrix.suffix }}
