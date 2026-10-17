@@ -27,7 +27,7 @@ PostgreSQL and MySQL need a provisioned database and least-privilege user. SQLit
 ## Environment variables
 
 Required for the account service:
-- `DATABASE_PROVIDER`: `postgresql`, `mysql`, or `sqlite`; must match image build arg.
+- `DATABASE_PROVIDER`: `postgresql`, `mysql`, or `sqlite`; selects the database at runtime without rebuilding the image.
 - `DATABASE_URL`: connection URL for the selected database.
 - `NEXTAUTH_SECRET`: unique high-entropy production secret.
 - `NEXTAUTH_URL`: public HTTPS URL used by NextAuth.
