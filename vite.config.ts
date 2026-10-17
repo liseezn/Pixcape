@@ -28,6 +28,8 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/blockbench(?:\/|$)/],
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2}'],
+        // Blockbench is a separately loaded editor; its 9 MB bundle must not be precached.
+        globIgnores: ['blockbench/**'],
       },
     }),
   ],
