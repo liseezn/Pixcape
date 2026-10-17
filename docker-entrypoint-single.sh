@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -eu
 : "${DATABASE_PROVIDER:=postgresql}"
 : "${DATABASE_URL:?DATABASE_URL is required}"
