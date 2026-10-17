@@ -81,7 +81,8 @@ function parseModel(modelId) {
   if (!modelId || modelId === 'auto') {
     const available = getModels()
     if (!available.length) throw new Error('AI_PROVIDER_NOT_CONFIGURED')
-    return available[0]
+    const preferred = process.env.AI_DEFAULT_PROVIDER
+    return (preferred && preferred !== 'auto' ? available.find(item => item.provider === preferred) : null) || available[0]
   }
   const model = getModels().find(item => item.id === modelId)
   if (!model) throw new Error('所选模型未配置或不可用，请检查服务端 API Key 与模型 ID')
@@ -93,9 +94,8 @@ function timeoutSignal() {
 }
 
 async function responseError(response, provider) {
-  const body = await response.text().catch(() => '')
-  // Never send provider response bodies back to the browser: they may contain sensitive diagnostics.
-  console.error('[ai-provider-error]', { provider, status: response.status, requestId: randomUUID(), detail: body.slice(0, 500) })
+  // Avoid logging provider response bodies: they may echo prompts or other user-supplied data.
+  console.error('[ai-provider-error]', { provider, status: response.status, requestId: randomUUID() })
   if (response.status === 401 || response.status === 403) throw new Error(`${provider} API 认证失败，请检查服务端密钥与权限`)
   if (response.status === 429) throw new Error(`${provider} 当前请求受限或额度不足，请稍后重试`)
   throw new Error(`${provider} 生成失败（HTTP ${response.status}）`)
