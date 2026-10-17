@@ -24,7 +24,7 @@ COPY . .
 RUN npm run build:app
 
 # Serve both apps from one deployment: Pixcape at /, Blockbench at /blockbench/.
-FROM nginx:1.27-alpine
+FROM nginx:1.29-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=pixcape-build /app/dist /usr/share/nginx/html
 COPY --from=blockbench-build /runtime/ /usr/share/nginx/html/blockbench/
