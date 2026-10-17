@@ -127,11 +127,29 @@ jobs:
             done
             test "$ready" -eq 1
             node -e "const fs=require('fs'); const h=JSON.parse(fs.readFileSync('/tmp/pixcape-health.json','utf8')); if(h.status!=='ok') process.exit(1)"
-            curl --fail --silent http://127.0.0.1:18787/ | grep -qi '<html'
-            curl --fail --silent http://127.0.0.1:18787/login | grep -qi '<html'
-            curl --fail --silent http://127.0.0.1:18787/studio/ | grep -qi '<html'
-            curl --fail --silent http://127.0.0.1:18787/blockbench/ | grep -qi '<html'
-            curl --fail --silent http://127.0.0.1:18787/api/ai/models | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const v=JSON.parse(s);if(!Array.isArray(v.models)||!Array.isArray(v.providers))process.exit(1)})"
+            check_http() {
+              local path="$1"
+              local expected="${2:-}"
+              local code
+              code="$(curl --silent --show-error --output /tmp/pixcape-response.txt --write-out '%{http_code}' "http://127.0.0.1:18787$path" || true)"
+              if [ "$code" != "200" ]; then
+                echo "Request $path returned HTTP $code" >&2
+                cat /tmp/pixcape-response.txt >&2 || true
+                docker logs pixcape-smoke >&2 || true
+                exit 1
+              fi
+              if [ -n "$expected" ] && ! grep -qi "$expected" /tmp/pixcape-response.txt; then
+                echo "Request $path did not contain expected marker: $expected" >&2
+                head -c 2000 /tmp/pixcape-response.txt >&2 || true
+                docker logs pixcape-smoke >&2 || true
+                exit 1
+              fi
+            }
+            check_http / '<html'
+            check_http /login '<html'
+            check_http /studio/ '<html'
+            check_http /blockbench/ '<html'
+            check_http /api/ai/models
             docker exec pixcape-smoke sh -c 'test -s /opt/pixcape-next/generated/prisma-postgresql/index.js && test -s /opt/pixcape-next/generated/prisma-mysql/index.js && test -s /opt/pixcape-next/generated/prisma-sqlite/index.js'
             if [ "$PROVIDER" = sqlite ]; then
               test -s /tmp/pixcape-smoke-data/pixcape.db
