@@ -19,6 +19,8 @@ RUN mkdir -p /runtime \
 FROM node:24-alpine AS pixcape-build
 ARG VITE_AI_API_BASE_URL=/api/ai
 ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL
+# better-sqlite3 may need a native build when no prebuilt binary is available.
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package*.json ./
 # The repository currently does not track a root package-lock.json, so npm ci cannot run here.
