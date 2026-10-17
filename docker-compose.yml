@@ -17,8 +17,8 @@ services:
 
   ai-api:
     build:
-      context: .
-      dockerfile: ai-api/Dockerfile
+      context: ./ai-api
+      dockerfile: Dockerfile
     container_name: pixcape-ai-api
     restart: unless-stopped
     environment:
