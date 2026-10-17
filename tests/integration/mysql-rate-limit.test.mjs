@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../../generated/prisma-mysql/index.js'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import { incrementMysqlRateLimitBucket } from '../../lib/login-rate-limit-store.ts'
 
