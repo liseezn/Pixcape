@@ -93,8 +93,8 @@ jobs:
         run: npm --prefix ai-api install && npm --prefix ai-api test
       - name: Build AI API container
         run: docker build --tag pixcape-ai-api-test ./ai-api
-      - name: Build complete Pixcape image including Blockbench (SQLite runtime)
-        run: docker build --build-arg DATABASE_PROVIDER=sqlite --tag pixcape-integration-test .
+      - name: Build complete Pixcape image including all database clients
+        run: docker build --tag pixcape-integration-test .
       - name: Smoke-test the single image with a real SQLite migration
         shell: bash
         run: |
