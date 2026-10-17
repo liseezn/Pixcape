@@ -6,7 +6,7 @@ type ModelOption = { id: string; provider: string; model: string; label: string;
 type ModelResponse = { models: ModelOption[]; providers: { id: string; label: string; configured: boolean }[] }
 type GenerationResponse = { imageDataUrl: string; provider: string; model: string; elapsedMs: number; notice: string; error?: string }
 
-const API_BASE = ((import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_AI_API_BASE_URL ?? '/api').replace(/\/$/, '')
+const API_BASE = ((import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env?.VITE_AI_API_BASE_URL ?? '/api/ai').replace(/\/$/, '')
 
 export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
   const [task, setTask] = useState<'text-to-image' | 'image-to-image'>('text-to-image')
@@ -23,7 +23,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     let active = true
-    fetch(`${API_BASE}/ai/models`)
+    fetch(`${API_BASE}/models`)
       .then(async response => {
         if (!response.ok) throw new Error('AI 服务暂时不可用')
         return response.json() as Promise<ModelResponse>
@@ -71,7 +71,7 @@ export default function AiSkinStudio({ onBack }: { onBack: () => void }) {
       body.set('model', model)
       body.set('task', task)
       if (task === 'image-to-image' && reference) body.set('reference', reference)
-      const response = await fetch(`${API_BASE}/ai/generate`, { method: 'POST', body })
+      const response = await fetch(`${API_BASE}/generate`, { method: 'POST', body })
       const data = await response.json() as GenerationResponse
       if (!response.ok) throw new Error(data.error || '生成失败，请稍后重试')
       setResult(data)
