@@ -18,7 +18,7 @@ RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build:app
 
-# Build Next.js and a provider-matched Prisma client.
+# Build Next.js and all Prisma clients for runtime-selectable database providers.
 FROM node:22-alpine AS next-build
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN apk add --no-cache python3 make g++
@@ -54,7 +54,6 @@ COPY --from=next-build /app/auth.ts /app/auth.ts
 COPY --from=next-build /app/next.config.ts /app/next.config.ts
 COPY --from=next-build /app/tsconfig.next.json /app/tsconfig.next.json
 COPY --from=next-build /app/next-env.d.ts /app/next-env.d.ts
-COPY --from=next-build /app/.database-provider-build /app/.database-provider-build
 COPY --from=ai-api-build /ai-api /opt/pixcape-ai-api
 COPY docker-entrypoint-single.sh /usr/local/bin/docker-entrypoint-single.sh
 COPY THIRD_PARTY_NOTICES.md /usr/share/nginx/html/THIRD_PARTY_NOTICES.md
