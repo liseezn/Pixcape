@@ -14,7 +14,8 @@ const upload = multer({
   limits: { fileSize: maxUploadMb * 1024 * 1024, files: 1 },
   fileFilter(_req, file, callback) {
     const valid = ['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)
-    callback(valid ? null : new Error('仅支持 PNG、JPEG 或 WebP 图片'), valid)
+    if (!valid) return callback(new Error('仅支持 PNG、JPEG 或 WebP 图片'))
+    callback(null, true)
   },
 })
 
