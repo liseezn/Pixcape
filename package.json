@@ -39,7 +39,7 @@
     "@prisma/adapter-mariadb": "^7.10.0",
     "mariadb": "^3.4.5",
     "@prisma/adapter-better-sqlite3": "^7.10.0",
-    "better-sqlite3": "^12.4.1"
+    "better-sqlite3": "^13.0.3"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
