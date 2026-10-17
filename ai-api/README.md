@@ -6,7 +6,7 @@ Independent Node.js API service for text-to-image and reference-image generation
 
 - `GET /health`
 - `GET /api/ai/models`: lists only providers with configured credentials (OpenRouter also requires a model ID).
-- `POST /api/ai/generate`: multipart form fields `prompt`, `model` (e.g. `gemini:gemini-2.5-flash-image`, `openai:gpt-image-1`, `openrouter:provider/model-id`, or `auto`), `task` (`text-to-image` or `image-to-image`), and optional file field `reference`.
+- `POST /api/ai/generate`: multipart form fields `prompt`, `model` (e.g. `gemini:gemini-2.5-flash-image`, `openai:gpt-image-1.5`, `openrouter:provider/model-id`, or `auto`), `task` (`text-to-image` or `image-to-image`), and optional file field `reference`.
 
 ## Local run
 
@@ -18,7 +18,7 @@ npm install
 npm start
 ```
 
-The API intentionally does not load `.env` itself; inject environment variables via your shell or deployment secrets manager.
+The API intentionally does not load `.env` itself; inject environment variables via your shell or deployment secrets manager. Configure multiple model IDs as comma- or semicolon-separated lists in `GEMINI_IMAGE_MODELS`, `OPENAI_IMAGE_MODELS`, and `OPENROUTER_IMAGE_MODELS`; legacy singular variables remain supported.
 
 ## Deployment
 
