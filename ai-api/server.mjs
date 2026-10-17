@@ -134,7 +134,7 @@ async function generateOpenAI(model, prompt, image) {
     body = new FormData()
     body.set('model', model.model)
     body.set('prompt', prompt)
-    body.set('image', new Blob([image.buffer], { type: image.mimetype }), image.originalname || 'reference.png')
+    body.append('image[]', new Blob([image.buffer], { type: image.mimetype }), image.originalname || 'reference.png')
     body.set('size', '1024x1024')
   } else {
     headers['Content-Type'] = 'application/json'
