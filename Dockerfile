@@ -15,37 +15,57 @@ RUN mkdir -p /runtime \
     && test -s /runtime/dist/bundle.js \
     && test -s /runtime/LICENSE.MD
 
-# Build Pixcape frontend.
-FROM node:24-alpine AS pixcape-build
+# Build Vite editor as a static application mounted at /studio/.
+FROM node:24-alpine AS vite-build
 ARG VITE_AI_API_BASE_URL=/api/ai
-ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL
-# better-sqlite3 may need a native build when no prebuilt binary is available.
+ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL VITE_BASE_PATH=/studio/
 RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY package*.json ./
-# The repository currently does not track a root package-lock.json, so npm ci cannot run here.
 RUN npm install --no-audit --no-fund
 COPY . .
-RUN npm run build:app
+RUN npm run build:app && test -s dist/index.html
 
-# Install AI API production dependencies on the same Alpine/Node ABI as runtime.
+# Build Next.js primary application and Prisma client.
+FROM node:24-bookworm-slim AS next-build
+ARG DATABASE_PROVIDER=postgresql
+ENV DATABASE_PROVIDER=$DATABASE_PROVIDER NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --no-audit --no-fund
+COPY . .
+RUN npm run db:generate && npm run next:build
+
+# Build AI API production dependencies.
 FROM node:22-alpine AS ai-api-build
 WORKDIR /ai-api
 COPY ai-api/package*.json ./
-RUN npm install --omit=dev
+RUN npm install --omit=dev --no-audit --no-fund
 COPY ai-api/ ./
 
-# One deployable image: Nginx + Pixcape + Blockbench + AI API.
+# Single deployable image: Nginx + Next.js + Vite + Blockbench + AI API.
 FROM nginx:1.29-alpine
 RUN apk add --no-cache nodejs
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=127.0.0.1 PORT=3000 AI_PORT=8787
+WORKDIR /opt/pixcape-next
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=pixcape-build /app/dist /usr/share/nginx/html
+COPY --from=vite-build /app/dist /usr/share/nginx/html/studio/
 COPY --from=blockbench-build /runtime/ /usr/share/nginx/html/blockbench/
 COPY --from=ai-api-build /ai-api /opt/pixcape-ai-api
+COPY --from=next-build /app/package.json ./package.json
+COPY --from=next-build /app/node_modules ./node_modules
+COPY --from=next-build /app/.next ./.next
+COPY --from=next-build /app/app ./app
+COPY --from=next-build /app/pages ./pages
+COPY --from=next-build /app/lib ./lib
+COPY --from=next-build /app/prisma ./prisma
+COPY --from=next-build /app/auth.ts ./auth.ts
+COPY --from=next-build /app/next.config.ts ./next.config.ts
+COPY --from=next-build /app/tsconfig.next.json ./tsconfig.next.json
+COPY --from=next-build /app/next-env.d.ts ./next-env.d.ts
 COPY docker-entrypoint-single.sh /usr/local/bin/docker-entrypoint-single.sh
 COPY THIRD_PARTY_NOTICES.md /usr/share/nginx/html/THIRD_PARTY_NOTICES.md
-RUN chmod +x /usr/local/bin/docker-entrypoint-single.sh
-ENV PORT=8787
+RUN mkdir -p /data && chmod +x /usr/local/bin/docker-entrypoint-single.sh
 EXPOSE 80
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/health || exit 1
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint-single.sh"]
