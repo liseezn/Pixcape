@@ -95,36 +95,56 @@ jobs:
         run: docker build --tag pixcape-ai-api-test ./ai-api
       - name: Build complete Pixcape image including all database clients
         run: docker build --tag pixcape-integration-test .
-      - name: Smoke-test the single image with a real SQLite migration
+      - name: Smoke-test the same image with PostgreSQL, MySQL and SQLite at runtime
         shell: bash
         run: |
           set -euo pipefail
-          docker run -d --name pixcape-smoke \
-            -p 18080:80 \
-            -e NODE_ENV=production \
-            -e DATABASE_PROVIDER=sqlite \
-            -e DATABASE_URL=file:/data/pixcape.db \
-            -e NEXTAUTH_SECRET=ci-smoke-secret-not-for-production-0123456789 \
-            -e NEXTAUTH_URL=http://127.0.0.1:18080 \
-            pixcape-integration-test
+          containers=(pixcape-smoke-sqlite pixcape-smoke-postgres pixcape-smoke-mysql)
           cleanup() {
             status=$?
-            if [ "$status" -ne 0 ]; then docker logs pixcape-smoke || true; fi
-            docker rm -f pixcape-smoke >/dev/null 2>&1 || true
+            if [ "$status" -ne 0 ]; then
+              for container in "${containers[@]}"; do docker logs "$container" || true; done
+            fi
+            docker rm -f "${containers[@]}" >/dev/null 2>&1 || true
             exit "$status"
           }
           trap cleanup EXIT
-          ready=0
-          for attempt in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:18080/login >/dev/null && curl -fsS http://127.0.0.1:18080/health >/dev/null; then
-              ready=1
-              break
-            fi
-            sleep 2
+
+          docker run -d --name pixcape-smoke-sqlite -p 18080:80 \
+            -e NODE_ENV=production -e DATABASE_PROVIDER=sqlite \
+            -e DATABASE_URL=file:/data/pixcape.db \
+            -e NEXTAUTH_SECRET=ci-smoke-secret-not-for-production-0123456789 \
+            -e NEXTAUTH_URL=http://127.0.0.1:18080 pixcape-integration-test
+
+          docker run -d --name pixcape-smoke-postgres --add-host=host.docker.internal:host-gateway -p 18081:80 \
+            -e NODE_ENV=production -e DATABASE_PROVIDER=postgresql \
+            -e DATABASE_URL='postgresql://ci:ci@host.docker.internal:5432/pixcape?schema=public' \
+            -e NEXTAUTH_SECRET=ci-smoke-secret-not-for-production-0123456789 \
+            -e NEXTAUTH_URL=http://127.0.0.1:18081 pixcape-integration-test
+
+          docker run -d --name pixcape-smoke-mysql --add-host=host.docker.internal:host-gateway -p 18082:80 \
+            -e NODE_ENV=production -e DATABASE_PROVIDER=mysql \
+            -e DATABASE_URL=mysql://ci:ci@host.docker.internal:3306/pixcape \
+            -e NEXTAUTH_SECRET=ci-smoke-secret-not-for-production-0123456789 \
+            -e NEXTAUTH_URL=http://127.0.0.1:18082 pixcape-integration-test
+
+          for spec in "18080 pixcape-smoke-sqlite" "18081 pixcape-smoke-postgres" "18082 pixcape-smoke-mysql"; do
+            read -r port container <<< "$spec"
+            ready=0
+            for attempt in $(seq 1 60); do
+              if curl -fsS "http://127.0.0.1:$port/login" >/dev/null && curl -fsS "http://127.0.0.1:$port/health" >/dev/null; then
+                ready=1
+                break
+              fi
+              sleep 2
+            done
+            test "$ready" -eq 1
+            curl -fsS "http://127.0.0.1:$port/" >/dev/null
+            curl -fsS "http://127.0.0.1:$port/api/auth/providers" >/dev/null
           done
-          test "$ready" -eq 1
-          curl -fsS http://127.0.0.1:18080/ >/dev/null
-          docker exec pixcape-smoke test -s /data/pixcape.db
-          docker exec pixcape-smoke node -e "fetch('http://127.0.0.1:8787/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+
+          curl -fsS http://127.0.0.1:18080/blockbench/ >/dev/null
+          docker exec pixcape-smoke-sqlite test -s /data/pixcape.db
+          docker exec pixcape-smoke-sqlite node -e "fetch('http://127.0.0.1:8787/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
           E2E_BASE_URL=http://127.0.0.1:18080 npm run test:e2e
-          echo "Single-image SQLite migration, HTTP and security E2E tests passed."
+          echo "Same-image PostgreSQL, MySQL and SQLite runtime plus security E2E tests passed."
