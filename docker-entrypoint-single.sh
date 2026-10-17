@@ -2,6 +2,8 @@
 set -eu
 : "${DATABASE_PROVIDER:=postgresql}"
 : "${DATABASE_URL:?DATABASE_URL is required}"
+: "${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}"
+: "${NEXTAUTH_URL:?NEXTAUTH_URL is required}"
 case "$DATABASE_PROVIDER" in postgresql|mysql|sqlite) ;; *) echo "Unsupported DATABASE_PROVIDER" >&2; exit 64 ;; esac
 BUILT_PROVIDER="$(cat /app/.database-provider-build 2>/dev/null || true)"
 if [ "$BUILT_PROVIDER" != "$DATABASE_PROVIDER" ]; then
