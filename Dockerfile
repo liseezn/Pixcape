@@ -39,7 +39,8 @@ RUN npm run db:generate && npm run next:build
 FROM node:22-alpine AS ai-api-build
 WORKDIR /ai-api
 COPY ai-api/package*.json ./
-RUN npm install --omit=dev --no-audit --no-fund
+RUN npm install --omit=dev --include=optional --no-audit --no-fund \
+    && npm install --omit=dev --include=optional --no-save --os=linux --cpu=x64 --libc=glibc sharp@^0.34.5 --no-audit --no-fund
 COPY ai-api/ ./
 
 # Debian runtime matches the native Prisma SQLite addon built in next-build.
