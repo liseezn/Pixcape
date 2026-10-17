@@ -39,7 +39,7 @@ COPY ai-api/ ./
 # Single image: keep the exact Node 22 Alpine runtime used to compile Prisma/SQLite/sharp native modules.
 FROM node:22-alpine AS runtime
 RUN apk add --no-cache nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/http.d/default.conf
 COPY --from=pixcape-build /app/dist /usr/share/nginx/html
 COPY --from=blockbench-build /runtime/ /usr/share/nginx/html/blockbench/
 COPY --from=next-build /app/package.json /app/package.json
