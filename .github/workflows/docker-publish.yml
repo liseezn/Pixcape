@@ -115,12 +115,24 @@ jobs:
 
             ready=0
             for attempt in $(seq 1 60); do
+              health_ok=0
+              app_ok=0
               if curl --fail --silent http://127.0.0.1:18787/health >/tmp/pixcape-health.json; then
+                health_ok=1
+              fi
+              # /health is served directly by nginx; also wait for the Next.js upstream
+              # so a transient 502 during process startup is not mistaken for app readiness.
+              app_code="$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:18787/ || true)"
+              if [ "$app_code" = "200" ]; then
+                app_ok=1
+              fi
+              if [ "$health_ok" -eq 1 ] && [ "$app_ok" -eq 1 ]; then
                 ready=1
                 break
               fi
               if [ "$attempt" -eq 60 ]; then
-                echo "Container did not become healthy for $PROVIDER" >&2
+                echo "Container did not become ready for $PROVIDER (health=$health_ok app_http=$app_code)" >&2
+                docker logs pixcape-smoke >&2 || true
                 exit 1
               fi
               sleep 2
