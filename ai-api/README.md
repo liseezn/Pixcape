@@ -22,7 +22,7 @@ The API intentionally does not load `.env` itself; inject environment variables 
 
 ## Deployment
 
-Create a separate service from the repository's `ai-api/Dockerfile`, set its root/build context to the repository root (Dockerfile path `ai-api/Dockerfile`), and add the secret variables shown in `.env.example`. Configure `AI_ALLOWED_ORIGINS` to the exact Pixcape frontend origin(s). The frontend must set `VITE_AI_API_BASE_URL` to the reachable API base URL, e.g. `https://your-ai-api.example` (no trailing slash). If using a same-origin reverse proxy, set the base URL to an empty string and route `/api/ai/*` to this service.
+Create a separate service from the repository's `ai-api/Dockerfile`, set its root/build context to the repository root (Dockerfile path `ai-api/Dockerfile`), and add the secret variables shown in `.env.example`. Configure `AI_ALLOWED_ORIGINS` to the exact Pixcape frontend origin(s). The frontend must set `VITE_AI_API_BASE_URL` to the API base path, e.g. `https://your-ai-api.example/api/ai` (no trailing slash). If using a same-origin reverse proxy, leave it as `/api/ai` and route `/api/ai/*` to this service. The repository's local Vite dev server proxies `/api/ai` to `http://127.0.0.1:8787`.
 
 ## Security and limitations
 
@@ -31,3 +31,7 @@ Create a separate service from the repository's `ai-api/Dockerfile`, set its roo
 - Provider model IDs and image API capabilities change. Validate the exact selected model against the provider's current docs/account before production use.
 - Generated output is a concept image. This service does **not** yet convert a generated image to Minecraft's 64×64 UV texture, validate Classic/Slim skin geometry, or create an export-ready skin. Do not present its output as a valid skin PNG.
 - The API does not silently switch a user's explicitly selected model to another provider.
+
+## Docker Compose quick start
+
+The root `docker-compose.yml` includes the isolated API service. Set the provider secrets and `AI_ALLOWED_ORIGINS=http://localhost:8080` in the shell or an untracked deployment env file, then run `docker compose up --build`. The Nginx reverse-proxy configuration for same-origin routing is a separate deployment choice; if exposing the API on its own public domain, build the frontend with `VITE_AI_API_BASE_URL=https://your-ai-api.example/api/ai` and set `AI_ALLOWED_ORIGINS` to the exact frontend origin.
