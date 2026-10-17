@@ -82,8 +82,10 @@ function parseModel(modelId) {
   if (!modelId || modelId === 'auto') {
     const available = getModels()
     if (!available.length) throw new Error('AI_PROVIDER_NOT_CONFIGURED')
+    const defaultModelId = process.env.AI_DEFAULT_MODEL
+    const explicitDefault = defaultModelId ? available.find(item => item.id === defaultModelId || item.model === defaultModelId) : null
     const preferred = process.env.AI_DEFAULT_PROVIDER
-    return (preferred && preferred !== 'auto' ? available.find(item => item.provider === preferred) : null) || available[0]
+    return explicitDefault || (preferred && preferred !== 'auto' ? available.find(item => item.provider === preferred) : null) || available[0]
   }
   const model = getModels().find(item => item.id === modelId)
   if (!model) throw new Error('所选模型未配置或不可用，请检查服务端 API Key 与模型 ID')
