@@ -1,0 +1,87 @@
+'use server'
+
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/auth'
+import { prisma } from '@/lib/prisma'
+import { redirect } from 'next/navigation'
+
+async function requireActiveAdmin() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.id) redirect('/login')
+  // Re-read role/status for every privileged mutation; never trust form data or stale UI state.
+  const actor = await prisma.user.findUnique({ where: { id: session.user.id }, select: { id: true, role: true, status: true } })
+  if (!actor || actor.status !== 'ACTIVE' || actor.role !== 'ADMIN') redirect('/?error=forbidden')
+  return actor
+}
+
+export async function reviewCreatorApplication(formData: FormData) {
+  const actor = await requireActiveAdmin()
+  const profileId = String(formData.get('profileId') ?? '').trim()
+  const decision = String(formData.get('decision') ?? '')
+  if (!profileId || profileId.length > 128 || !['approve', 'reject'].includes(decision)) redirect('/admin?error=invalid_request')
+
+  const approved = decision === 'approve'
+  const reviewed = await prisma.$transaction(async (tx) => {
+    // Conditional update prevents two concurrent admins from both reviewing the same application.
+    const changed = await tx.creatorProfile.updateMany({
+      where: { id: profileId, reviewStatus: 'PENDING' },
+      data: { reviewStatus: approved ? 'APPROVED' : 'REJECTED' },
+    })
+    if (changed.count !== 1) return false
+
+    const profile = await tx.creatorProfile.findUnique({ where: { id: profileId }, select: { userId: true } })
+    if (!profile) throw new Error('Creator profile disappeared during review')
+    await tx.user.update({
+      where: { id: profile.userId },
+      data: { role: approved ? 'CREATOR' : 'USER' },
+    })
+    await tx.auditLog.create({ data: {
+      actorId: actor.id,
+      action: approved ? 'CREATOR_APPLICATION_APPROVED' : 'CREATOR_APPLICATION_REJECTED',
+      targetType: 'CreatorProfile',
+      targetId: profileId,
+      details: { userId: profile.userId },
+    } })
+    return true
+  })
+  if (!reviewed) redirect('/admin?error=already_reviewed')
+  redirect('/admin?reviewed=1')
+}
+
+export async function setUserStatus(formData: FormData) {
+  const actor = await requireActiveAdmin()
+  const targetId = String(formData.get('userId') ?? '').trim()
+  const requestedStatus = String(formData.get('status') ?? '')
+  if (!targetId || targetId.length > 128 || !['ACTIVE', 'SUSPENDED'].includes(requestedStatus)) redirect('/admin?error=invalid_request')
+  if (targetId === actor.id) redirect('/admin?error=cannot_change_own_status')
+
+  const target = await prisma.user.findUnique({ where: { id: targetId }, select: { id: true, status: true, role: true } })
+  if (!target) redirect('/admin?error=user_not_found')
+  if (target.role === 'ADMIN') redirect('/admin?error=admin_status_protected')
+  const nextStatus = requestedStatus as 'ACTIVE' | 'SUSPENDED'
+  if (target.status === nextStatus) redirect('/admin?notice=no_change')
+
+  const changed = await prisma.$transaction(async (tx) => {
+    // Include the previously observed state and non-admin role in the write condition to avoid TOCTOU races.
+    const result = await tx.user.updateMany({
+      where: { id: target.id, status: target.status, role: { not: 'ADMIN' } },
+      data: { status: nextStatus },
+    })
+    if (result.count !== 1) return false
+
+    await tx.auditLog.create({ data: {
+      actorId: actor.id,
+      action: nextStatus === 'SUSPENDED' ? 'USER_SUSPENDED' : 'USER_REACTIVATED',
+      targetType: 'User',
+      targetId: target.id,
+      details: { previousStatus: target.status, nextStatus },
+    } })
+    if (nextStatus === 'SUSPENDED') {
+      // Invalidate existing database sessions immediately when an account is suspended.
+      await tx.session.deleteMany({ where: { userId: target.id } })
+    }
+    return true
+  })
+  if (!changed) redirect('/admin?error=concurrent_change')
+  redirect('/admin?userUpdated=1')
+}

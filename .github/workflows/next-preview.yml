@@ -1,0 +1,154 @@
+name: Next.js Preview Build and Security Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'pages/**'
+      - 'scripts/**'
+      - 'auth.ts'
+      - 'lib/**'
+      - 'prisma/**'
+      - 'prisma.config.ts'
+      - 'Dockerfile.nextjs'
+      - 'tests/**'
+      - 'next.config.ts'
+      - 'tsconfig.next.json'
+      - 'package.json'
+      - '.env.example'
+      - 'docs/NEXTJS-USER-ROLES-MIGRATION.md'
+      - 'docs/PRODUCTION-SECURITY-ROLLOUT.md'
+      - 'docs/NEXTJS-CONTAINER-DEPLOYMENT.md'
+      - '.github/workflows/next-preview.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-v4-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  security-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: pixcape
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d pixcape"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: pixcape
+          MYSQL_USER: ci
+          MYSQL_PASSWORD: ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      DATABASE_PROVIDER: postgresql
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/pixcape?schema=public
+      NEXTAUTH_SECRET: ci-only-secret-not-for-production
+      NEXTAUTH_URL: http://127.0.0.1:3000
+      LOGIN_RATE_LIMIT_MAX: '10'
+      LOGIN_RATE_LIMIT_WINDOW_SECONDS: '900'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          check-latest: true
+      - name: Install dependencies
+        run: npm install
+      - name: Report high and critical dependency advisories
+        run: |
+          npm audit --json > /tmp/npm-audit.json || true
+          node <<'NODE'
+          const audit = require('/tmp/npm-audit.json')
+          console.log('Dependency audit summary:', audit.metadata?.vulnerabilities)
+          for (const [name, issue] of Object.entries(audit.vulnerabilities || {})) {
+            if (['high', 'critical'].includes(issue.severity)) {
+              console.log(JSON.stringify({
+                name,
+                severity: issue.severity,
+                fixAvailable: issue.fixAvailable,
+                via: issue.via.map(item => typeof item === 'string' ? item : item.title),
+              }))
+            }
+          }
+          NODE
+      - name: Fail on high or critical dependency advisories
+        run: npm audit --audit-level=high
+      - name: Generate Prisma Client
+        run: npm run db:generate
+      - name: Validate Prisma schema
+        run: npx prisma validate
+      - name: Apply migrations to a real PostgreSQL service
+        run: npm run db:migrate
+      - name: Generate and validate the MySQL Prisma Client
+        run: |
+          DATABASE_PROVIDER=mysql DATABASE_URL='mysql://ci:ci@127.0.0.1:3306/pixcape' npm run db:generate
+          DATABASE_PROVIDER=mysql DATABASE_URL='mysql://ci:ci@127.0.0.1:3306/pixcape' npx prisma validate
+      - name: Apply migrations to a real MySQL service
+        run: DATABASE_PROVIDER=mysql DATABASE_URL='mysql://ci:ci@127.0.0.1:3306/pixcape' npm run db:migrate
+      - name: Test atomic MySQL login rate limiting
+        run: DATABASE_PROVIDER=mysql DATABASE_URL='mysql://ci:ci@127.0.0.1:3306/pixcape' npm run test:mysql-rate-limit
+      - name: Generate and validate SQLite Prisma Client
+        run: |
+          DATABASE_PROVIDER=sqlite DATABASE_URL='file:./prisma/ci.sqlite.db' npm run db:generate
+          DATABASE_PROVIDER=sqlite DATABASE_URL='file:./prisma/ci.sqlite.db' npx prisma validate
+      - name: Apply SQLite migrations and test atomic login rate limiting
+        run: |
+          DATABASE_PROVIDER=sqlite DATABASE_URL='file:./prisma/ci.sqlite.db' npm run db:migrate
+          DATABASE_PROVIDER=sqlite DATABASE_URL='file:./prisma/ci.sqlite.db' npm run test:sqlite-rate-limit
+      - name: Restore PostgreSQL Prisma Client for the remaining test suite
+        run: DATABASE_PROVIDER=postgresql npm run db:generate
+      - name: Run RBAC and ownership unit tests
+        run: npm run test:unit
+      - name: Run PostgreSQL integration tests
+        run: npm run test:integration
+      - name: Build existing Vite app
+        run: npm run build
+      - name: Build Next.js app
+        run: npm run next:build
+      - name: Build isolated Next.js runtime image (PostgreSQL)
+        run: docker build --build-arg DATABASE_PROVIDER=postgresql --file Dockerfile.nextjs --tag pixcape-nextjs-preview .
+      - name: Build isolated Next.js runtime image (MySQL)
+        run: docker build --build-arg DATABASE_PROVIDER=mysql --file Dockerfile.nextjs --tag pixcape-nextjs-mysql-preview .
+      - name: Build isolated Next.js runtime image (SQLite)
+        run: docker build --build-arg DATABASE_PROVIDER=sqlite --file Dockerfile.nextjs --tag pixcape-nextjs-sqlite-preview .
+      - name: Start Next.js for security E2E
+        run: |
+          nohup npm run next:start -- --port 3000 > /tmp/pixcape-next.log 2>&1 &
+          echo $! > /tmp/pixcape-next.pid
+          for attempt in $(seq 1 60); do
+            if curl --silent --fail http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/pixcape-next.log
+          exit 1
+      - name: Run security end-to-end tests
+        run: npm run test:e2e
+      - name: Stop Next.js
+        if: always()
+        run: |
+          if [ -f /tmp/pixcape-next.pid ]; then kill "$(cat /tmp/pixcape-next.pid)" || true; fi
+          cat /tmp/pixcape-next.log || true

@@ -1,0 +1,46 @@
+# Separate Node.js runtime for the Next.js account/workspace preview.
+# Intentionally separate from the root Dockerfile, which continues serving Vite + Blockbench.
+ARG DATABASE_PROVIDER=postgresql
+
+FROM node:24-bookworm-slim AS build
+ARG DATABASE_PROVIDER
+ENV DATABASE_PROVIDER=${DATABASE_PROVIDER} \
+    NEXT_TELEMETRY_DISABLED=1
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run db:generate && npm run next:build
+
+FROM node:24-bookworm-slim AS runtime
+ARG DATABASE_PROVIDER
+ENV DATABASE_PROVIDER=${DATABASE_PROVIDER} \
+    NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    HOSTNAME=0.0.0.0 \
+    PORT=3000
+WORKDIR /app
+
+# Copy the build output and the installed dependency tree, including Prisma's generated client.
+# Keeping the dependency tree avoids accidentally omitting runtime adapter modules.
+COPY --from=build --chown=node:node /app/package.json ./package.json
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/.next ./.next
+COPY --from=build --chown=node:node /app/app ./app
+COPY --from=build --chown=node:node /app/pages ./pages
+COPY --from=build --chown=node:node /app/lib ./lib
+COPY --from=build --chown=node:node /app/prisma ./prisma
+COPY --from=build --chown=node:node /app/auth.ts ./auth.ts
+COPY --from=build --chown=node:node /app/next.config.ts ./next.config.ts
+COPY --from=build --chown=node:node /app/tsconfig.next.json ./tsconfig.next.json
+COPY --from=build --chown=node:node /app/next-env.d.ts ./next-env.d.ts
+
+# Persistent mount point for the optional single-instance SQLite database.
+RUN mkdir -p /data && chown node:node /data
+
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.status < 500 ? 0 : 1)).catch(()=>process.exit(1))"
+CMD ["npm", "run", "next:start"]

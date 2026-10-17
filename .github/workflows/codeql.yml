@@ -1,0 +1,43 @@
+name: CodeQL Security Analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '23 4 * * 1'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze JavaScript and TypeScript
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+      - name: Perform CodeQL analysis without repository code-scanning upload
+        uses: github/codeql-action/analyze@v4
+        with:
+          output: results
+          upload: never
+      - name: Preserve SARIF results for manual review
+        uses: actions/upload-artifact@v7
+        with:
+          name: codeql-sarif-results
+          path: results/*.sarif
+          if-no-files-found: error
+          retention-days: 14
