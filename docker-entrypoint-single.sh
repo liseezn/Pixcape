@@ -5,11 +5,6 @@ set -eu
 : "${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}"
 : "${NEXTAUTH_URL:?NEXTAUTH_URL is required}"
 case "$DATABASE_PROVIDER" in postgresql|mysql|sqlite) ;; *) echo "Unsupported DATABASE_PROVIDER" >&2; exit 64 ;; esac
-BUILT_PROVIDER="$(cat /app/.database-provider-build 2>/dev/null || true)"
-if [ "$BUILT_PROVIDER" != "$DATABASE_PROVIDER" ]; then
-  echo "Image Prisma client was built for '$BUILT_PROVIDER', but DATABASE_PROVIDER='$DATABASE_PROVIDER'. Rebuild the image with matching --build-arg DATABASE_PROVIDER." >&2
-  exit 64
-fi
 if [ "$DATABASE_PROVIDER" = sqlite ]; then
   case "$DATABASE_URL" in file:*) ;; *) echo "SQLite DATABASE_URL must start with file:" >&2; exit 64 ;; esac
   mkdir -p /data
