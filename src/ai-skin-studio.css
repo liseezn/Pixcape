@@ -36,7 +36,7 @@
 .ai-studio__time { color: #a7c991; font-size: 12px; }
 .ai-studio__canvas { min-height: 460px; display: grid; place-items: center; padding: 22px; background-color: #141b13; background-image: linear-gradient(45deg,#20291e 25%,transparent 25%),linear-gradient(-45deg,#20291e 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#20291e 75%),linear-gradient(-45deg,transparent 75%,#20291e 75%); background-size: 24px 24px; background-position: 0 0,0 12px,12px -12px,-12px 0; }
 .ai-studio__canvas.has-result { display: block; text-align: center; }
-.ai-studio__canvas.has-result img { display: block; max-width: 100%; max-height: 680px; margin: 0 auto; object-fit: contain; image-rendering: auto; }
+.ai-studio__canvas.has-result img { display: block; width: min(512px, 100%); max-height: 680px; aspect-ratio: 1; margin: 0 auto; object-fit: contain; image-rendering: pixelated; }
 .ai-studio__empty, .ai-studio__loading { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 .ai-studio__empty-art { width: 76px; height: 76px; display: grid; place-items: center; border: 1px solid #40513a; border-radius: 18px; color: #9bd16b; background: #263323; }
 .ai-studio__empty strong, .ai-studio__loading strong { font-size: 14px; }
