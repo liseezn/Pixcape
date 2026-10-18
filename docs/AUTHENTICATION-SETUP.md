@@ -30,7 +30,9 @@ https://你的主站域名/api/auth/callback/提供商ID
 
 ### GitHub
 
-1. 打开 GitHub Developer settings，进入 OAuth Apps，创建或选择应用。
+**配置入口：** [GitHub Developer Settings → OAuth Apps](https://github.com/settings/developers)
+
+1. 打开上方链接，进入 OAuth Apps，创建或选择应用。
 2. Homepage URL 填主站网址。
 3. Authorization callback URL 填 `https://你的域名/api/auth/callback/github`。
 4. 将 Client ID、Client Secret 配到部署环境：
@@ -42,7 +44,9 @@ AUTH_GITHUB_SECRET="你的 GitHub OAuth Client Secret"
 
 ### Google
 
-1. 在 Google Cloud Console 中配置 OAuth consent screen，并创建 OAuth Client ID（Web application）。
+**配置入口：** [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials) · [OAuth consent screen / Google Auth Platform](https://console.cloud.google.com/auth/overview)
+
+1. 打开上方链接，在 Google Cloud Console 中配置 OAuth consent screen，并创建 OAuth Client ID（Web application）。
 2. Authorized JavaScript origins 填主站网址。
 3. Authorized redirect URIs 填 `https://你的域名/api/auth/callback/google`。
 4. 设置：
@@ -56,7 +60,9 @@ AUTH_GOOGLE_SECRET="你的 Google Client Secret"
 
 ### Microsoft
 
-1. 在 Microsoft Entra 管理中心注册应用。
+**配置入口：** [Microsoft Entra admin center → App registrations](https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
+
+1. 打开上方链接注册应用。
 2. 添加 Web 平台的 Redirect URI：`https://你的域名/api/auth/callback/azure-ad`。
 3. 创建客户端密码，并按租户策略配置支持的账户类型。
 4. 设置：
@@ -71,7 +77,9 @@ AUTH_MICROSOFT_ENTRA_ID_TENANT_ID="common"
 
 ### Apple
 
-1. 在 Apple Developer 中配置 Sign in with Apple，按 Apple 要求准备已启用的 App ID / Services ID、域名与回调地址。
+**配置入口：** [Apple Developer → Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list) · [Sign in with Apple 官方说明](https://developer.apple.com/sign-in-with-apple/)
+
+1. 打开上方链接配置 Sign in with Apple，按 Apple 要求准备已启用的 App ID / Services ID、域名与回调地址。
 2. Return URL 填 `https://你的域名/api/auth/callback/apple`。
 3. Apple 的客户端密钥涉及 Team ID、Key ID 和私钥生成的 client-secret JWT。按 Apple 当前开发者文档生成有效密钥，再将其配置为：
 
@@ -86,7 +94,7 @@ Apple 密钥可能会过期，需要设置到期提醒并在失效前更新。Ap
 
 邮箱登录不是密码登录。用户提交邮箱后，系统发送一次性登录链接；当前代码把链接有效期设为 **15 分钟**。只有能够接收该邮箱邮件的人才能使用链接。
 
-需要一个允许应用发送邮件的 SMTP 服务商，并获取服务器地址、端口、用户名和密码。将 SMTP 连接 URL 放进 `EMAIL_SERVER`，发件人放进 `EMAIL_FROM`：
+需要一个允许应用发送邮件的 SMTP 服务商，并获取服务器地址、端口、用户名和密码。可参考：[Resend SMTP 文档](https://resend.com/docs/send-with-smtp)、[Brevo SMTP 文档](https://help.brevo.com/hc/en-us/articles/7924908992402)。请先选择并注册你实际使用的服务商。将 SMTP 连接 URL 放进 `EMAIL_SERVER`，发件人放进 `EMAIL_FROM`：
 
 ```dotenv
 EMAIL_SERVER="smtp://SMTP用户名:URL编码后的密码@smtp.example.com:587"
