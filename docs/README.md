@@ -10,6 +10,7 @@
 | 编辑器怎么用 | [使用指南](./USER_GUIDE.md) |
 | 本地开发、贡献与 PR | [开发指南](./DEVELOPMENT.md) |
 | 部署与环境变量 | [单镜像生产部署](./SINGLE-IMAGE-PRODUCTION.md)、[部署入口说明](./DEPLOYMENT.md) |
+| 登录、OAuth、邮箱魔法链接与首次管理员初始化 | [登录配置指南](./AUTHENTICATION-SETUP.md) |
 | 独立 Next.js 容器 | [Next.js 容器部署](./NEXTJS-CONTAINER-DEPLOYMENT.md) |
 | 用户、创作者、管理员与数据库迁移 | [角色与迁移方案](./NEXTJS-USER-ROLES-MIGRATION.md) |
 | 发布、验证与回滚 | [发布清单](./RELEASE.md)、[生产安全上线清单](./PRODUCTION-SECURITY-ROLLOUT.md) |
@@ -22,7 +23,7 @@
 - **产品与架构**：PROJECT_OVERVIEW.md、ARCHITECTURE.md、USER_GUIDE.md
 - **开发与协作**：DEVELOPMENT.md
 - **部署与运维**：DEPLOYMENT.md、SINGLE-IMAGE-PRODUCTION.md、NEXTJS-CONTAINER-DEPLOYMENT.md、RELEASE.md、PRODUCTION-SECURITY-ROLLOUT.md
-- **功能与集成**：NEXTJS-USER-ROLES-MIGRATION.md、AI-MODEL-ARCHITECTURE.md、PWA-SEO-DEPLOYMENT.md
+- **功能与集成**：AUTHENTICATION-SETUP.md、NEXTJS-USER-ROLES-MIGRATION.md、AI-MODEL-ARCHITECTURE.md、PWA-SEO-DEPLOYMENT.md
 - **许可与合规**：根目录 THIRD_PARTY_NOTICES.md
 
 ## 推荐阅读顺序
@@ -31,7 +32,8 @@
 2. 使用编辑器时查看使用指南。
 3. 开发或贡献代码时查看开发指南。
 4. 部署前阅读单镜像部署、环境变量和发布清单。
-5. 涉及账户、权限、数据库或生产变更时，必须额外阅读角色迁移方案与生产安全清单。
+5. 配置登录提供商或初始化管理员时，阅读登录配置指南。
+6. 涉及账户、权限、数据库或生产变更时，必须额外阅读角色迁移方案与生产安全清单。
 
 ## 文档维护规则
 

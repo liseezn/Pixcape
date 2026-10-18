@@ -9,6 +9,7 @@ Pixcape 是面向 Minecraft 皮肤的预制与编辑工作台，支持披肩、�
 - **技术架构：** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - **开发与贡献：** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - **单镜像部署与环境变量：** [docs/SINGLE-IMAGE-PRODUCTION.md](docs/SINGLE-IMAGE-PRODUCTION.md)
+- **登录配置（Google / Microsoft / GitHub / Apple / 邮箱魔法链接）：** [docs/AUTHENTICATION-SETUP.md](docs/AUTHENTICATION-SETUP.md)
 - **用户系统与角色迁移：** [docs/NEXTJS-USER-ROLES-MIGRATION.md](docs/NEXTJS-USER-ROLES-MIGRATION.md)
 - **发布与回滚清单：** [docs/RELEASE.md](docs/RELEASE.md)
 - **生产安全验收：** [docs/PRODUCTION-SECURITY-ROLLOUT.md](docs/PRODUCTION-SECURITY-ROLLOUT.md)
