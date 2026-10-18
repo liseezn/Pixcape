@@ -1,27 +1,12 @@
-# Pixcape 文档中心
+# 文档目录兼容入口
 
-欢迎来到 Pixcape 文档目录。
+项目文档已统一整理到 [docs/](../docs/README.md)。请从 [Pixcape 文档中心](../docs/README.md) 进入，避免继续维护两套重复文档。
 
-## 文档索引
+旧路径暂时保留，便于历史链接访问。后续新增和更新请只修改 docs/ 中的规范文档。
 
-- [产品与功能使用指南](USER_GUIDE.md)：画布、工具、导入导出和快捷键。
-- [开发环境与贡献指南](DEVELOPMENT.md)：本地启动、构建、代码修改与提交前检查。
-- [技术架构说明](ARCHITECTURE.md)：前端结构、像素数据模型、渲染和容器架构。
-- [发布与运维清单](RELEASE.md)：提交、CI、镜像发布和 Zeabur 更新流程。
-- [部署与运维文档](DEPLOYMENT.md)：Docker、GHCR、Zeabur、Cloudflare 域名配置及故障排查。
-
-## 项目概览
-
-Pixcape 是一个基于 React、TypeScript、Vite 和 Canvas 2D 的轻量级 64×64 像素画编辑器。当前功能以单画布绘制和 PNG 导出为主。
-
-## 文档维护原则
-
-- 文档应与实际代码和部署配置保持一致。
-- 任何新增工具、快捷键或导出格式，都应同步更新使用指南。
-- 修改 Docker、Nginx、GitHub Actions 或域名配置时，应同步更新部署文档。
-- 对尚未实现的功能应明确标注为计划事项，不要描述为现有能力。
-
-
-## 声明与素材署名
-
-Pixcape 是非官方 Minecraft 社区项目，与 Mojang Studios / Microsoft 无关联。外套与披肩素材：邹陈云飞、Th千。部分素材来自 [CapeSkinImage](https://github.com/lonelyang/CapeSkinImage)，请遵守原始许可证。
+常用入口：
+- [项目概览](../docs/PROJECT_OVERVIEW.md)
+- [单镜像生产部署与环境变量](../docs/SINGLE-IMAGE-PRODUCTION.md)
+- [Next.js 容器部署](../docs/NEXTJS-CONTAINER-DEPLOYMENT.md)
+- [生产安全上线清单](../docs/PRODUCTION-SECURITY-ROLLOUT.md)
+- [第三方许可证声明](../THIRD_PARTY_NOTICES.md)
