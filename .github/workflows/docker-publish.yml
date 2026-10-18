@@ -16,6 +16,9 @@ on:
       - 'generated/**'
       - 'lib/**'
       - 'app/**'
+      - 'auth.ts'
+      - 'next.config.ts'
+      - 'tsconfig*.json'
       - 'ai-api/**'
       - '.github/workflows/docker-publish.yml'
   push:
