@@ -1,4 +1,16 @@
-import { PrismaClient } from '@prisma/client'
+const provider = process.env.DATABASE_PROVIDER ?? 'postgresql'
+const clientPaths = {
+  postgresql: '../generated/prisma-postgresql/index.js',
+  mysql: '../generated/prisma-mysql/index.js',
+  sqlite: '../generated/prisma-sqlite/index.js',
+}
+const clientPath = clientPaths[provider]
+if (!clientPath) {
+  console.error(`Unsupported DATABASE_PROVIDER: ${provider}`)
+  process.exit(1)
+}
+const { PrismaClient } = await import(clientPath)
+
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
@@ -14,7 +26,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 function createAdapter() {
-  const provider = process.env.DATABASE_PROVIDER ?? 'postgresql'
   const connectionString = process.env.DATABASE_URL
   if (provider === 'sqlite') {
     if (!connectionString.startsWith('file:')) {
@@ -38,13 +49,10 @@ function createAdapter() {
       connectionLimit: 2,
     })
   }
-  if (provider === 'postgresql') {
-    if (!connectionString.startsWith('postgresql://') && !connectionString.startsWith('postgres://')) {
-      throw new Error('DATABASE_URL must use postgresql:// or postgres:// when DATABASE_PROVIDER=postgresql.')
-    }
-    return new PrismaPg({ connectionString })
+  if (!connectionString.startsWith('postgresql://') && !connectionString.startsWith('postgres://')) {
+    throw new Error('DATABASE_URL must use postgresql:// or postgres:// when DATABASE_PROVIDER=postgresql.')
   }
-  throw new Error(`Unsupported DATABASE_PROVIDER: ${provider}`)
+  return new PrismaPg({ connectionString })
 }
 
 let prisma
