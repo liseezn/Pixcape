@@ -5,8 +5,12 @@ Pixcape 是面向 Minecraft 皮肤的预制与编辑工作台，支持披肩、�
 ## 当前项目入口
 
 - **文档中心：** [docs/README.md](docs/README.md)
+- **编辑器使用指南：** [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
+- **技术架构：** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **开发与贡献：** [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
 - **单镜像部署与环境变量：** [docs/SINGLE-IMAGE-PRODUCTION.md](docs/SINGLE-IMAGE-PRODUCTION.md)
 - **用户系统与角色迁移：** [docs/NEXTJS-USER-ROLES-MIGRATION.md](docs/NEXTJS-USER-ROLES-MIGRATION.md)
+- **发布与回滚清单：** [docs/RELEASE.md](docs/RELEASE.md)
 - **生产安全验收：** [docs/PRODUCTION-SECURITY-ROLLOUT.md](docs/PRODUCTION-SECURITY-ROLLOUT.md)
 - **第三方许可证：** [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
@@ -15,7 +19,7 @@ Pixcape 是面向 Minecraft 皮肤的预制与编辑工作台，支持披肩、�
 - 披肩 / 外套 / 披风独立分类，按当前选中分类展示素材。
 - 皮肤 PNG 导入、预制合成与导出。
 - Steve / Alex 角色与实时 3D 预览。
-- 内置 Blockbench Web 编辑器入口：/blockbench/。
+- 内置 Blockbench Web 编辑器入口：`/blockbench/`。
 - PWA 安装支持、Service Worker 与 Open Graph 分享元数据。
 - Next.js 用户系统、创作者和管理员功能正在按独立部署/单镜像方案分阶段验证；生产启用状态以真实部署验收为准。
 
@@ -53,7 +57,7 @@ npm run test:e2e
 
 ## 部署提示
 
-当前仓库同时包含主站/编辑器和 Next.js 账户相关代码。部署入口、端口、环境变量和迁移策略请以单镜像生产部署文档为准；不要混用根目录 Dockerfile 与 Dockerfile.nextjs 的配置。生产数据库迁移前必须确认目标环境和可恢复备份。
+当前仓库同时包含主站/编辑器和 Next.js 账户相关代码。部署入口、端口、环境变量和迁移策略请以 [单镜像生产部署文档](docs/SINGLE-IMAGE-PRODUCTION.md) 为准；不要混用根目录 Dockerfile 与 Dockerfile.nextjs 的配置。生产数据库迁移前必须确认目标环境和可恢复备份。
 
 ## 声明与素材署名
 
