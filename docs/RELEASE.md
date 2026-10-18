@@ -25,8 +25,8 @@ Zeabur 部署新镜像
 - [ ] 检查改动范围与代码差异。
 - [ ] 执行 `npm install`。
 - [ ] 执行 `npm run build` 并确认成功。
-- [ ] 新增或变更的功能已更新 `doc/USER_GUIDE.md`。
-- [ ] 变更构建或部署配置时已更新 `doc/DEPLOYMENT.md`。
+- [ ] 新增或变更的功能已更新 `docs/USER_GUIDE.md`。
+- [ ] 变更构建或部署配置时已更新 `docs/SINGLE-IMAGE-PRODUCTION.md`。
 - [ ] 未提交任何令牌、密码或其他机密信息。
 
 ## 3. GitHub Actions

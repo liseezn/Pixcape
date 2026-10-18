@@ -2,25 +2,19 @@
 
 ## 1. 总体架构
 
-Pixcape 是静态前端应用，没有必须运行的应用后端或数据库。React 管理界面状态，Canvas 2D 绘制像素内容，Vite 负责开发和生产构建，Nginx 在容器中托管构建后的静态资源。
+Pixcape 当前包含 React + TypeScript + Vite 编辑器、Blockbench Web 入口，以及 Next.js 账户/API 相关代码。生产请求由单镜像中的 Nginx 统一路由；实际启用的功能以当前 Dockerfile、入口脚本和部署验证为准。
 
 ```text
-用户浏览器
-  └── React + TypeScript
-       ├── 工具与颜色状态
-       ├── 64×64 像素数据
-       ├── 撤销/重做历史
-       ├── 图片导入处理
-       └── Canvas 2D 渲染与 PNG 导出
+浏览器
+  ├── Next.js 主站 / 账户 / API
+  ├── Vite 构建的皮肤编辑器（/studio/）
+  └── Blockbench Web（/blockbench/）
                 │
                 ▼
-          Vite 生产构建（dist）
+      Docker 镜像 + Nginx 路由
                 │
                 ▼
-       Docker 多阶段镜像 / Nginx
-                │
-                ▼
-             Zeabur
+         Zeabur 或其他容器平台
 ```
 
 ## 2. 像素数据模型
@@ -64,14 +58,7 @@ Pixcape 是静态前端应用，没有必须运行的应用后端或数据库。
 
 ## 7. 生产容器
 
-Docker 使用多阶段构建：
-
-1. Node.js 构建阶段安装 npm 依赖并运行 `npm run build`。
-2. Nginx 运行阶段复制 `dist/` 和 Nginx 配置。
-3. Nginx 在容器的 80 端口提供静态文件。
-4. SPA 请求回退到 `index.html`，健康检查由容器配置执行。
-
-生产服务不需要运行 Node.js Web 服务器，也不应把 Vite 开发端口 5173 当作容器对外服务端口。
+生产镜像与路由细节以 [单镜像生产部署](./SINGLE-IMAGE-PRODUCTION.md) 为准。当前方案包含 Next.js、Vite 静态编辑器、Blockbench 与 Nginx；不要把旧的纯静态 Vite 部署说明直接当作当前生产架构。
 
 ## 8. 当前限制与后续演进
 

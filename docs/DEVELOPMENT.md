@@ -39,12 +39,12 @@ npm run preview
 ```text
 .
 ├── .github/workflows/   # CI 与镜像发布工作流
-├── doc/                # 项目文档
+├── docs/               # 项目文档（唯一规范目录）
 ├── src/
 │   ├── App.tsx         # 编辑器交互与像素数据逻辑
 │   ├── main.tsx        # React 应用入口
 │   └── styles.css      # 工作区样式
-├── Dockerfile          # 多阶段构建与 Nginx 运行镜像
+├── Dockerfile          # 单镜像生产构建入口
 ├── nginx.conf          # Nginx 配置
 ├── docker-compose.yml  # 本地容器运行
 ├── package.json        # 依赖与脚本
@@ -55,7 +55,7 @@ npm run preview
 
 - 保持组件与交互逻辑清晰，避免将不相关的功能耦合在一起。
 - 像素数组与 Canvas 渲染应保持一致；涉及绘制操作时测试鼠标/触控指针事件。
-- 新增工具时同步更新工具类型、操作逻辑、快捷键和用户文档。
+- 新增工具时同步更新工具类型、操作逻辑、快捷键和 `docs/USER_GUIDE.md`。
 - 修改导入或导出逻辑时，测试透明像素、边缘尺寸与异常文件情况。
 - 避免把秘密、访问令牌、私钥或生产凭据提交到 Git。
 - 保持 Docker 生产阶段通过 Nginx 提供静态文件，不要将开发服务器当作生产服务。
