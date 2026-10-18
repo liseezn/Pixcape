@@ -17,13 +17,58 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: pixcape
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d pixcape"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root-ci
+          MYSQL_DATABASE: pixcape
+          MYSQL_USER: ci
+          MYSQL_PASSWORD: ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -uci -pci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           check-latest: true
-      - run: npm install
+      - run: npm install --no-audit --no-fund
+      - name: Run unit tests
+        run: npm run test:unit
+      - name: Migrate PostgreSQL and run security integration tests
+        env:
+          DATABASE_PROVIDER: postgresql
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/pixcape?schema=public
+        run: npm run db:generate:all && npm run db:migrate && npm run test:integration
+      - name: Migrate MySQL and run rate-limit integration tests
+        env:
+          DATABASE_PROVIDER: mysql
+          DATABASE_URL: mysql://ci:ci@127.0.0.1:3306/pixcape
+        run: npm run db:generate:all && npm run db:migrate && npm run test:mysql-rate-limit
+      - name: Migrate SQLite and run rate-limit integration tests
+        env:
+          DATABASE_PROVIDER: sqlite
+          DATABASE_URL: file:/tmp/pixcape-ci.db
+        run: npm run db:generate:all && npm run db:migrate && npm run test:sqlite-rate-limit
       - name: Report high and critical dependency advisories
         run: |
           npm audit --json > /tmp/npm-audit.json || true
