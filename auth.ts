@@ -11,7 +11,11 @@ const providers = process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
   : []
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // The runtime-selected Prisma client is generated into provider-specific output directories.
+  // Those generated types are structurally compatible with the adapter's schema contract,
+  // but TypeScript treats their duplicated generic transaction types as distinct.
+  // Keep the cast scoped to this adapter boundary; application queries remain strongly typed.
+  adapter: PrismaAdapter(prisma as never),
   providers,
   secret: authSecret,
   session: { strategy: 'database', maxAge: 8 * 60 * 60, updateAge: 60 * 60 },
