@@ -6,7 +6,8 @@ Updated: 2026-10-18
 
 The root `Dockerfile` produces the deployable Pixcape image. The intended routes are:
 
-- Vite editor at `/`
+- Next.js application at `/` (including account, creator/admin, and authentication routes)
+- Vite editor at `/studio/`
 - Blockbench at `/blockbench/`
 - Next.js account and creator/admin pages, including `/login`, `/account`, `/creator`, and `/admin`
 - Next.js authentication/API routes under `/api/`
@@ -86,7 +87,7 @@ For SQLite, preserve the persistent `/data` volume. For PostgreSQL/MySQL, create
 Run these checks against the actual image and deployment:
 
 1. Confirm the container stays healthy and logs show successful database migration.
-2. Verify `/`, `/blockbench/`, `/login`, `/api/auth/providers`, `/api/ai/models`, and `/health`.
+2. Verify `/`, `/studio/`, `/blockbench/`, `/login`, `/api/auth/providers`, `/api/ai/models`, and `/health`.
 3. Verify sign-in and role-based access for ordinary users, creators, and administrators.
 4. Test rate limiting and confirm protected resources cannot be accessed by another user's account.
 5. For each database provider, verify migration status, create/read-back persistence, and data survival after a container restart.
