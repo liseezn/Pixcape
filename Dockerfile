@@ -1,5 +1,5 @@
 # Build Blockbench as a static sub-app served under /blockbench/.
-FROM node:24-bookworm-slim AS blockbench-build
+FROM node:25-bookworm-slim AS blockbench-build
 ARG BLOCKBENCH_REF=5b0c99cd5a0e0ef3d15f52e91e945672076022ac
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -15,7 +15,7 @@ RUN mkdir -p /runtime \
     && test -s /runtime/dist/bundle.js \
     && test -s /runtime/LICENSE.MD
 
-FROM node:24-alpine AS vite-build
+FROM node:25-alpine AS vite-build
 ARG VITE_AI_API_BASE_URL=/api/ai
 ENV VITE_AI_API_BASE_URL=$VITE_AI_API_BASE_URL VITE_BASE_PATH=/studio/
 RUN apk add --no-cache python3 make g++
@@ -25,7 +25,7 @@ RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build:app && test -s dist/index.html
 
-FROM node:24-bookworm-slim AS next-build
+FROM node:25-bookworm-slim AS next-build
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
@@ -38,7 +38,7 @@ RUN npm install --no-audit --no-fund && npm cache clean --force
 COPY . .
 RUN rm -rf /tmp/pixcape-vite-dist && npm run next:build
 
-FROM node:24-bookworm-slim AS ai-api-build
+FROM node:25-bookworm-slim AS ai-api-build
 WORKDIR /ai-api
 COPY ai-api/package*.json ./
 RUN npm install --omit=dev --include=optional --no-audit --no-fund \
@@ -46,7 +46,7 @@ RUN npm install --omit=dev --include=optional --no-audit --no-fund \
 COPY ai-api/ ./
 
 # Debian runtime matches the native Prisma SQLite addon built in next-build.
-FROM node:24-bookworm-slim
+FROM node:25-bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends bash nginx ca-certificates wget \
     && rm -f /etc/nginx/sites-enabled/default \
     && rm -rf /var/lib/apt/lists/*
